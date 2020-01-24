@@ -70,42 +70,16 @@ void execute_command(const char *file, char *const argv[]) {
 	}
 }
 
-
 void execute_boring_commander() {
 	execute_command("whoami", NULL); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
 	execute_command("last", NULL); // TODO something else is bugging out here
 	char* argv[] = {"-al", "/home"};
 	execute_command("ls", argv);
-};
-
-/**
- * Loops the Read:Eval:Print:Loop
- */
-void loop_repl() {
-	char cmd[BUFSIZE];
-
-	while(1) {
-		// Input next command from fgets
-		if (fgets(cmd, BUFSIZE, stdin) == NULL) {
-			printf("EOF Detected, Exiting.../n");
-			exit(0);
-		}
-
-		// TODO, use the strtok function to parse the string in an array of char* argv[]. (as per hw guidelines)
-
-		// "Moving where the null terminator is by one to avoid the new line problem"
-		cmd[strcspn(cmd, "\n")] = 0;
-		printf("Received: %s\n", cmd); // TEMP logging
-
-		execute_command(cmd, NULL); // TODO, null should be argv[]
-	}
-
 }
 
 
 int main() {
 	execute_boring_commander();
-	loop_repl();
 }
 
 
