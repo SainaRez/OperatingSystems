@@ -9,14 +9,6 @@
 
 #define BUFSIZE 32
 
-/**
- * <BS>
- *
- * struct timeval {
-                 time_t      tv_sec;     /* seconds 
-                 suseconds_t tv_usec;    /* microseconds
- * 	                  };
- */
 int main() {
 	char cmd[BUFSIZE];
 	int err;
@@ -46,6 +38,12 @@ int main() {
 		} else { // parent process
 			wait(NULL);
 
+			// Measure pagefaults:
+			struct rusage usage;
+			getrusage(RUSAGE_CHILDREN, &usage);
+			long major_faults = usage.ru_majflt;
+			long minor_faults = usage.ru_minflt;
+
 			// measure endtime
 			struct timeval end_timeval;
 			gettimeofday(&end_timeval, NULL);
@@ -54,17 +52,13 @@ int main() {
 			struct timeval delta_timeval;
 			timersub(&end_timeval, &start_timeval, &delta_timeval);
 
-			// Measure pagefaults:
-
+			
 			// print statistics:
-			printf("Time elapsed: %ld.%06ld\n seconds", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
-			printf("Page Faults: %ld", major_faults);
-			printf("Page Faults (reclaimed): %ld", minor_faults);
+			printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
+			printf("Page Faults: %ld\n", major_faults);
+			printf("Page Faults (reclaimed): %ld\n", minor_faults);
 
 		}	
 	}
 }
 
-/*
- * note: don't use /bin/sh -c ls, that's wasteful
- */
