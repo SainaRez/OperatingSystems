@@ -15,11 +15,18 @@
  *
  * @param const char *file
  * 	The file name (i.e., "ls")
+ * @param int argc
+ * 	The number of elements in the array argv
  * @param char *const argv[]
- * 	The args
+ * 	The args. Kind of assumes argv[0] is == the file name
  */
-void execute_command(const char *file, char *const argv[]) {
-	int err;
+void execute_command(const char *file, int argc, char *const argv[]) {
+	// Prints the 'running command' log
+	printf("Running command: ");
+	int i; 
+	for(i = 0; i < argc; i++)
+		printf("%s ", argv[i]);
+	printf("\n");
 
 	// Measure start of time
 	struct timeval start_timeval;
@@ -29,6 +36,7 @@ void execute_command(const char *file, char *const argv[]) {
 	struct rusage rusage_start;
 	getrusage(RUSAGE_CHILDREN, &rusage_start);
 
+	int err;
 	int pid = fork();
 	if (pid == 0) {
 		// child process
@@ -38,8 +46,9 @@ void execute_command(const char *file, char *const argv[]) {
 			printf("execvp %s failed with %s\n", file, strerror(err));
 			exit(errno);
 		} 
-	} else if (pid > 0){ // parent process
+	} else if (pid > 0) { // parent process
 		wait(NULL);
+		printf("\n");
 
 		// Measure pagefaults:
 		struct rusage rusage_end;
@@ -54,12 +63,10 @@ void execute_command(const char *file, char *const argv[]) {
 		// diff time
 		struct timeval delta_timeval;
 		timersub(&end_timeval, &start_timeval, &delta_timeval);
-		float delta_time_ms = (float)(delta_timeval.tv_sec * 1000) + (float)(delta_timeval.tv_usec / 1000);
-		
 
 		// print statistics:
 		printf("-- Statistics ---\n");
-		printf("Time elapsed: %f milliseconds\n", delta_time_ms);
+		printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
 		printf("Page Faults: %ld\n", major_faults);
 		printf("Page Faults (reclaimed): %ld\n", minor_faults);
 		printf("-- End of Statistics --\n");
@@ -70,17 +77,19 @@ void execute_command(const char *file, char *const argv[]) {
 	}
 }
 
-// This function is a wrapper for executing each command
+// This function is a wrapper for the execute_command function with specific inputs harcoded
 void execute_boring_commander() {
-	execute_command("whoami", NULL); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
-	execute_command("last", NULL); // TODO something else is bugging out here
-	char* argv[] = {"-al", "/home"};
-	execute_command("ls", argv);
+	char* argv1[] = {"whoami", NULL};
+	execute_command("whoami", 1, argv1); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
+	char* argv2[] = {"last", NULL};
+	execute_command("last", 1, argv2); // TODO something else is bugging out here
+	char* argv3[] = {"ls", "-al", "/home", NULL};
+	execute_command("ls", 3, argv3);
 }
-
 
 int main() {
 	execute_boring_commander();
+	// loop_repl();
 }
 
 
