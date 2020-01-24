@@ -15,11 +15,18 @@
  *
  * @param const char *file
  * 	The file name (i.e., "ls")
+ * @param int argc
+ * 	The number of elements in the array argv
  * @param char *const argv[]
- * 	The args
+ * 	The args. Kind of assumes argv[0] is == the file name
  */
-void execute_command(const char *file, char *const argv[]) {
-	int err;
+void execute_command(const char *file, int argc, char *const argv[]) {
+	// Prints the 'running command' log
+	printf("Running command: ");
+	int i; 
+	for(i = 0; i < argc; i++)
+		printf("%s ", argv[i]);
+	printf("\n");
 
 	// Measure start of time
 	struct timeval start_timeval;
@@ -29,6 +36,7 @@ void execute_command(const char *file, char *const argv[]) {
 	struct rusage rusage_start;
 	getrusage(RUSAGE_CHILDREN, &rusage_start);
 
+	int err;
 	if (fork() == 0) {
 		// child process
 		if (execvp(file, argv) == -1) { // third arg is char *const envp[]
@@ -39,6 +47,7 @@ void execute_command(const char *file, char *const argv[]) {
 		} 
 	} else { // parent process
 		wait(NULL);
+		printf("\n");
 
 		// Measure pagefaults:
 		struct rusage rusage_end;
@@ -66,10 +75,12 @@ void execute_command(const char *file, char *const argv[]) {
 
 
 void execute_boring_commander() {
-	execute_command("whoami", NULL); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
-	execute_command("last", NULL); // TODO something else is bugging out here
-	char* argv[] = {"-al", "/home"};
-	execute_command("ls", argv);
+	char* argv1[] = {"whoami", NULL};
+	execute_command("whoami", 1, argv1); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
+	char* argv2[] = {"last", NULL};
+	execute_command("last", 1, argv2); // TODO something else is bugging out here
+	char* argv3[] = {"ls", "-al", "/home", NULL};
+	execute_command("ls", 3, argv3);
 };
 
 /**
@@ -91,7 +102,7 @@ void loop_repl() {
 		cmd[strcspn(cmd, "\n")] = 0;
 		printf("Received: %s\n", cmd); // TEMP logging
 
-		execute_command(cmd, NULL); // TODO, null should be argv[]
+		execute_command(cmd, 1, NULL); // TODO, null should be argv[], 1 should be argc
 	}
 
 }
@@ -99,7 +110,7 @@ void loop_repl() {
 
 int main() {
 	execute_boring_commander();
-	loop_repl();
+	// loop_repl();
 }
 
 
