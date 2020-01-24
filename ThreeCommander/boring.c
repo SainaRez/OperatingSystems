@@ -29,7 +29,7 @@ void execute_command(const char *file, char *const argv[]) {
 	struct rusage rusage_start;
 	getrusage(RUSAGE_CHILDREN, &rusage_start);
 
-	pid = fork()
+	int pid = fork();
 	if (pid == 0) {
 		// child process
 		if (execvp(file, argv) == -1) { // third arg is char *const envp[]
@@ -54,10 +54,12 @@ void execute_command(const char *file, char *const argv[]) {
 		// diff time
 		struct timeval delta_timeval;
 		timersub(&end_timeval, &start_timeval, &delta_timeval);
+		float delta_time_ms = (float)(delta_timeval.tv_sec * 1000) + (float)(delta_timeval.tv_usec / 1000);
+		
 
 		// print statistics:
 		printf("-- Statistics ---\n");
-		printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
+		printf("Time elapsed: %f milliseconds\n", delta_time_ms);
 		printf("Page Faults: %ld\n", major_faults);
 		printf("Page Faults (reclaimed): %ld\n", minor_faults);
 		printf("-- End of Statistics --\n");
