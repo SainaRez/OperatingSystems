@@ -1,4 +1,4 @@
-
+all: boring custom
 
 boring: boring.c
 	 gcc -o boring boring.c
