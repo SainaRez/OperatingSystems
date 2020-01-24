@@ -9,6 +9,15 @@
 
 #define BUFSIZE 32
 
+/**
+ * Executes a command using execvp, and measures the time of the 
+ * execution of the command, and the pagefaults of the execution of the command
+ *
+ * @param const char *file
+ * 	The file name (i.e., "ls")
+ * @param char *const argv[]
+ * 	The args
+ */
 void execute_command(const char *file, char *const argv[]) {
 	int err;
 
@@ -46,13 +55,27 @@ void execute_command(const char *file, char *const argv[]) {
 		timersub(&end_timeval, &start_timeval, &delta_timeval);
 
 		// print statistics:
+		printf("-- Statistics ---\n");
 		printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
 		printf("Page Faults: %ld\n", major_faults);
 		printf("Page Faults (reclaimed): %ld\n", minor_faults);
+		printf("-- End of Statistics --\n");
+		printf("\n");
 	}
 }
 
-int main() {
+
+void execute_boring_commander() {
+	execute_command("whoami", NULL); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
+	execute_command("last", NULL); // TODO something else is bugging out here
+	char* argv[] = {"-al", "/home"};
+	execute_command("ls", argv);
+};
+
+/**
+ * Loops the Read:Eval:Print:Loop
+ */
+void loop_repl() {
 	char cmd[BUFSIZE];
 
 	while(1) {
@@ -70,5 +93,13 @@ int main() {
 
 		execute_command(cmd, NULL); // TODO, null should be argv[]
 	}
+
 }
+
+
+int main() {
+	execute_boring_commander();
+	loop_repl();
+}
+
 
