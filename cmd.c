@@ -28,6 +28,10 @@ int main() {
 		struct timeval start_timeval;
 		gettimeofday(&start_timeval, NULL);
 
+		// Measure pagefaults at start:
+		struct rusage rusage_start;
+		getrusage(RUSAGE_CHILDREN, &rusage_start);
+	
 		if (fork() == 0) {
 			// child process
 			if (execl(cmd, cmd, NULL) == -1) {
@@ -39,10 +43,10 @@ int main() {
 			wait(NULL);
 
 			// Measure pagefaults:
-			struct rusage usage;
-			getrusage(RUSAGE_CHILDREN, &usage);
-			long major_faults = usage.ru_majflt;
-			long minor_faults = usage.ru_minflt;
+			struct rusage rusage_end;
+			getrusage(RUSAGE_CHILDREN, &rusage_end);
+			long major_faults = rusage_end.ru_majflt - rusage_start.ru_majflt;
+			long minor_faults = rusage_end.ru_minflt - rusage_start.ru_minflt;
 
 			// measure endtime
 			struct timeval end_timeval;
@@ -52,12 +56,10 @@ int main() {
 			struct timeval delta_timeval;
 			timersub(&end_timeval, &start_timeval, &delta_timeval);
 
-			
 			// print statistics:
 			printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
-			printf("Page Faults: %ld\n", major_faults);
-			printf("Page Faults (reclaimed): %ld\n", minor_faults);
-
+			printf("Page Faults: %ld\n", major_faults_end);
+			printf("Page Faults (reclaimed): %ld\n", minor_faults_end);
 		}	
 	}
 }
