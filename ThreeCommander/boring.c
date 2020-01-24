@@ -1,70 +1,66 @@
-#include <stdio.h> 
-#include <sys/types.h> 
+#include <stdio.h>
 #include <unistd.h>
-#include <sys/wait.h>
-#include <stdlib.h>
 #include <string.h>
+#include <errno.h> // should always include errno when doing system calls to debug
+#include <stdlib.h> // included for exit()
+#include <sys/wait.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+
+#define BUFSIZE 32
 
 int main() {
-    
-    int pid = fork();
+	char cmd[BUFSIZE];
+	int err;
 
-    if (pid < 0) {
-        printf("fork failed\n");
-    }
-    else if (pid == 0) {
-        printf("Running Command: whoami\n");
-        char *myargs[2];
-        myargs[0] = strdup("whoami");
-        myargs[1] = NULL;
-        execvp(myargs[0], myargs);
-    }
-    else {
-        int rc_wait = wait(NULL);
-        //printf("I am parent process\n");
-    }
-    
-    pid = fork();
-    if (pid == 0) {
-        printf("########################\n");
-        printf("Running Command: last\n");
-        printf("-- Statistics --\n");
-        char *myargs[2];
-        myargs[0] = strdup("last");
-        myargs[1] = NULL;
-        execvp(myargs[0], myargs);
-        
-    }
-    else if (pid > 0) {
-        int rc_wait = wait(NULL);
-    }
-    else {
-        printf("oh no you failed");
-    }
-    printf("-- End of Statistics --\n");
-    
-    
-    pid = fork();
-    if (pid == 0) {
-        printf("########################\n");
-        printf("Running Command: ls -al /home\n");
-        printf("-- Statistics --\n");
-        char *myargs[4];
-        myargs[0] = strdup("ls");
-        myargs[1] = strdup("-al");
-        myargs[2] = strdup("/home");
-        myargs[3] = NULL;
-        execvp(myargs[0], myargs);
-    }
-    else if (pid > 0) {
-        int rc_wait = wait(NULL);
-    }
-    else {
-        printf("oh no you failed");
-    }
-    printf("-- End of Statistics --\n");
-    
+	while(1) {
+		// Input next command from fgets
+		if (fgets(cmd, BUFSIZE, stdin) == NULL) {
+			printf("EOF Detected, Exiting.../n");
+			exit(0);
+		}
 
-    return 0;
+		// "Moving where the null terminator is by one to avoid the new line problem"
+		cmd[strcspn(cmd, "\n")] = 0;
+		printf("Received: %s\n", cmd); // TEMP logging
 
+		// Measure start of time
+		struct timeval start_timeval;
+		gettimeofday(&start_timeval, NULL);
+
+		// Measure pagefaults at start:
+		struct rusage rusage_start;
+		getrusage(RUSAGE_CHILDREN, &rusage_start);
+	
+		if (fork() == 0) {
+			// child process
+			if (execl(cmd, cmd, NULL) == -1) {
+				err = errno;
+				printf("exec %s failed with %s\n", cmd, strerror(err));
+				exit(errno);
+			} 
+		} else { // parent process
+			wait(NULL);
+
+			// Measure pagefaults:
+			struct rusage rusage_end;
+			getrusage(RUSAGE_CHILDREN, &rusage_end);
+			long major_faults = rusage_end.ru_majflt - rusage_start.ru_majflt;
+			long minor_faults = rusage_end.ru_minflt - rusage_start.ru_minflt;
+
+			// measure endtime
+			struct timeval end_timeval;
+			gettimeofday(&end_timeval, NULL);
+
+			// diff time
+			struct timeval delta_timeval;
+			timersub(&end_timeval, &start_timeval, &delta_timeval);
+
+			// print statistics:
+			printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
+			printf("Page Faults: %ld\n", major_faults);
+			printf("Page Faults (reclaimed): %ld\n", minor_faults);
+		}	
+	}
 }
+
