@@ -70,6 +70,7 @@ void execute_command(const char *file, char *const argv[]) {
 	}
 }
 
+// This function is a wrapper for executing each command
 void execute_boring_commander() {
 	execute_command("whoami", NULL); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
 	execute_command("last", NULL); // TODO something else is bugging out here
