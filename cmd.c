@@ -59,7 +59,7 @@ int main() {
 			// print statistics:
 			printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
 			printf("Page Faults: %ld\n", major_faults_end);
-			printf("Page Faults (reclaimed): %ld\n", minor_faults_end);
+			printf("Page Faults (reclaimed): %ld\n", minor_faults);
 		}	
 	}
 }
