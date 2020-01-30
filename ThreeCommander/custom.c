@@ -91,30 +91,64 @@ void execute_boring_commander() {
  * Loops the Read:Eval:Print:Loop
  */
 void loop_repl() {
-	char cmd[BUFSIZE];
+	
+	//char* text_file = custom.txt;
+	FILE *file; 
+	file = fopen("custom.txt", "r");
+	char cmd[128];
+	while(fgets(cmd, 128, file) != NULL) {
+		//cmd[strcspn(cmd, "\n")] = 0;
+		//printf("Received: %s\n", cmd);
+		//char delim = ' '; 
+		char* token = strtok(cmd, " ");
+		char* argv[32]; 
+		// char* argv = arr;
+		//argv = (char*) malloc(32 * sizeof(char));
+		argv[0] = token;
+		int counter = 1;
 
-	while(1) {
-		// Input next command from fgets
-		if (fgets(cmd, BUFSIZE, stdin) == NULL) {
-			printf("EOF Detected, Exiting.../n");
-			exit(0);
+		while(token != NULL) {
+			argv[counter] = strtok(cmd, " ");
+			counter++;
 		}
+		
+		for(int i = 0; i <= sizeof(argv); i++) {
+			printf("%s \n", argv[i]);
+		}
+	}
+}
+
+		// char delim = " "; 
+		// char* token = strtok(cmd, delim);
+		// char* argv[32];
+		// argv[0] = token;
+		// int counter = 1;
+
+		// while(token != NULL) {
+		// 	argv[counter] = strtok(cmd, delim);
+		// 	counter++;
+		// }
+		
+		// for(int i = 0; i <= sizeof(argv); i++) {
+		// 	printf("%s \n", argv[i]);
+		// }
+		
+
+
 
 		// TODO, use the strtok function to parse the string in an array of char* argv[]. (as per hw guidelines)
 
 		// "Moving where the null terminator is by one to avoid the new line problem"
-		cmd[strcspn(cmd, "\n")] = 0;
-		printf("Received: %s\n", cmd); // TEMP logging
 
-		execute_command(cmd, 1, NULL); // TODO, null should be argv[], 1 should be argc
-	}
 
-}
+		//execute_command(cmd, 1, NULL); // TODO, null should be argv[], 1 should be argc
+
 
 
 int main() {
-	execute_boring_commander();
-	//loop_repl();
+	//execute_boring_commander();
+	loop_repl();
+	return 0;
 }
 
 
