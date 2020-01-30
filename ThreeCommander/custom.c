@@ -20,7 +20,7 @@
  * @param char *const argv[]
  * 	The args. Kind of assumes argv[0] is == the file name
  */
-void execute_command(const char *file, int argc, char *const argv[]) {
+void execute_command(int argc, char *const argv[]) {
 	// Prints the 'running command' log
 	printf("Running command: ");
 	int i; 
@@ -37,15 +37,55 @@ void execute_command(const char *file, int argc, char *const argv[]) {
 	getrusage(RUSAGE_CHILDREN, &rusage_start);
 
 	int err;
+	if(strcmp(argv[0], "ccd") == 0) {
+			if(chdir(argv[1]) == -1) {
+				err = errno;
+				// TODO/SUGGESTION add args to logging
+				printf("execvp %s failed with %s\n", argv[0], strerror(err));
+				exit(errno);
+			}
+		}
+
+	else if(strcmp(argv[0], "cpwd") == 0) {
+		char* buffer;
+		if(getwd(buffer) == -1) {
+			err = errno;
+			// TODO/SUGGESTION add args to logging
+			printf("execvp %s failed with %s\n", argv[0], strerror(err));
+			exit(errno);
+		}
+	}
+
+	
 	int pid = fork();
 	if (pid == 0) {
 		// child process
-		if (execvp(file, argv) == -1) { // third arg is char *const envp[]
+		// if(strcmp(argv[0], "ccd") == 0) {
+		// 	if(chdir(argv[1]) == -1) {
+		// 		err = errno;
+		// 		// TODO/SUGGESTION add args to logging
+		// 		printf("execvp %s failed with %s\n", argv[0], strerror(err));
+		// 		exit(errno);
+		// 	}
+		// }
+
+		// else if(strcmp(argv[0], "cpwd") == 0) {
+		// 	char* buffer;
+		// 	if(getwd(buffer) == -1) {
+		// 		err = errno;
+		// 		// TODO/SUGGESTION add args to logging
+		// 		printf("execvp %s failed with %s\n", argv[0], strerror(err));
+		// 		exit(errno);
+		// 	}
+		// }
+
+			if (execvp(argv[0], argv) == -1) { // third arg is char *const envp[]
 			err = errno;
 			// TODO/SUGGESTION add args to logging
-			printf("execvp %s failed with %s\n", file, strerror(err));
+			printf("execvp %s failed with %s\n", argv[0], strerror(err));
 			exit(errno);
-		} 
+			} 
+
 	} else if (pid > 0) { // parent process
 		wait(NULL);
 		printf("\n");
@@ -65,12 +105,12 @@ void execute_command(const char *file, int argc, char *const argv[]) {
 		timersub(&end_timeval, &start_timeval, &delta_timeval);
 
 		// print statistics:
-		printf("-- Statistics ---\n");
-		printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
-		printf("Page Faults: %ld\n", major_faults);
-		printf("Page Faults (reclaimed): %ld\n", minor_faults);
-		printf("-- End of Statistics --\n");
-		printf("\n");
+		// printf("-- Statistics ---\n");
+		// printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
+		// printf("Page Faults: %ld\n", major_faults);
+		// printf("Page Faults (reclaimed): %ld\n", minor_faults);
+		// printf("-- End of Statistics --\n");
+		// printf("\n");
 	}
 	else {
 		printf("Fork failed");
@@ -80,11 +120,13 @@ void execute_command(const char *file, int argc, char *const argv[]) {
 
 void execute_boring_commander() {
 	char* argv1[] = {"whoami", NULL};
-	execute_command("whoami", 1, argv1); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
+	execute_command(1, argv1); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
 	char* argv2[] = {"last", NULL};
-	execute_command("last", 1, argv2); // TODO something else is bugging out here
+	execute_command(1, argv2); // TODO something else is bugging out here
 	char* argv3[] = {"ls", "-al", "/home", NULL};
-	execute_command("ls", 3, argv3);
+	execute_command(3, argv3);
+	char* argv4[] = {"ccd", "/", NULL};
+	execute_command(2, argv4);
 };
 
 /**
@@ -94,13 +136,21 @@ void loop_repl() {
 	
 	FILE *file; 
 	file = fopen("custom.txt", "r");
-	char cmd[128];
-	int loopnum = 0;
-	while(fgets(cmd, 128, file) != NULL) {
+	char cmd[129];
+	int line_count = 0;
+	
+	while((fgets(cmd, 129, file) != NULL) && (line_count < 32)) {
 		
-// 		//char delim = ' '; 
+		//Check for  new line char
+		size_t length = strlen(cmd);
+    	if (cmd[length - 1] == '\n' ) {
+			cmd[--length] = '\0';
+		}
+        
 		char* token = strtok(cmd, " ");
-		char* argv[32]; 
+		printf ("#############################\n");
+		printf("This the first token: %s\n", token);
+		char* argv[BUFSIZ]; 
 		argv[0] = token;
 		int counter = 1;
 
@@ -110,18 +160,18 @@ void loop_repl() {
 			// printf("printing argv[counter]: %s\n", argv[counter]);
  			counter++;
 		}
+		//token[strcspn(token, "\n")] = 0;
 		int i = 0;
 		while(i < counter) {
 			printf("printing the argv array: %s \n", argv[i]);
 			i++;
 		}
-		execvp(argv[0], argv);
-		//execute_command(argv[0], counter-1, argv);
-		//printf("size of argv: %i\n", sizeof(argv));
-		
-		
-		printf("THE LOOP NUMBER: %int\n",  loopnum);
-		loopnum++;
+		//execvp(argv[0], argv);
+		execute_command(counter, argv);
+		// //printf("size of argv: %i\n", sizeof(argv));
+				
+		printf("Line Number: %int\n", line_count);
+		line_count++;
  	}
 }
 
