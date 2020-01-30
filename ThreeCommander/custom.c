@@ -92,30 +92,37 @@ void execute_boring_commander() {
  */
 void loop_repl() {
 	
-	//char* text_file = custom.txt;
 	FILE *file; 
 	file = fopen("custom.txt", "r");
 	char cmd[128];
+	int loopnum = 0;
 	while(fgets(cmd, 128, file) != NULL) {
-		//cmd[strcspn(cmd, "\n")] = 0;
-		//printf("Received: %s\n", cmd);
-		//char delim = ' '; 
+		
+// 		//char delim = ' '; 
 		char* token = strtok(cmd, " ");
 		char* argv[32]; 
-		// char* argv = arr;
-		//argv = (char*) malloc(32 * sizeof(char));
 		argv[0] = token;
 		int counter = 1;
 
 		while(token != NULL) {
-			argv[counter] = strtok(cmd, " ");
-			counter++;
+			token = strtok(NULL, " ");
+			argv[counter] = token;
+			// printf("printing argv[counter]: %s\n", argv[counter]);
+ 			counter++;
 		}
+		int i = 0;
+		while(i < counter) {
+			printf("printing the argv array: %s \n", argv[i]);
+			i++;
+		}
+		execvp(argv[0], argv);
+		//execute_command(argv[0], counter-1, argv);
+		//printf("size of argv: %i\n", sizeof(argv));
 		
-		for(int i = 0; i <= sizeof(argv); i++) {
-			printf("%s \n", argv[i]);
-		}
-	}
+		
+		printf("THE LOOP NUMBER: %int\n",  loopnum);
+		loopnum++;
+ 	}
 }
 
 		// char delim = " "; 
