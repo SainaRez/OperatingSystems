@@ -1,0 +1,9 @@
+whoami
+ls
+ls -a
+man
+ls -al /home
+sleep 1
+this is a fake command for testing
+ls -alh
+sleep 2
