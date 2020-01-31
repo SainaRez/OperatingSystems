@@ -46,33 +46,41 @@ void execute_command(int argc, char *const argv[]) {
 		if(chdir(argv[1]) == -1) {
 			err = errno;
 			// TODO/SUGGESTION add args to logging
-			printf("execvp %s failed with %s\n", argv[0], strerror(err));
-			//exit(errno);
+			printf("chdir %s failed with %s\n", argv[0], strerror(err));
+			//exit(err);
+		}
+		else {
+			printf("chdir just ran\n");
 		}
 	}
 	else if(strcmp(argv[0], "cpwd") == 0) {
 		char* buffer;
-		if(getwd(buffer) == -1) {
+		long size;
+		if(getcwd(buffer, (size_t)size) == -1) {
 			err = errno;
 			// TODO/SUGGESTION add args to logging
-			printf("execvp %s failed with %s\n", argv[0], strerror(err));
-			//exit(errno);
+			printf("getwd %s failed with %s\n", argv[0], strerror(err));
+			//exit(err);
+		}
+		else {
+			printf("getwd just ran\n");
 		}
 	}
-	else if(strcmp(argv[0], "ls") == 0) {
+	else {
 		int pid = fork();
+		printf("A fork was just made\n");
 		if (pid == 0) {
 			if (execvp(argv[0], argv) == -1) { // third arg is char *const envp[]
 			err = errno;
 			// TODO/SUGGESTION add args to logging
 			printf("execvp %s failed with %s\n", argv[0], strerror(err));
-			//exit(errno);
+			exit(err);
 			}
 		}			
 		else if (pid > 0) { // parent process
 		wait(NULL);
 		//while ((w = wait(&status) > 0));
-		printf("\n");
+		printf("parent process just ran\n");
 
 		// Measure pagefaults:
 		struct rusage rusage_end;
@@ -100,9 +108,7 @@ void execute_command(int argc, char *const argv[]) {
 			printf("Fork failed");
 		}
 	}
-	else {
-		printf("No rule to run command\n");
-	}
+	return;
 }
 	
 
@@ -192,10 +198,16 @@ void loop_repl() {
 	while((fgets(cmd, 129, file) != NULL) && (line_count < 32)) {
 		
 		//Check for  new line char
-		size_t length = strlen(cmd);
-    	if (cmd[length - 1] == '\n' ) {
-			cmd[--length] = '\0';
-		}
+		//char cmd[129];
+		//strtok(cmd, "\n");
+		//cmd[sizeof(cmd)] = NULL; 
+		cmd[strcspn(cmd, "\n")] = 0;
+		//cmd[sizeof(cmd)] = NULL;
+
+		// size_t length = strlen(cmd);
+    	// if (cmd[length - 1] == '\n' ) {
+		// 	cmd[--length] = '\0';
+		// }
         
 		char* token = strtok(cmd, " ");
 		printf ("#############################\n");
@@ -210,9 +222,10 @@ void loop_repl() {
 			// printf("printing argv[counter]: %s\n", argv[counter]);
  			counter++;
 		}
+		argv[counter] = NULL;
 		//token[strcspn(token, "\n")] = 0;
 		int i = 0;
-		while(i < counter) {
+		while(i <= counter) {
 			printf("printing the argv array: %s \n", argv[i]);
 			i++;
 		}
@@ -223,6 +236,7 @@ void loop_repl() {
 		printf("Line Number: %int\n", line_count);
 		line_count++;
  	}
+	return;
 }
 
 		// char delim = " "; 
