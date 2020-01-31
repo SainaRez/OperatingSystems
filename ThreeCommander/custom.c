@@ -21,6 +21,10 @@
  * 	The args. Kind of assumes argv[0] is == the file name
  */
 void execute_command(int argc, char *const argv[]) {
+
+	pid_t w;
+	int status;
+
 	// Prints the 'running command' log
 	printf("Running command: ");
 	int i; 
@@ -38,13 +42,13 @@ void execute_command(int argc, char *const argv[]) {
 
 	int err;
 	if(strcmp(argv[0], "ccd") == 0) {
-			if(chdir(argv[1]) == -1) {
-				err = errno;
-				// TODO/SUGGESTION add args to logging
-				printf("execvp %s failed with %s\n", argv[0], strerror(err));
-				exit(errno);
-			}
+		if(chdir(argv[1]) == -1) {
+			err = errno;
+			// TODO/SUGGESTION add args to logging
+			printf("execvp %s failed with %s\n", argv[0], strerror(err));
+			//exit(errno);
 		}
+	}
 
 	else if(strcmp(argv[0], "cpwd") == 0) {
 		char* buffer;
@@ -52,14 +56,14 @@ void execute_command(int argc, char *const argv[]) {
 			err = errno;
 			// TODO/SUGGESTION add args to logging
 			printf("execvp %s failed with %s\n", argv[0], strerror(err));
-			exit(errno);
+			//exit(errno);
 		}
 	}
 
 	
 	int pid = fork();
 	if (pid == 0) {
-		// child process
+		//child process
 		// if(strcmp(argv[0], "ccd") == 0) {
 		// 	if(chdir(argv[1]) == -1) {
 		// 		err = errno;
@@ -83,11 +87,12 @@ void execute_command(int argc, char *const argv[]) {
 			err = errno;
 			// TODO/SUGGESTION add args to logging
 			printf("execvp %s failed with %s\n", argv[0], strerror(err));
-			exit(errno);
+			//exit(errno);
 			} 
 
 	} else if (pid > 0) { // parent process
 		wait(NULL);
+		//while ((w = wait(&status) > 0));
 		printf("\n");
 
 		// Measure pagefaults:
@@ -149,8 +154,8 @@ void loop_repl() {
         
 		char* token = strtok(cmd, " ");
 		printf ("#############################\n");
-		printf("This the first token: %s\n", token);
-		char* argv[BUFSIZ]; 
+		//printf("This the first token: %s\n", token);
+		char* argv[32]; 
 		argv[0] = token;
 		int counter = 1;
 
