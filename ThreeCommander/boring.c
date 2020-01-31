@@ -7,7 +7,6 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#define BUFSIZE 32
 
 /**
  * Executes a command using execvp, and measures the time of the 
@@ -80,16 +79,14 @@ void execute_command(const char *file, int argc, char *const argv[]) {
 // This function is a wrapper for the execute_command function with specific inputs harcoded
 void execute_boring_commander() {
 	char* argv1[] = {"whoami", NULL};
-	execute_command("whoami", 1, argv1); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
+	execute_command("whoami", 1, argv1);
 	char* argv2[] = {"last", NULL};
-	execute_command("last", 1, argv2); // TODO something else is bugging out here
+	execute_command("last", 1, argv2);
 	char* argv3[] = {"ls", "-al", "/home", NULL};
 	execute_command("ls", 3, argv3);
 }
 
 int main() {
 	execute_boring_commander();
-	// loop_repl();
 }
-
 
