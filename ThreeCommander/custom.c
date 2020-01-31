@@ -153,11 +153,11 @@ void loop_repl() {
 		argv[counter] = NULL;
 
 		//printing the argv elements (the command that id being passed for execution)
-		int i = 0;
-		while(i <= counter) {
-			printf("printing the argv array: %s \n", argv[i]);
-			i++;
-		}
+		// int i = 0;
+		// while(i <= counter) {
+		// 	printf("printing the argv array: %s \n", argv[i]);
+		// 	i++;
+		// }
 
 		// Execute the  command
 		execute_command(counter, argv);
