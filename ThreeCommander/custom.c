@@ -47,7 +47,18 @@ void execute_command(const char *file, int argc, char *const argv[]) {
 			exit(errno);
 		} 
 	} else if (pid > 0) { // parent process
-		wait(NULL);
+		int status; 
+		struct rusage usage; 
+		// TODO temp stuff
+		if (strcmp("sleep", file) == 0) {
+			printf("Executing wait3\n");
+			pid_t pid = wait3(&status, WNOHANG, &usage);
+			printf("pid: %ld\n", (long) pid);
+			printf("Finished!\n\n");
+		}
+		else {
+			wait3(&status, 0, &usage);
+		}
 		printf("\n");
 
 		// Measure pagefaults:
@@ -78,76 +89,36 @@ void execute_command(const char *file, int argc, char *const argv[]) {
 }
 
 
-void execute_boring_commander() {
-	char* argv1[] = {"whoami", NULL};
-	execute_command("whoami", 1, argv1); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
-	char* argv2[] = {"last", NULL};
-	execute_command("last", 1, argv2); // TODO something else is bugging out here
-	char* argv3[] = {"ls", "-al", "/home", NULL};
-	execute_command("ls", 3, argv3);
-};
-
-/**
- * Loops the Read:Eval:Print:Loop
- */
-void loop_repl() {
-	
-	//char* text_file = custom.txt;
-	FILE *file; 
-	file = fopen("custom.txt", "r");
-	char cmd[128];
-	while(fgets(cmd, 128, file) != NULL) {
-		//cmd[strcspn(cmd, "\n")] = 0;
-		//printf("Received: %s\n", cmd);
-		//char delim = ' '; 
-		char* token = strtok(cmd, " ");
-		char* argv[32]; 
-		// char* argv = arr;
-		//argv = (char*) malloc(32 * sizeof(char));
-		argv[0] = token;
-		int counter = 1;
-
-		while(token != NULL) {
-			argv[counter] = strtok(cmd, " ");
-			counter++;
-		}
-		
-		for(int i = 0; i <= sizeof(argv); i++) {
-			printf("%s \n", argv[i]);
-		}
-	}
+void checkwaitcommands() {
+	int status; 
+	struct rusage usage; 
+	// TODO temp stuff
+	printf("executing wait3 as general check:\n");
+	pid_t pid = wait3(&status, WNOHANG, &usage);
+	printf("PID: %ld\n", (long) pid);
+	printf("status: %i\n", status);
+	printf("Finished!\n");
 }
 
-		// char delim = " "; 
-		// char* token = strtok(cmd, delim);
-		// char* argv[32];
-		// argv[0] = token;
-		// int counter = 1;
 
-		// while(token != NULL) {
-		// 	argv[counter] = strtok(cmd, delim);
-		// 	counter++;
-		// }
-		
-		// for(int i = 0; i <= sizeof(argv); i++) {
-		// 	printf("%s \n", argv[i]);
-		// }
-		
-
-
-
-		// TODO, use the strtok function to parse the string in an array of char* argv[]. (as per hw guidelines)
-
-		// "Moving where the null terminator is by one to avoid the new line problem"
-
-
-		//execute_command(cmd, 1, NULL); // TODO, null should be argv[], 1 should be argc
-
+void execute_boring_commander() {
+	char* argv1[] = {"sleep", "2", NULL};
+	execute_command("sleep", 2, argv1); 
+	checkwaitcommands();
+	char* argv2[] = {"last", NULL};
+	execute_command("last", 1, argv2); 
+	checkwaitcommands();
+	char* argv3[] = {"ls", "-al", "/home", NULL};
+	execute_command("ls", 3, argv3);
+	checkwaitcommands();
+	char* argv4[] = {"sleep", "1", NULL};
+	execute_command("sleep", 2, argv1); 
+	checkwaitcommands();
+}
 
 
 int main() {
-	//execute_boring_commander();
-	loop_repl();
+	execute_boring_commander();
 	return 0;
 }
 
