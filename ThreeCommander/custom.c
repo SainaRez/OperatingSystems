@@ -41,6 +41,7 @@ void execute_command(int argc, char *const argv[]) {
 	getrusage(RUSAGE_CHILDREN, &rusage_start);
 
 	int err;
+
 	if(strcmp(argv[0], "ccd") == 0) {
 		if(chdir(argv[1]) == -1) {
 			err = errno;
@@ -49,7 +50,6 @@ void execute_command(int argc, char *const argv[]) {
 			//exit(errno);
 		}
 	}
-
 	else if(strcmp(argv[0], "cpwd") == 0) {
 		char* buffer;
 		if(getwd(buffer) == -1) {
@@ -59,38 +59,17 @@ void execute_command(int argc, char *const argv[]) {
 			//exit(errno);
 		}
 	}
-
-	
-	int pid = fork();
-	if (pid == 0) {
-		//child process
-		// if(strcmp(argv[0], "ccd") == 0) {
-		// 	if(chdir(argv[1]) == -1) {
-		// 		err = errno;
-		// 		// TODO/SUGGESTION add args to logging
-		// 		printf("execvp %s failed with %s\n", argv[0], strerror(err));
-		// 		exit(errno);
-		// 	}
-		// }
-
-		// else if(strcmp(argv[0], "cpwd") == 0) {
-		// 	char* buffer;
-		// 	if(getwd(buffer) == -1) {
-		// 		err = errno;
-		// 		// TODO/SUGGESTION add args to logging
-		// 		printf("execvp %s failed with %s\n", argv[0], strerror(err));
-		// 		exit(errno);
-		// 	}
-		// }
-
+	else if(strcmp(argv[0], "ls") == 0) {
+		int pid = fork();
+		if (pid == 0) {
 			if (execvp(argv[0], argv) == -1) { // third arg is char *const envp[]
 			err = errno;
 			// TODO/SUGGESTION add args to logging
 			printf("execvp %s failed with %s\n", argv[0], strerror(err));
 			//exit(errno);
-			} 
-
-	} else if (pid > 0) { // parent process
+			}
+		}			
+		else if (pid > 0) { // parent process
 		wait(NULL);
 		//while ((w = wait(&status) > 0));
 		printf("\n");
@@ -116,11 +95,77 @@ void execute_command(int argc, char *const argv[]) {
 		// printf("Page Faults (reclaimed): %ld\n", minor_faults);
 		// printf("-- End of Statistics --\n");
 		// printf("\n");
+		}
+		else {
+			printf("Fork failed");
+		}
 	}
 	else {
-		printf("Fork failed");
+		printf("No rule to run command\n");
 	}
 }
+	
+
+	
+	// int pid = fork();
+	// if (pid == 0) {
+		//child process
+		// if(strcmp(argv[0], "ccd") == 0) {
+		// 	if(chdir(argv[1]) == -1) {
+		// 		err = errno;
+		// 		// TODO/SUGGESTION add args to logging
+		// 		printf("execvp %s failed with %s\n", argv[0], strerror(err));
+		// 		exit(errno);
+		// 	}
+		// }
+
+		// else if(strcmp(argv[0], "cpwd") == 0) {
+		// 	char* buffer;
+		// 	if(getwd(buffer) == -1) {
+		// 		err = errno;
+		// 		// TODO/SUGGESTION add args to logging
+		// 		printf("execvp %s failed with %s\n", argv[0], strerror(err));
+		// 		exit(errno);
+		// 	}
+		// }
+
+			// if (execvp(argv[0], argv) == -1) { // third arg is char *const envp[]
+			// err = errno;
+			// // TODO/SUGGESTION add args to logging
+			// printf("execvp %s failed with %s\n", argv[0], strerror(err));
+			// //exit(errno);
+			// } 
+
+	// } else if (pid > 0) { // parent process
+	// 	wait(NULL);
+	// 	//while ((w = wait(&status) > 0));
+	// 	printf("\n");
+
+	// 	// Measure pagefaults:
+	// 	struct rusage rusage_end;
+	// 	getrusage(RUSAGE_CHILDREN, &rusage_end);
+	// 	long major_faults = rusage_end.ru_majflt - rusage_start.ru_majflt;
+	// 	long minor_faults = rusage_end.ru_minflt - rusage_start.ru_minflt;
+
+	// 	// measure endtime
+	// 	struct timeval end_timeval;
+	// 	gettimeofday(&end_timeval, NULL);
+
+	// 	// diff time
+	// 	struct timeval delta_timeval;
+	// 	timersub(&end_timeval, &start_timeval, &delta_timeval);
+
+	// 	// print statistics:
+	// 	// printf("-- Statistics ---\n");
+	// 	// printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
+	// 	// printf("Page Faults: %ld\n", major_faults);
+	// 	// printf("Page Faults (reclaimed): %ld\n", minor_faults);
+	// 	// printf("-- End of Statistics --\n");
+	// 	// printf("\n");
+	// }
+	// else {
+	// 	printf("Fork failed");
+	// }
 
 
 void execute_boring_commander() {
@@ -156,12 +201,12 @@ void loop_repl() {
 		printf ("#############################\n");
 		//printf("This the first token: %s\n", token);
 		char* argv[32]; 
-		argv[0] = token;
-		int counter = 1;
+		//argv[0] = token;
+		int counter = 0;
 
 		while(token != NULL) {
-			token = strtok(NULL, " ");
 			argv[counter] = token;
+			token = strtok(NULL, " ");
 			// printf("printing argv[counter]: %s\n", argv[counter]);
  			counter++;
 		}
