@@ -90,6 +90,7 @@ void process_text_file(const char *filename) {
 	char cmd[128];
 	int file_line_number = 0;
 	while(fgets(cmd, 128, file) != NULL) {
+		cmd[strcspn(cmd, "\n")] = 0; // Remove newline suffix from command string
 		printf("Prcessing CMD: %s, line %i\n", cmd, file_line_number);
 		char* token = strtok(cmd, " ");
 		char* argv[32]; 
@@ -107,7 +108,6 @@ void process_text_file(const char *filename) {
 		}
 		
 		file_line_number++;
-
  	}
 }
 
