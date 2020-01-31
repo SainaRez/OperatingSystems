@@ -1,13 +1,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <errno.h> // should always include errno when doing system calls to debug
-#include <stdlib.h> // included for exit()
+#include <errno.h>
+#include <stdlib.h>
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#define BUFSIZE 32
 
 /**
  * Executes a command using execvp, and measures the time of the 
@@ -66,7 +65,8 @@ void execute_command(const char *file, int argc, char *const argv[]) {
 
 		// print statistics:
 		printf("-- Statistics ---\n");
-		printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
+		// TODO change to milliseconds
+		printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); 
 		printf("Page Faults: %ld\n", major_faults);
 		printf("Page Faults (reclaimed): %ld\n", minor_faults);
 		printf("-- End of Statistics --\n");
@@ -77,28 +77,22 @@ void execute_command(const char *file, int argc, char *const argv[]) {
 	}
 }
 
-
 void execute_boring_commander() {
 	char* argv1[] = {"whoami", NULL};
-	execute_command("whoami", 1, argv1); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
+	execute_command("whoami", 1, argv1);
 	char* argv2[] = {"last", NULL};
-	execute_command("last", 1, argv2); // TODO something else is bugging out here
+	execute_command("last", 1, argv2);
 	char* argv3[] = {"ls", "-al", "/home", NULL};
 	execute_command("ls", 3, argv3);
 };
 
-/**
- * Loops the Read:Eval:Print:Loop
- */
-void loop_repl() {
-	
+void execute_custom.txt() {
 	FILE *file; 
 	file = fopen("custom.txt", "r");
 	char cmd[128];
 	int loopnum = 0;
 	while(fgets(cmd, 128, file) != NULL) {
 		
-// 		//char delim = ' '; 
 		char* token = strtok(cmd, " ");
 		char* argv[32]; 
 		argv[0] = token;
@@ -107,7 +101,6 @@ void loop_repl() {
 		while(token != NULL) {
 			token = strtok(NULL, " ");
 			argv[counter] = token;
-			// printf("printing argv[counter]: %s\n", argv[counter]);
  			counter++;
 		}
 		int i = 0;
@@ -116,8 +109,6 @@ void loop_repl() {
 			i++;
 		}
 		execvp(argv[0], argv);
-		//execute_command(argv[0], counter-1, argv);
-		//printf("size of argv: %i\n", sizeof(argv));
 		
 		
 		printf("THE LOOP NUMBER: %int\n",  loopnum);
@@ -125,35 +116,8 @@ void loop_repl() {
  	}
 }
 
-		// char delim = " "; 
-		// char* token = strtok(cmd, delim);
-		// char* argv[32];
-		// argv[0] = token;
-		// int counter = 1;
-
-		// while(token != NULL) {
-		// 	argv[counter] = strtok(cmd, delim);
-		// 	counter++;
-		// }
-		
-		// for(int i = 0; i <= sizeof(argv); i++) {
-		// 	printf("%s \n", argv[i]);
-		// }
-		
-
-
-
-		// TODO, use the strtok function to parse the string in an array of char* argv[]. (as per hw guidelines)
-
-		// "Moving where the null terminator is by one to avoid the new line problem"
-
-
-		//execute_command(cmd, 1, NULL); // TODO, null should be argv[], 1 should be argc
-
-
-
 int main() {
-	//execute_boring_commander();
+	execute_boring_commander();
 	loop_repl();
 	return 0;
 }
