@@ -124,6 +124,11 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 		struct timeval start_timeval;
 		gettimeofday(&start_timeval, NULL);
 
+		// Measure pagefaults at start:
+		struct rusage rusage_start;
+		getrusage(RUSAGE_CHILDREN, &rusage_start);
+
+
 		if (pid2 == 0) { // Grandchild process
 			// run process
 			if (execvp(argv[0], argv) == -1) {
@@ -133,6 +138,13 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 			} 
 		} else if (pid2 > 0) { // Not the Grandchild process
 			wait(NULL);
+
+			// Measure pagefaults:
+			struct rusage rusage_end;
+			getrusage(RUSAGE_CHILDREN, &rusage_end);
+			long major_faults = rusage_end.ru_majflt - rusage_start.ru_majflt;
+			long minor_faults = rusage_end.ru_minflt - rusage_start.ru_minflt;
+
 			// measure endtime
 			struct timeval end_timeval;
 			gettimeofday(&end_timeval, NULL);
@@ -141,8 +153,14 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 			struct timeval delta_timeval;
 			timersub(&end_timeval, &start_timeval, &delta_timeval);
 
-			// print time
-			printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec);
+			// print statistics:
+			printf("-- Statistics ---\n");
+			// TODO change to milliseconds
+			printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); 
+			printf("Page Faults: %ld\n", major_faults);
+			printf("Page Faults (reclaimed): %ld\n", minor_faults);
+			printf("-- End of Statistics --\n");
+			printf("\n");
 			exit(0);
 		}
 	} else if (pid > 0) { // parent process
