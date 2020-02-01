@@ -37,7 +37,7 @@ void initialize_background_command_array() {
  *  [1] sleep 3
  */
 void print_active_background_processes() {
-	for (int i = 0; i < MAX_COMMANDS; i++) { // TODO define 32
+	for (int i = 0; i < MAX_COMMANDS; i++) {
 		background_command cmd = background_command_array[i];
 		if (cmd.background_id != -1) {
 			printf("[%i] ", cmd.background_id);
@@ -191,8 +191,6 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 			} 
 		} else if (pid2 > 0) { // Not the Grandchild process
 			wait4(pid2, NULL, 0, NULL);
-			// TODO change to wait4
-			//wait4(pid2, );
 
 			// Measure pagefaults:
 			struct rusage rusage_end;
@@ -229,8 +227,7 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 			exit(0);
 		}
 	} else if (pid > 0) { // parent process
-		// TODO remove
-		// printf("Returning from fork. There is now a child running with PID %i\n", pid);
+		// TODO not sure if this logic is necessary anymore.
 		background_command cmd = background_command_array[background_id];
 		cmd.pid = pid;
 		return;
@@ -251,7 +248,13 @@ void execute_boring_commander() {
 
 
 /**
- * Returns the background_id which has the given PID
+ * Searches background_command_array for the command with has the given PID,
+ * and returns the background_id of the first command found.
+ *
+ * Returns -1 if no PID is found.
+ *
+ * @param int pid
+ * 	The process id, such as 1243, of a given background process.
  */
 int get_command_of_pid(int pid) {
 	for (int i = 0; i < MAX_COMMANDS; i++) {
@@ -259,6 +262,8 @@ int get_command_of_pid(int pid) {
 			return background_command_array[i].background_id;
 		}
 	}
+
+	return -1;
 }
 
 
@@ -274,6 +279,11 @@ void disable_background_process_by_pid(int wait_pid) {
 	}
 }
 
+/**
+ * Waits for any child processes, and disables their active status if they have completed.
+ *
+ * Returns true if there are more processes to be waited for.
+ */
 bool wait_for_process() {
 	int status = 0;
 	struct rusage usage;
@@ -282,8 +292,6 @@ bool wait_for_process() {
 	else if (wait_pid > 0) {
 		int background_id = get_command_of_pid(wait_pid);
 		background_command cmd = background_command_array[background_id];
-		// TODO, should this logging be done after the wait() command?
-				// TODO remove printf
 		disable_background_process_by_pid(wait_pid);
 		return true;
 	}
@@ -337,8 +345,6 @@ void process_text_file(const char *filename, int multi_threaded_line_numbers[], 
 			execute_command(arg_counter, argv);
 		}
 
-		// TODO remove
-		// print_active_background_processes();
 		wait_for_process();
 		file_line_number++;
 	}
