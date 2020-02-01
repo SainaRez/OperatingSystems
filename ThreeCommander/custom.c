@@ -7,6 +7,10 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
+
+// This function takes the start time and rusage as inputs and returns
+//the time elapsed and page faults
+
 void get_statistics(struct rusage ruse_start, struct timeval start_time) {
 	// Measure pagefaults:
 	struct rusage rusage_end;
@@ -33,7 +37,6 @@ void get_statistics(struct rusage ruse_start, struct timeval start_time) {
 
 	return;
 }
-
 
 
 /**
