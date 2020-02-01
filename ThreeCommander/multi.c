@@ -88,6 +88,8 @@ void execute_command(int argc, char *const argv[]) {
 		printf("Fork failed");
 	}
 }
+
+
 /**
  * Executes a command using execvp, and measures the time of the 
  * execution of the command, and the pagefaults of the execution of the command
@@ -106,7 +108,10 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 	for(i = 0; i < argc; i++)
 		printf("%s ", argv[i]);
 	printf("\n");
-	// TODO print "Background: ID [%i]: <command>\n\n", background_id
+	printf("Background: ID [%i]: ", background_id);
+	for(i = 0; i < argc; i++)
+		printf("%s ", argv[i]);
+	printf("\n\n");
 
 	int err;
 	int pid = fork();
@@ -141,7 +146,7 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 		}
 	} else if (pid > 0) { // parent process
 		// TODO
-		printf("Returning from fork. There is now a child running with PID %i\n", 42);
+		printf("Returning from fork. There is now a child running with PID %i\n", background_id);
 		return;
 	}
 	else {
@@ -218,12 +223,7 @@ void process_text_file(const char *filename, int multi_threaded_line_numbers[], 
 		}
 		argv[arg_counter] = NULL; // Make sure our argv is null terminated
 
-		// background_command background_command_array[32]; TODO delete
-
-		// Branch based on multi_thread_line_numbers
-		// if (multi_threaded_line_numbers.contains(file_line_number)) { // TODO temp
-		if (valueinarray(file_line_number, multi_threaded_line_numbers, argc)) { // TODO temp
-
+		if (valueinarray(file_line_number, multi_threaded_line_numbers, argc)) {
 			execute_multi_command(arg_counter, argv, background_id_counter++);
 
 			// Next, create a struct for the command and store it background_command_array
@@ -235,7 +235,7 @@ void process_text_file(const char *filename, int multi_threaded_line_numbers[], 
 			execute_command(arg_counter, argv);
 		}
 
-		print_active_background_processes();
+		// print_active_background_processes();
 		wait_for_process();
 		file_line_number++;
 	}
@@ -250,14 +250,15 @@ void process_text_file(const char *filename, int multi_threaded_line_numbers[], 
 int main(int argc, char *argv[]) {
 	// execute_boring_commander();
 	initialize_background_command_array();
-	// TODO
+
+	// Acquire multi-threaded command line numbers
 	int multi_threaded_line_numbers[32];
 	for (int i = 1; i < argc; i++) {
 		multi_threaded_line_numbers[i] = atoi(argv[i]);
 	}
 	multi_threaded_line_numbers[argc] = '\0';
 
-	process_text_file("multi.txt", multi_threaded_line_numbers, argc-1);
+	process_text_file("multi.txt", multi_threaded_line_numbers, argc);
 	return 0;
 }
 

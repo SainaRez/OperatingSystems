@@ -1,5 +1,4 @@
 whoami
-sleep 2 ***
-sleep 5
+ls
+sleep 4
 whoami
-ls -a
