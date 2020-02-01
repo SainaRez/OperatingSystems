@@ -18,11 +18,62 @@ typedef struct {
 
 background_command background_command_array[MAX_COMMANDS];
 
+/**
+ * Iterates through background_command_array and sets all background_id's to -1.
+ */
 void initialize_background_command_array() {
 	for (int i = 0; i < MAX_COMMANDS; i++) {
 		background_command_array[i].background_id = -1;
 	}
 }
+
+
+/**
+ * Lists all background processes currently active
+ * 
+ * Output looks as such:
+ * -- Background Processes --
+ *  [0] sleep 10
+ *  [1] sleep 3
+ */
+void print_active_background_processes() {
+	for (int i = 0; i < MAX_COMMANDS; i++) { // TODO define 32
+		background_command cmd = background_command_array[i];
+		if (cmd.background_id != -1) {
+			printf("[%i] ", cmd.background_id);
+			printf("%s\n", cmd.command);
+		}
+	}
+	printf("\n");
+}
+
+
+/**
+ * Checks argv to see if the given command is one of 'ccd', 'cpwd', or 'cproclist', 
+ * and if so runs the command and exits using exit(0)
+ * 
+ * @param int argc
+ * 	The number of elements in the array argv
+ * @param char *const argv[]
+ * 	The args. Assumes argv[0] is == the file name
+ */
+void check_special_commands(int argc, char *const argv[]) {
+	if (strcmp(argv[0], "ccd") == 0) {
+		// TODO
+		exit(0);
+	}
+	
+	else if (strcmp(argv[0], "cpwd") == 0) {
+		// TODO
+		exit(0);
+	}
+
+	else if (strcmp(argv[0], "cproclist") == 0) {
+		print_active_background_processes();
+		exit(0);
+	}
+}
+
 
 /**
  * Executes a command using execvp, and measures the time of the 
@@ -52,6 +103,7 @@ void execute_command(int argc, char *const argv[]) {
 	int err;
 	int pid = fork();
 	if (pid == 0) {
+		check_special_commands(argc, argv);
 		// child process
 		if (execvp(argv[0], argv) == -1) {
 			err = errno;
@@ -131,6 +183,7 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 
 		if (pid2 == 0) { // Grandchild process
 			// run process
+			check_special_commands(argc, argv);
 			if (execvp(argv[0], argv) == -1) {
 				err = errno;
 				printf("execvp %s failed with %s\n", argv[0], strerror(err));
@@ -138,6 +191,8 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 			} 
 		} else if (pid2 > 0) { // Not the Grandchild process
 			wait(NULL);
+			// TODO change to wait4
+			//wait4(pid2, );
 
 			// Measure pagefaults:
 			struct rusage rusage_end;
@@ -165,7 +220,7 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 		}
 	} else if (pid > 0) { // parent process
 		// TODO remove
-		printf("Returning from fork. There is now a child running with PID %i\n", pid);
+		// printf("Returning from fork. There is now a child running with PID %i\n", pid);
 		background_command cmd = background_command_array[background_id];
 		cmd.pid = pid;
 		return;
@@ -184,24 +239,7 @@ void execute_boring_commander() {
 	execute_command(3, argv3);
 };
 
-/**
- * Lists all background processes currently active
- * 
- * Output looks as such:
- * -- Background Processes --
- *  [0] sleep 10
- *  [1] sleep 3
- */
-void print_active_background_processes() {
-	for (int i = 0; i < MAX_COMMANDS; i++) { // TODO define 32
-		background_command cmd = background_command_array[i];
-		if (cmd.background_id != -1) {
-			printf("[%i] ", cmd.background_id);
-			printf("%s\n", cmd.command);
-		}
-	}
-	printf("\n");
-}
+
 /**
  * Returns the background_id which has the given PID
  */
@@ -234,8 +272,9 @@ bool wait_for_process() {
 	else if (wait_pid > 0) {
 		int background_id = get_command_of_pid(wait_pid);
 		background_command cmd = background_command_array[background_id];
-		printf("-- Job Complete [%i: %s] --", cmd.background_id, cmd.command);
-		printf("Process ID: %i", wait_pid);
+		// TODO, should this logging be done after the wait() command?
+		printf("-- Job Complete [%i: %s] --\n", cmd.background_id, cmd.command);
+		printf("Process ID: %i\n", wait_pid);
 
 		// TODO remove printf
 		disable_background_process_by_pid(wait_pid);
@@ -264,6 +303,8 @@ void process_text_file(const char *filename, int multi_threaded_line_numbers[], 
 	while(fgets(cmd, 128, file) != NULL) {
 		cmd[strcspn(cmd, "\n")] = 0; // Remove newline suffix from command string
 		printf("Processing CMD: %s, line %i\n", cmd, file_line_number);
+		char cmd_copy[128]; // Create a copy of cmd before tokenizing it.
+		strcpy(cmd_copy, cmd);
 		char* token = strtok(cmd, " ");
 		char* argv[128]; 
 		int arg_counter = 0;
@@ -280,14 +321,17 @@ void process_text_file(const char *filename, int multi_threaded_line_numbers[], 
 
 			// Next, create a struct for the command and store it background_command_array
 			background_command command;
-			strcpy(command.command, cmd);
+			strcpy(command.command, cmd_copy);
+			// TODO remove logging
+			printf("command.command is now %s\n", command.command);
 			command.background_id = background_id_counter;
 			background_command_array[background_id_counter] = command;
 		} else {
 			execute_command(arg_counter, argv);
 		}
 
-		print_active_background_processes();
+		// TODO remove
+		// print_active_background_processes();
 		wait_for_process();
 		file_line_number++;
 	}

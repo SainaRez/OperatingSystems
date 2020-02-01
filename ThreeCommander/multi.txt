@@ -1,5 +1,2 @@
-whoami
-sleep 4
-whoami
-sleep 1
+sleep 5
 whoami
