@@ -194,7 +194,7 @@ void process_text_file(const char *filename, int multi_threaded_line_numbers[]) 
 		}
 		argv[arg_counter] = NULL; // Make sure our argv is null terminated
 
-		struct background_command background_command_array[32];
+		background_command background_command_array[32];
 
 		// Branch based on multi_thread_line_numbers
 		// if (multi_threaded_line_numbers.contains(file_line_number)) { // TODO temp
@@ -202,7 +202,7 @@ void process_text_file(const char *filename, int multi_threaded_line_numbers[]) 
 			execute_multi_command(arg_counter, argv, background_id_counter++);
 
 			// Next, create a struct for the command and store it background_command_array
-			struct background_command command;
+			background_command command;
 			strcpy(command.command, cmd);
 			command.background_id = background_id_counter;
 			background_command_array[background_id_counter] = command;
@@ -222,7 +222,7 @@ void process_text_file(const char *filename, int multi_threaded_line_numbers[]) 
 
 char* parse_line_number_arguments(int argc, char* argv[], int num_array[]) {
 
-    for (int i = 1; i < argc; i++) {
+	for (int i = 1; i < argc; i++) {
 		num_array[i] = atoi(argv[i]);
 	}
 	num_array[argc] = '\0';
