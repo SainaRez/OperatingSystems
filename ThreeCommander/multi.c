@@ -198,11 +198,6 @@ int valueinarray(int val, int arr[], int argc)
 }
 
 
-typedef struct {
-	char command[128];
-	int background_id;
-} background_command;
-
 void process_text_file(const char *filename, int multi_threaded_line_numbers[], int argc) {
 	FILE *file; 
 	file = fopen(filename, "r");
