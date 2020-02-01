@@ -12,14 +12,12 @@
  * Executes a command using execvp, and measures the time of the 
  * execution of the command, and the pagefaults of the execution of the command
  *
- * @param const char *file
- * 	The file name (i.e., "ls")
  * @param int argc
  * 	The number of elements in the array argv
  * @param char *const argv[]
- * 	The args. Kind of assumes argv[0] is == the file name
+ * 	The args. Assumes argv[0] is == the file name
  */
-void execute_command(const char *file, int argc, char *const argv[]) {
+void execute_command(int argc, char *const argv[]) {
 	// Prints the 'running command' log
 	printf("Running command: ");
 	int i; 
@@ -39,10 +37,10 @@ void execute_command(const char *file, int argc, char *const argv[]) {
 	int pid = fork();
 	if (pid == 0) {
 		// child process
-		if (execvp(file, argv) == -1) { // third arg is char *const envp[]
+		if (execvp(argv[0], argv) == -1) { // third arg is char *const envp[]
 			err = errno;
 			// TODO/SUGGESTION add args to logging
-			printf("execvp %s failed with %s\n", file, strerror(err));
+			printf("execvp %s failed with %s\n", argv[0], strerror(err));
 			exit(errno);
 		} 
 	} else if (pid > 0) { // parent process
@@ -79,46 +77,43 @@ void execute_command(const char *file, int argc, char *const argv[]) {
 
 void execute_boring_commander() {
 	char* argv1[] = {"whoami", NULL};
-	execute_command("whoami", 1, argv1);
+	execute_command(1, argv1);
 	char* argv2[] = {"last", NULL};
-	execute_command("last", 1, argv2);
+	execute_command(1, argv2);
 	char* argv3[] = {"ls", "-al", "/home", NULL};
-	execute_command("ls", 3, argv3);
+	execute_command(3, argv3);
 };
 
-void execute_custom.txt() {
+void process_text_file(const char *filename) {
 	FILE *file; 
-	file = fopen("custom.txt", "r");
+	file = fopen(filename, "r");
 	char cmd[128];
-	int loopnum = 0;
+	int file_line_number = 0;
 	while(fgets(cmd, 128, file) != NULL) {
-		
+		cmd[strcspn(cmd, "\n")] = 0; // Remove newline suffix from command string
+		printf("Prcessing CMD: %s, line %i\n", cmd, file_line_number);
 		char* token = strtok(cmd, " ");
 		char* argv[32]; 
-		argv[0] = token;
-		int counter = 1;
+		int arg_counter = 0;
 
 		while(token != NULL) {
+			argv[arg_counter] = token;
 			token = strtok(NULL, " ");
-			argv[counter] = token;
- 			counter++;
+ 			arg_counter++;
 		}
 		int i = 0;
-		while(i < counter) {
-			printf("printing the argv array: %s \n", argv[i]);
+		while(i < arg_counter) {
+			printf("argv[%i]: %s\n", i, argv[i]);
 			i++;
 		}
-		execvp(argv[0], argv);
 		
-		
-		printf("THE LOOP NUMBER: %int\n",  loopnum);
-		loopnum++;
+		file_line_number++;
  	}
 }
 
 int main() {
 	execute_boring_commander();
-	loop_repl();
+	process_text_file("multi.txt");
 	return 0;
 }
 
