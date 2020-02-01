@@ -111,7 +111,7 @@ void execute_command(int argc, char *const argv[]) {
 			exit(errno);
 		} 
 	} else if (pid > 0) { // parent process
-		wait(NULL);
+		wait4(pid, NULL, 0, NULL);
 		printf("\n");
 
 		// Measure pagefaults:
@@ -190,7 +190,7 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 				exit(errno);
 			} 
 		} else if (pid2 > 0) { // Not the Grandchild process
-			wait(NULL);
+			wait4(pid2, NULL, 0, NULL);
 			// TODO change to wait4
 			//wait4(pid2, );
 
@@ -207,6 +207,16 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 			// diff time
 			struct timeval delta_timeval;
 			timersub(&end_timeval, &start_timeval, &delta_timeval);
+			
+			
+			// Print Job Complete Log
+			printf("-- Job Complete [%i: ", background_id);
+			for(i = 0; i < argc; i++)
+				printf("%s ", argv[i]);
+			printf("] --\n");
+			printf("Process ID: %i\n\n", pid2);
+
+
 
 			// print statistics:
 			printf("-- Statistics ---\n");
@@ -273,10 +283,7 @@ bool wait_for_process() {
 		int background_id = get_command_of_pid(wait_pid);
 		background_command cmd = background_command_array[background_id];
 		// TODO, should this logging be done after the wait() command?
-		printf("-- Job Complete [%i: %s] --\n", cmd.background_id, cmd.command);
-		printf("Process ID: %i\n", wait_pid);
-
-		// TODO remove printf
+				// TODO remove printf
 		disable_background_process_by_pid(wait_pid);
 		return true;
 	}
@@ -317,15 +324,15 @@ void process_text_file(const char *filename, int multi_threaded_line_numbers[], 
 		argv[arg_counter] = NULL; // Make sure our argv is null terminated
 
 		if (valueinarray(file_line_number, multi_threaded_line_numbers, argc)) {
-			execute_multi_command(arg_counter, argv, background_id_counter++);
-
-			// Next, create a struct for the command and store it background_command_array
+			// Create a struct for the command and store it background_command_array
 			background_command command;
 			strcpy(command.command, cmd_copy);
-			// TODO remove logging
-			printf("command.command is now %s\n", command.command);
 			command.background_id = background_id_counter;
 			background_command_array[background_id_counter] = command;
+
+			// Execute the command
+			execute_multi_command(arg_counter, argv, background_id_counter);
+			background_id_counter++;
 		} else {
 			execute_command(arg_counter, argv);
 		}

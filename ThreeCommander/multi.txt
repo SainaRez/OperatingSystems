@@ -1,2 +1,5 @@
-sleep 5
-whoami
+sleep 10
+ls -alh
+sleep 3
+cproclist
+cpwd
