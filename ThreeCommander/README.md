@@ -1,87 +1,55 @@
-OperatingSystems
-Project 1 checkpoint
-Author: Saina Rezvani, Josh Desmond
-Date: 01/24/2020
+#Operating Systems
+#Project 1 checkpoint
+#Author: Saina Rezvani, Josh Desmond
+#Date: 01/31/2020
 
-This project includes the boring.c and the custom.c files.
+This project includes the boring.c, custom.c and multi.c files.
+
+# File/Phase Descriptions: 
 
 Phase 1: 
 The boring.c runs the following commands: whoami, last, ls -al /home
+It then prints the stats of the commands
 
-Phase:
-The custom.c is taking in the commands as parameters from command line. (This file is not yet complete, but can be run)
+Phase 2:
+The custom.c reads and parses a text file that includes a number of commands and executes them all in order.
 
-the following was the output directly from command line:
+Phase 3:
+The multi.c takes in integers as line numbers from the command line and reads and parses a text file that includes commands. It then executes the commands at the given line numbers in the background and the rest as forground. It then prints the stats of the commands and the processes.
 
-########################
+# Outputs:
 
-```
-Running command: whoami 
-saina
+The output of the files/phases are in boring_output.txt, custom_ouput.txt and multi_output.txt
 
--- Statistics ---
-Time elapsed: 0.002026 seconds
-Page Faults: 1
-Page Faults (reclaimed): 92
--- End of Statistics --
+These files include the command that was ran, the content of the text file (custom.txt, multi.txt) and the output that was printed in the command line.
 
-Running command: last 
-saina    tty7         :0               Fri Jan 24 19:56    gone - no logout
-reboot   system boot  4.4.203srezvani  Fri Jan 24 19:56   still running
-saina    tty7         :0               Fri Jan 24 09:40 - crash  (10:15)
-reboot   system boot  4.4.203srezvani  Fri Jan 24 09:40   still running
-saina    tty7         :0               Thu Jan 23 12:02 - down   (05:42)
-reboot   system boot  4.4.203srezvani  Thu Jan 23 12:01 - 17:44  (05:42)
-saina    tty7         :0               Wed Jan 22 00:12 - crash (1+11:49)
-reboot   system boot  4.4.203srezvani  Wed Jan 22 00:12 - 17:44 (1+17:31)
-saina    tty7         :0               Tue Jan 21 23:41 - down   (00:02)
-reboot   system boot  4.4.203srezvani  Tue Jan 21 23:41 - 23:44  (00:03)
-saina    tty7         :0               Tue Jan 21 23:20 - crash  (00:20)
-reboot   system boot  4.4.203srezvani  Tue Jan 21 23:20 - 23:44  (00:23)
-saina    tty7         :0               Tue Jan 21 20:35 - down   (01:39)
-reboot   system boot  4.4.203srezvani  Tue Jan 21 20:35 - 22:15  (01:39)
-saina    tty7         :0               Tue Jan 21 12:53 - down   (07:41)
-reboot   system boot  4.4.0-171-generi Tue Jan 21 12:53 - 20:35  (07:41)
-saina    tty7         :0               Tue Jan 21 11:15 - down   (01:18)
-reboot   system boot  4.4.0-171-generi Tue Jan 21 11:14 - 12:33  (01:18)
-saina    tty7         :0               Tue Jan 21 10:25 - down   (00:31)
-reboot   system boot  4.4.0-171-generi Tue Jan 21 10:25 - 10:57  (00:31)
-saina    tty7         :0               Tue Jan 21 09:31 - crash  (00:53)
-reboot   system boot  4.4.0-31-generic Tue Jan 21 09:31 - 10:57  (01:25)
-saina    tty7         :0               Tue Jan 21 01:56 - crash  (07:34)
-reboot   system boot  4.4.0-31-generic Tue Jan 21 01:56 - 10:57  (09:00)
-saina    tty7         :0               Tue Jan 21 01:26 - down   (00:29)
-reboot   system boot  4.4.0-31-generic Tue Jan 21 01:26 - 01:55  (00:29)
+# Additional Information on Phase 3:
 
-wtmp begins Tue Jan 21 01:26:33 2020
+We execute a background command and while we are reading the next command/line we check to see if a background command is done running with wait functions. If it's done we print it, if not we move to the next line/command. 
 
--- Statistics ---
-Time elapsed: 0.004135 seconds
-Page Faults: 1
-Page Faults (reclaimed): 113
--- End of Statistics --
+If it's a forground process, we run it normally and wait on it. After we run the forground command, we check again for the background command to see if it's done until there is not a valid input for fgets. 
 
-Running command: ls -al /home 
-total 12
-drwxr-xr-x  3 root  root  4096 Jan 21 01:22 .
-drwxr-xr-x 23 root  root  4096 Jan 23 13:15 ..
-drwxr-xr-x 24 saina saina 4096 Jan 24 19:56 saina
+# Testing:
 
--- Statistics ---
-Time elapsed: 0.001400 seconds
-Page Faults: 0
-Page Faults (reclaimed): 134
--- End of Statistics --
+We tested boring and custom by trying different commands in different orders. We tested multi by testing it with different commands and different line numbers for bakcgorund processes. We also tried passing in more than 2 numbers or less than 2.
 
-```
-########################
+
+# Running the files:
 
 Running boring:
 
 $ make
 $ ./boring
 
+
 Running custom:
 
 $ make
 $ ./custom
+
+
+Running multi:
+$ make
+$ ./multi 1 3
+
+# Makefile includes all three programs and running make one time is sufficient

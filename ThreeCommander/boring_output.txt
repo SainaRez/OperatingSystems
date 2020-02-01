@@ -1,0 +1,84 @@
+COMMAND:
+
+$ ./boring
+
+
+
+COMMAND LINE OUTPUT:
+
+saina
+
+saina    tty7         :0               Fri Jan 31 13:09    gone - no logout
+reboot   system boot  4.4.203srezvani  Fri Jan 31 13:08   still running
+saina    tty7         :0               Thu Jan 30 17:47 - down   (03:28)
+reboot   system boot  4.4.203srezvani  Thu Jan 30 17:46 - 21:15  (03:28)
+saina    tty7         :0               Thu Jan 30 12:02 - crash  (05:44)
+reboot   system boot  4.4.203srezvani  Thu Jan 30 12:02 - 21:15  (09:12)
+saina    tty7         :0               Thu Jan 30 00:36 - down   (01:33)
+reboot   system boot  4.4.203srezvani  Thu Jan 30 00:36 - 02:10  (01:33)
+saina    tty7         :0               Wed Jan 29 23:41 - crash  (00:54)
+reboot   system boot  4.4.203srezvani  Wed Jan 29 23:41 - 02:10  (02:28)
+saina    tty7         :0               Wed Jan 29 20:12 - crash  (03:28)
+reboot   system boot  4.4.203srezvani  Wed Jan 29 20:12 - 02:10  (05:57)
+saina    tty7         :0               Wed Jan 29 13:53 - down   (03:52)
+reboot   system boot  4.4.203srezvani  Wed Jan 29 13:53 - 17:46  (03:52)
+saina    tty7         :0               Tue Jan 28 19:03 - crash  (18:50)
+reboot   system boot  4.4.203srezvani  Tue Jan 28 19:03 - 17:46  (22:43)
+saina    tty7         :0               Tue Jan 28 09:26 - down   (02:29)
+reboot   system boot  4.4.203srezvani  Tue Jan 28 09:26 - 11:55  (02:29)
+saina    tty7         :0               Fri Jan 24 19:56 - crash (3+13:30)
+reboot   system boot  4.4.203srezvani  Fri Jan 24 19:56 - 11:55 (3+15:59)
+saina    tty7         :0               Fri Jan 24 09:40 - crash  (10:15)
+reboot   system boot  4.4.203srezvani  Fri Jan 24 09:40 - 11:55 (4+02:15)
+saina    tty7         :0               Thu Jan 23 12:02 - down   (05:42)
+reboot   system boot  4.4.203srezvani  Thu Jan 23 12:01 - 17:44  (05:42)
+saina    tty7         :0               Wed Jan 22 00:12 - crash (1+11:49)
+reboot   system boot  4.4.203srezvani  Wed Jan 22 00:12 - 17:44 (1+17:31)
+saina    tty7         :0               Tue Jan 21 23:41 - down   (00:02)
+reboot   system boot  4.4.203srezvani  Tue Jan 21 23:41 - 23:44  (00:03)
+saina    tty7         :0               Tue Jan 21 23:20 - crash  (00:20)
+reboot   system boot  4.4.203srezvani  Tue Jan 21 23:20 - 23:44  (00:23)
+saina    tty7         :0               Tue Jan 21 20:35 - down   (01:39)
+reboot   system boot  4.4.203srezvani  Tue Jan 21 20:35 - 22:15  (01:39)
+saina    tty7         :0               Tue Jan 21 12:53 - down   (07:41)
+reboot   system boot  4.4.0-171-generi Tue Jan 21 12:53 - 20:35  (07:41)
+saina    tty7         :0               Tue Jan 21 11:15 - down   (01:18)
+reboot   system boot  4.4.0-171-generi Tue Jan 21 11:14 - 12:33  (01:18)
+saina    tty7         :0               Tue Jan 21 10:25 - down   (00:31)
+reboot   system boot  4.4.0-171-generi Tue Jan 21 10:25 - 10:57  (00:31)
+saina    tty7         :0               Tue Jan 21 09:31 - crash  (00:53)
+reboot   system boot  4.4.0-31-generic Tue Jan 21 09:31 - 10:57  (01:25)
+saina    tty7         :0               Tue Jan 21 01:56 - crash  (07:34)
+reboot   system boot  4.4.0-31-generic Tue Jan 21 01:56 - 10:57  (09:00)
+saina    tty7         :0               Tue Jan 21 01:26 - down   (00:29)
+reboot   system boot  4.4.0-31-generic Tue Jan 21 01:26 - 01:55  (00:29)
+
+wtmp begins Tue Jan 21 01:26:33 2020
+total 12
+drwxr-xr-x  3 root  root  4096 Jan 21 01:22 .
+drwxr-xr-x 23 root  root  4096 Jan 30 12:40 ..
+drwxr-xr-x 25 saina saina 4096 Jan 31 13:09 saina
+Running command: whoami 
+
+-- Statistics ---
+Time elapsed: 0.001596 seconds
+Page Faults: 0
+Page Faults (reclaimed): 91
+-- End of Statistics --
+
+Running command: last 
+
+-- Statistics ---
+Time elapsed: 0.001544 seconds
+Page Faults: 0
+Page Faults (reclaimed): 113
+-- End of Statistics --
+
+Running command: ls -al /home 
+
+-- Statistics ---
+Time elapsed: 0.001298 seconds
+Page Faults: 0
+Page Faults (reclaimed): 131
+-- End of Statistics --
+
