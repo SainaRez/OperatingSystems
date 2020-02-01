@@ -161,11 +161,6 @@ typedef struct {
 	int background_id;
 } background_command;
 
-typedef struct node {
-	struct background_command;
-	struct node * next;
-} background_list;
-
 void process_text_file(const char *filename) {
 	FILE *file; 
 	file = fopen(filename, "r");
@@ -176,7 +171,7 @@ void process_text_file(const char *filename) {
 		cmd[strcspn(cmd, "\n")] = 0; // Remove newline suffix from command string
 		printf("Processing CMD: %s, line %i\n", cmd, file_line_number);
 		char* token = strtok(cmd, " ");
-		char* argv[32]; 
+		char* argv[128]; 
 		int arg_counter = 0;
 
 		while(token != NULL) {
@@ -186,11 +181,17 @@ void process_text_file(const char *filename) {
 		}
 		argv[arg_counter] = NULL; // Make sure our argv is null terminated
 
+		struct background_command background_command_array[32];
+
 		// Branch based on multi_thread_line_numbers
 		if (file_line_number == 2) { // TODO temp
 			execute_multi_command(arg_counter, argv, background_id_counter++);
 
-			// keep track of background commands in a struct
+			// Next, create a struct for the command and store it background_command_array
+			struct background_command command;
+			strcpy(command.command, cmd);
+			command.background_id = background_id_counter;
+			background_command_array[background_id_counter] = command;
 		} else {
 			execute_command(arg_counter, argv);
 		}
