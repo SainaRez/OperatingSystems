@@ -186,7 +186,24 @@ bool wait_for_process() {
 	return false;
 }
 
-void process_text_file(const char *filename) {
+int valueinarray(int val, int arr[])
+{
+    int i;
+    for(i = 0; i < sizeof(arr) / sizeof(arr[0]); i++)
+    {
+        if(arr[i] == val)
+            return 1;
+    }
+    return 0;
+}
+
+
+typedef struct {
+	char command[128];
+	int background_id;
+} background_command;
+
+void process_text_file(const char *filename, int multi_threaded_line_numbers[]) {
 	FILE *file; 
 	file = fopen(filename, "r");
 	char cmd[128];
@@ -210,7 +227,7 @@ void process_text_file(const char *filename) {
 
 		// Branch based on multi_thread_line_numbers
 		// if (multi_threaded_line_numbers.contains(file_line_number)) { // TODO temp
-		if (file_line_number == 2) { // TODO temp
+		if (valueinarray(file_line_number, multi_threaded_line_numbers)) { // TODO temp
 			execute_multi_command(arg_counter, argv, background_id_counter++);
 
 			// Next, create a struct for the command and store it background_command_array
@@ -252,7 +269,7 @@ int main(int argc, char *argv[]) {
 	}
 	multi_threaded_line_numbers[argc] = '\0';
 
-	process_text_file("multi.txt");
+	process_text_file("multi.txt", multi_threaded_line_numbers);
 	return 0;
 }
 
