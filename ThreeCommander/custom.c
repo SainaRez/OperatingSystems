@@ -7,7 +7,34 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#define BUFSIZE 32
+void get_statistics(struct rusage ruse_start, struct timeval start_time) {
+	// Measure pagefaults:
+	struct rusage rusage_end;
+	getrusage(RUSAGE_CHILDREN, &rusage_end);
+	long major_faults = rusage_end.ru_majflt - ruse_start.ru_majflt;
+	long minor_faults = rusage_end.ru_minflt - ruse_start.ru_minflt;
+
+	// measure endtime
+	struct timeval end_timeval;
+	gettimeofday(&end_timeval, NULL);
+
+	// diff time
+	struct timeval delta_timeval;
+	timersub(&end_timeval, &start_time, &delta_timeval);
+
+	//print statistics:
+	printf("\n");
+	printf("-- Statistics ---\n");
+	printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
+	printf("Page Faults: %ld\n", major_faults);
+	printf("Page Faults (reclaimed): %ld\n", minor_faults);
+	printf("-- End of Statistics --\n");
+	printf("\n");
+
+	return;
+}
+
+
 
 /**
  * Executes a command using execvp, and measures the time of the 
@@ -55,16 +82,15 @@ void execute_command(int argc, char *const argv[]) {
 		}
 	}
 	else if(strcmp(argv[0], "cpwd") == 0) {
-		char* buffer;
+		char buffer[255];
 		long size;
-		if(getcwd(buffer, (size_t)size) == -1) {
+		if(getcwd(buffer, sizeof(buffer)) == NULL) {
 			err = errno;
 			// TODO/SUGGESTION add args to logging
 			printf("getcwd %s failed with %s\n", argv[0], strerror(err));
 		}
 		else {
 			printf("The output of cpwd: %s\n", buffer);
-			//printf("getwd just ran\n");
 		}
 	}
 	else {
@@ -79,29 +105,7 @@ void execute_command(int argc, char *const argv[]) {
 		}			
 		else if (pid > 0) { // parent process
 		wait(NULL);
-
-		// Measure pagefaults:
-		struct rusage rusage_end;
-		getrusage(RUSAGE_CHILDREN, &rusage_end);
-		long major_faults = rusage_end.ru_majflt - rusage_start.ru_majflt;
-		long minor_faults = rusage_end.ru_minflt - rusage_start.ru_minflt;
-
-		// measure endtime
-		struct timeval end_timeval;
-		gettimeofday(&end_timeval, NULL);
-
-		// diff time
-		struct timeval delta_timeval;
-		timersub(&end_timeval, &start_timeval, &delta_timeval);
-
-		//print statistics:
-		printf("\n");
-		printf("-- Statistics ---\n");
-		printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); // TODO change to milliseconds
-		printf("Page Faults: %ld\n", major_faults);
-		printf("Page Faults (reclaimed): %ld\n", minor_faults);
-		printf("-- End of Statistics --\n");
-		printf("\n");
+		get_statistics(rusage_start, start_timeval);
 		}
 		else {
 			printf("Fork Failed!");
