@@ -106,18 +106,26 @@ void process_text_file(const char *filename) {
  	}
 }
 
-void parse_line_number_arguments() {
-	// TODO
+char* parse_line_number_arguments(int argc, char* argv[], int num_array[]) {
+
+    for (int i = 1; i < argc; i++) {
+		num_array[i] = atoi(argv[i]);
+	}
+	num_array[argc] = '\0';
+	return num_array; 
 }
 
 int main(int argc, char *argv[]) {
-	execute_boring_commander();
+	//execute_boring_commander();
 	
 	// TODO
-	int multi_threaded_line_numbers[2] = {1,3};
-	parse_line_number_arguments();
+	int multi_threaded_line_numbers[32];
+	for (int i = 1; i < argc; i++) {
+		multi_threaded_line_numbers[i] = atoi(argv[i]);
+	}
+	multi_threaded_line_numbers[argc] = '\0';
 
-	process_text_file("multi.txt");
+	//process_text_file("multi.txt");
 	return 0;
 }
 

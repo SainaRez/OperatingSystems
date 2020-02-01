@@ -7,6 +7,6 @@ custom: custom.c
 	gcc -o custom custom.c
 
 multi: multi.c
-	gcc -o multi.o multi.c
+	gcc -o multi multi.c
 
 	
