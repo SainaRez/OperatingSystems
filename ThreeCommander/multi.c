@@ -88,7 +88,7 @@ void process_text_file(const char *filename) {
 	FILE *file; 
 	file = fopen(filename, "r");
 	char cmd[128];
-	int file_line_number = 0;
+	int file_line_number = 1; // 1 because linenumbers start at 1
 	while(fgets(cmd, 128, file) != NULL) {
 		cmd[strcspn(cmd, "\n")] = 0; // Remove newline suffix from command string
 		printf("Prcessing CMD: %s, line %i\n", cmd, file_line_number);
@@ -106,8 +106,15 @@ void process_text_file(const char *filename) {
  	}
 }
 
-int main() {
+void parse_line_number_arguments() {
+	// TODO
+}
+
+int main(int argc, char *argv[]) {
 	execute_boring_commander();
+	parse_line_number_arguments(multi_threaded_line_numbers);
+	int multi_threaded_line_numbers[];
+	multi_threaded_line_numbers = {1,3};
 	process_text_file("multi.txt");
 	return 0;
 }
