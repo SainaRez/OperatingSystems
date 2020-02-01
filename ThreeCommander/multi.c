@@ -285,9 +285,7 @@ void disable_background_process_by_pid(int wait_pid) {
  * Returns true if there are more processes to be waited for.
  */
 bool wait_for_process() {
-	int status = 0;
-	struct rusage usage;
-	int wait_pid = wait3(&status, WNOHANG, &usage);
+	int wait_pid = wait3(NULL, WNOHANG, NULL);
 	if (wait_pid == 0) { return true; }
 	else if (wait_pid > 0) {
 		int background_id = get_command_of_pid(wait_pid);
@@ -361,7 +359,7 @@ int main(int argc, char *argv[]) {
 	initialize_background_command_array();
 
 	// Acquire multi-threaded command line numbers
-	int multi_threaded_line_numbers[32];
+	int multi_threaded_line_numbers[MAX_COMMANDS];
 	for (int i = 1; i < argc; i++) {
 		multi_threaded_line_numbers[i] = atoi(argv[i]);
 	}
