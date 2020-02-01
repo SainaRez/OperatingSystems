@@ -13,6 +13,7 @@
 typedef struct {
 	char command[128];
 	int background_id;
+	int pid;
 } background_command;
 
 background_command background_command_array[MAX_COMMANDS];
@@ -131,7 +132,7 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 				exit(errno);
 			} 
 		} else if (pid2 > 0) { // Not the Grandchild process
-			wait(NULL); // TODO maybe use wait0
+			wait(NULL);
 			// measure endtime
 			struct timeval end_timeval;
 			gettimeofday(&end_timeval, NULL);
@@ -141,12 +142,14 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 			timersub(&end_timeval, &start_timeval, &delta_timeval);
 
 			// print time
-			printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec); 
+			printf("Time elapsed: %ld.%06ld seconds\n", delta_timeval.tv_sec, delta_timeval.tv_usec);
 			exit(0);
 		}
 	} else if (pid > 0) { // parent process
-		// TODO
-		printf("Returning from fork. There is now a child running with PID %i\n", background_id);
+		// TODO remove
+		printf("Returning from fork. There is now a child running with PID %i\n", pid);
+		background_command cmd = background_command_array[background_id];
+		cmd.pid = pid;
 		return;
 	}
 	else {
@@ -172,11 +175,26 @@ void execute_boring_commander() {
  *  [1] sleep 3
  */
 void print_active_background_processes() {
-	for (int i = 0; i < 32; i++) { // TODO define 32
-		//if (background_command_array[i]) {
-		printf("B_PID: %i", background_command_array[i].background_id);
+	for (int i = 0; i < MAX_COMMANDS; i++) { // TODO define 32
+		background_command cmd = background_command_array[i];
+		if (cmd.background_id != -1) {
+			printf("[%i]", cmd.background_id);
+			printf("%s\n", cmd.command);
+		}
 	}
 	printf("\n");
+}
+
+/**
+ * Marks any background process in the array, background_command_array, which has
+ * the PID of wait_pid as being disabled. Does so by setting it's background_id to -1.
+ */
+void disable_background_process_by_pid(int wait_pid) {
+	for (int i = 0; i < MAX_COMMANDS; i++) {
+		if (background_command_array[i].pid == wait_pid) {
+			background_command_array[i].background_id = -1;
+		}
+	}
 }
 
 bool wait_for_process() {
@@ -186,20 +204,20 @@ bool wait_for_process() {
 	if (wait_pid == 0) { return true; }
 	else if (wait_pid > 0) {
 		printf("PID %i returned!\n", wait_pid);
+		disable_background_process_by_pid(wait_pid);
+		return true;
 	}
 
 	return false;
 }
 
-int valueinarray(int val, int arr[], int argc)
-{
-    int i;
-    for(i = 0; i < argc; i++)
-    {
-        if(arr[i] == val)
-            return 1;
-    }
-    return 0;
+int valueinarray(int val, int arr[], int argc) {
+	int i;
+    	for(i = 0; i < argc; i++) {
+		if(arr[i] == val)
+		return 1;
+	}
+	return 0;
 }
 
 
@@ -235,7 +253,7 @@ void process_text_file(const char *filename, int multi_threaded_line_numbers[], 
 			execute_command(arg_counter, argv);
 		}
 
-		// print_active_background_processes();
+		print_active_background_processes();
 		wait_for_process();
 		file_line_number++;
 	}
