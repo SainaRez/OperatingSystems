@@ -1,9 +1,5 @@
 whoami
-ls
+sleep 2 ***
+sleep 5
+whoami
 ls -a
-man
-ls -al /home
-sleep 1
-this is a fake command for testing
-ls -alh
-sleep 2
