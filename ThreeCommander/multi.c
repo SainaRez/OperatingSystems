@@ -178,12 +178,23 @@ void print_active_background_processes() {
 	for (int i = 0; i < MAX_COMMANDS; i++) { // TODO define 32
 		background_command cmd = background_command_array[i];
 		if (cmd.background_id != -1) {
-			printf("[%i]", cmd.background_id);
+			printf("[%i] ", cmd.background_id);
 			printf("%s\n", cmd.command);
 		}
 	}
 	printf("\n");
 }
+/**
+ * Returns the background_id which has the given PID
+ */
+int get_command_of_pid(int pid) {
+	for (int i = 0; i < MAX_COMMANDS; i++) {
+		if (background_command_array[i].pid == pid) {
+			return background_command_array[i].background_id;
+		}
+	}
+}
+
 
 /**
  * Marks any background process in the array, background_command_array, which has
@@ -203,7 +214,12 @@ bool wait_for_process() {
 	int wait_pid = wait3(&status, WNOHANG, &usage);
 	if (wait_pid == 0) { return true; }
 	else if (wait_pid > 0) {
-		printf("PID %i returned!\n", wait_pid);
+		int background_id = get_command_of_pid(wait_pid);
+		background_command cmd = background_command_array[background_id];
+		printf("-- Job Complete [%i: %s] --", cmd.background_id, cmd.command);
+		printf("Process ID: %i", wait_pid);
+
+		// TODO remove printf
 		disable_background_process_by_pid(wait_pid);
 		return true;
 	}
