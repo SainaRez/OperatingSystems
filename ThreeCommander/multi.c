@@ -8,6 +8,20 @@
 #include <sys/resource.h>
 #include <stdbool.h>
 
+#define MAX_COMMANDS 32
+
+typedef struct {
+	char command[128];
+	int background_id;
+} background_command;
+
+background_command background_command_array[MAX_COMMANDS];
+
+void initialize_background_command_array() {
+	for (int i = 0; i < MAX_COMMANDS; i++) {
+		background_command_array[i].background_id = -1;
+	}
+}
 
 /**
  * Executes a command using execvp, and measures the time of the 
@@ -144,6 +158,22 @@ void execute_boring_commander() {
 	execute_command(3, argv3);
 };
 
+/**
+ * Lists all background processes currently active
+ * 
+ * Output looks as such:
+ * -- Background Processes --
+ *  [0] sleep 10
+ *  [1] sleep 3
+ */
+void print_active_background_processes() {
+	for (int i = 0; i < 32; i++) { // TODO define 32
+		//if (background_command_array[i]) {
+		printf("B_PID: %i", background_command_array[i].background_id);
+	}
+	printf("\n");
+}
+
 bool wait_for_process() {
 	int status = 0;
 	struct rusage usage;
@@ -155,11 +185,6 @@ bool wait_for_process() {
 
 	return false;
 }
-
-typedef struct {
-	char command[128];
-	int background_id;
-} background_command;
 
 void process_text_file(const char *filename) {
 	FILE *file; 
@@ -181,7 +206,7 @@ void process_text_file(const char *filename) {
 		}
 		argv[arg_counter] = NULL; // Make sure our argv is null terminated
 
-		background_command background_command_array[32];
+		// background_command background_command_array[32]; TODO delete
 
 		// Branch based on multi_thread_line_numbers
 		// if (multi_threaded_line_numbers.contains(file_line_number)) { // TODO temp
@@ -197,6 +222,7 @@ void process_text_file(const char *filename) {
 			execute_command(arg_counter, argv);
 		}
 
+		print_active_background_processes();
 		wait_for_process();
 		file_line_number++;
 	}
@@ -218,7 +244,7 @@ char* parse_line_number_arguments(int argc, char* argv[], int num_array[]) {
 
 int main(int argc, char *argv[]) {
 	// execute_boring_commander();
-	
+	initialize_background_command_array();
 	// TODO
 	int multi_threaded_line_numbers[32];
 	for (int i = 1; i < argc; i++) {
