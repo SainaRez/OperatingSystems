@@ -71,16 +71,17 @@ void execute_command(int argc, char *const argv[]) {
 	getrusage(RUSAGE_CHILDREN, &rusage_start);
 
 	int err;
+	// TODO max path length is 256 chars?
 	char curr_path[100]; 
 
 	if(strcmp(argv[0], "ccd") == 0) {
 		printf("Directory before calling ccd: %s\n", getcwd(curr_path, 100));
 		if(chdir(argv[1]) == -1) {
 			err = errno;
-			// TODO/SUGGESTION add args to logging
 			printf("chdir %s failed with %s\n", argv[0], strerror(err));
 		}
 		else {
+			// TODO this doesn't match hw logging
 			printf("Directory after calling ccd: %s\n", getcwd(curr_path, 100));
 		}
 	}
@@ -89,10 +90,10 @@ void execute_command(int argc, char *const argv[]) {
 		long size;
 		if(getcwd(buffer, sizeof(buffer)) == NULL) {
 			err = errno;
-			// TODO/SUGGESTION add args to logging
 			printf("getcwd %s failed with %s\n", argv[0], strerror(err));
 		}
 		else {
+			// TODO doesn't match hw desc.
 			printf("The output of cpwd: %s\n", buffer);
 		}
 	}
@@ -101,7 +102,6 @@ void execute_command(int argc, char *const argv[]) {
 		if (pid == 0) {
 			if (execvp(argv[0], argv) == -1) { // third arg is char *const envp[]
 			err = errno;
-			// TODO/SUGGESTION add args to logging
 			printf("execvp %s failed with %s\n", argv[0], strerror(err));
 			exit(err);
 			}
@@ -120,9 +120,9 @@ void execute_command(int argc, char *const argv[]) {
 
 void execute_boring_commander() {
 	char* argv1[] = {"whoami", NULL};
-	execute_command(1, argv1); // TODO, this can't be NULL! (Unix expects it argv[0] to be the name of the program or something weird. See https://stackoverflow.com/questions/36673765/why-can-the-execve-system-call-run-bin-sh-without-any-argv-arguments-but-not
+	execute_command(1, argv1);
 	char* argv2[] = {"last", NULL};
-	execute_command(1, argv2); // TODO something else is bugging out here
+	execute_command(1, argv2);
 	char* argv3[] = {"ls", "-al", "/home", NULL};
 	execute_command(3, argv3);
 	char* argv4[] = {"ccd", "/", NULL};
@@ -130,6 +130,7 @@ void execute_boring_commander() {
 };
 
 /**
+ * TODO rename and redocument
  * Loops the Read:Eval:Print:Loop
  */
 void loop_repl() {
@@ -145,6 +146,7 @@ void loop_repl() {
 		cmd[strcspn(cmd, "\n")] = 0;
         
 		char* token = strtok(cmd, " ");
+		// TODO is this supposed to be here?
 		printf ("#############################\n");
 		printf("\n");
 		char* argv[32];
@@ -170,7 +172,6 @@ void loop_repl() {
 
 
 int main() {
-	//execute_boring_commander();
 	loop_repl();
 	return 0;
 }
