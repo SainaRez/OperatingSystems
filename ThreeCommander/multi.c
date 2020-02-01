@@ -101,11 +101,6 @@ void process_text_file(const char *filename) {
 			token = strtok(NULL, " ");
  			arg_counter++;
 		}
-		int i = 0;
-		while(i < arg_counter) {
-			printf("argv[%i]: %s\n", i, argv[i]);
-			i++;
-		}
 		
 		file_line_number++;
  	}
