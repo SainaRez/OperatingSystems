@@ -184,6 +184,7 @@ void process_text_file(const char *filename) {
 		struct background_command background_command_array[32];
 
 		// Branch based on multi_thread_line_numbers
+		// if (multi_threaded_line_numbers.contains(file_line_number)) { // TODO temp
 		if (file_line_number == 2) { // TODO temp
 			execute_multi_command(arg_counter, argv, background_id_counter++);
 
@@ -225,7 +226,7 @@ int main(int argc, char *argv[]) {
 	}
 	multi_threaded_line_numbers[argc] = '\0';
 
-	//process_text_file("multi.txt");
+	process_text_file("multi.txt");
 	return 0;
 }
 
