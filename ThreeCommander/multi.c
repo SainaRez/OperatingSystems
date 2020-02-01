@@ -112,9 +112,11 @@ void parse_line_number_arguments() {
 
 int main(int argc, char *argv[]) {
 	execute_boring_commander();
-	parse_line_number_arguments(multi_threaded_line_numbers);
-	int multi_threaded_line_numbers[];
-	multi_threaded_line_numbers = {1,3};
+	
+	// TODO
+	int multi_threaded_line_numbers[2] = {1,3};
+	parse_line_number_arguments();
+
 	process_text_file("multi.txt");
 	return 0;
 }
