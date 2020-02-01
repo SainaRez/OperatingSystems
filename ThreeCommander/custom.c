@@ -156,48 +156,14 @@ void loop_repl() {
 		//Add NULL to the end of argv which holds the tokens (command)
 		argv[counter] = NULL;
 
-		//printing the argv elements (the command that id being passed for execution)
-		// int i = 0;
-		// while(i <= counter) {
-		// 	printf("printing the argv array: %s \n", argv[i]);
-		// 	i++;
-		// }
-
 		// Execute the  command
 		execute_command(counter, argv);
-				
-		//printf("Line Number: %int\n", line_count);
+	
 		printf("\n");
 		line_count++;
  	}
 	return;
 }
-
-		// char delim = " "; 
-		// char* token = strtok(cmd, delim);
-		// char* argv[32];
-		// argv[0] = token;
-		// int counter = 1;
-
-		// while(token != NULL) {
-		// 	argv[counter] = strtok(cmd, delim);
-		// 	counter++;
-		// }
-		
-		// for(int i = 0; i <= sizeof(argv); i++) {
-		// 	printf("%s \n", argv[i]);
-		// }
-		
-
-
-
-		// TODO, use the strtok function to parse the string in an array of char* argv[]. (as per hw guidelines)
-
-		// "Moving where the null terminator is by one to avoid the new line problem"
-
-
-		//execute_command(cmd, 1, NULL); // TODO, null should be argv[], 1 should be argc
-
 
 
 int main() {
