@@ -75,14 +75,13 @@ void execute_command(int argc, char *const argv[]) {
 	char curr_path[100]; 
 
 	if(strcmp(argv[0], "ccd") == 0) {
-		printf("Directory before calling ccd: %s\n", getcwd(curr_path, 100));
 		if(chdir(argv[1]) == -1) {
 			err = errno;
 			printf("chdir %s failed with %s\n", argv[0], strerror(err));
 		}
 		else {
-			// TODO this doesn't match hw logging
-			printf("Directory after calling ccd: %s\n", getcwd(curr_path, 100));
+			wait(NULL);
+			printf("Changed to directory: %s\n", getcwd(curr_path, 100));
 		}
 	}
 	else if(strcmp(argv[0], "cpwd") == 0) {
@@ -93,8 +92,8 @@ void execute_command(int argc, char *const argv[]) {
 			printf("getcwd %s failed with %s\n", argv[0], strerror(err));
 		}
 		else {
-			// TODO doesn't match hw desc.
-			printf("The output of cpwd: %s\n", buffer);
+			wait(NULL);
+			printf("Current directory: %s\n", buffer);
 		}
 	}
 	else {
@@ -129,10 +128,6 @@ void execute_boring_commander() {
 	execute_command(2, argv4);
 };
 
-/**
- * TODO rename and redocument
- * Loops the Read:Eval:Print:Loop
- */
 void loop_repl() {
 	
 	FILE *file; 
@@ -146,8 +141,6 @@ void loop_repl() {
 		cmd[strcspn(cmd, "\n")] = 0;
         
 		char* token = strtok(cmd, " ");
-		// TODO is this supposed to be here?
-		printf ("#############################\n");
 		printf("\n");
 		char* argv[32];
 		int counter = 0;

@@ -58,13 +58,31 @@ void print_active_background_processes() {
  * 	The args. Assumes argv[0] is == the file name
  */
 void check_special_commands(int argc, char *const argv[]) {
+	int err;                                                                                                                // TODO max path length is 256 chars?
+	char curr_path[100]; 
+
+
 	if (strcmp(argv[0], "ccd") == 0) {
-		// TODO
+		if(chdir(argv[1]) == -1) {
+			err = errno;
+			printf("chdir %s failed with %s\n", argv[0], strerror(err));
+		}
+		else {
+			wait(NULL);
+			printf("Changed to directory: %s\n", getcwd(curr_path, 100));
+		}     
 		exit(0);
 	}
-	
+
 	else if (strcmp(argv[0], "cpwd") == 0) {
-		// TODO
+		if(chdir(argv[1]) == -1) {
+			err = errno;
+			printf("chdir %s failed with %s\n", argv[0], strerror(err));
+		}
+		else {
+			wait(NULL);
+			printf("Changed to directory: %s\n", getcwd(curr_path, 100));
+		}     
 		exit(0);
 	}
 
@@ -205,8 +223,8 @@ void execute_multi_command(int argc, char *const argv[], int background_id) {
 			// diff time
 			struct timeval delta_timeval;
 			timersub(&end_timeval, &start_timeval, &delta_timeval);
-			
-			
+
+
 			// Print Job Complete Log
 			printf("-- Job Complete [%i: ", background_id);
 			for(i = 0; i < argc; i++)
@@ -299,9 +317,9 @@ bool wait_for_process() {
 
 int valueinarray(int val, int arr[], int argc) {
 	int i;
-    	for(i = 0; i < argc; i++) {
+	for(i = 0; i < argc; i++) {
 		if(arr[i] == val)
-		return 1;
+			return 1;
 	}
 	return 0;
 }
