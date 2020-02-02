@@ -1,8 +1,8 @@
 all: boring custom multi
 
 clean:
-	rm -f $(objects) custom.o boring.o multi.o
-	echo Clean done
+	rm -f custom.o boring.o multi.o custom boring multi 
+	echo clean done
 
 boring: boring.c
 	 gcc -o boring boring.c
