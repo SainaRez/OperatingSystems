@@ -93,7 +93,11 @@ void map(int process_id, int virtual_address, int value) {
  * @param 
  */
 void process_commmand(int process_id, char instruction_type, int virtual_address, int value) {
-	// TODO Don't do this yet, put it off, see if there's any logic that needs to apply for all processes
+	
+	if(3 < process_id && process_id < 0){
+		printf("process ID is out of range");
+	}
+
 	
 }
 
@@ -102,7 +106,21 @@ void process_commmand(int process_id, char instruction_type, int virtual_address
  * Loops the read, evaluate, and print loop
  */
 void loop_repl() {
-	// TODO, probably copy logic from earlier project
+	int pid, vir_addrs, value;
+    char command[512], exit_check[512];
+    
+    while(1){
+
+        printf("Instruction?  ");
+        scanf("%i,%s,%i,%i\n", &pid, command, &vir_addrs, &value);
+
+        printf("Are you done? (type yes or no) \n");
+        scanf("%s", exit_check);
+
+        if (strcmp(exit_check, "yes") == 0){
+            exit(1);
+        }
+    }
 }
 
 int main() {
@@ -115,4 +133,5 @@ int main() {
 	memory[17] = bar;
 
 	print_memory();
+
 }
