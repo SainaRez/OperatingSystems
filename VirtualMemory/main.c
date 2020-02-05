@@ -7,10 +7,27 @@
 /** 
  * Each process will have a simulated hardware register pointing to the start of
  * their respective page tables. You can simulate these registers with an array
- * indexed by process id.
+ * indexed by process id. Values are initialized to -1 when there is no page table
+ * yet.
  **/
-int page_table_register_array[MAX_PROCESSES]; // TODO/Suggestion, maybe initialize these values to something like -1?
+int page_table_register_array[MAX_PROCESSES];
 
+// Initialize all page_table_registers to -1
+for (each i from 0 to 3) {
+	page_table_register_array[i] = -1;
+}
+
+/**
+ * Returns true if the given process has a page table initialized into memory yet
+ */
+bool does_process_have_page_file(int process_id) {
+	if (page_table_register_array[process_id] == -1) {
+		return false;
+	} 
+
+	return true;
+
+}
 
 /**
  * TODO
@@ -54,7 +71,7 @@ void map(int process_id, int virtual_address, int value) {
  * @param 
  */
 void process_commmand(int process_id, char instruction_type, int virtual_address, int value) {
-	// TODO
+	// TODO Don't do this yet, put it off, see if there's any logic that needs to apply for all processes
 }
 
 /**
