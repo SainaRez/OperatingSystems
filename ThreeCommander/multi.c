@@ -75,14 +75,17 @@ void check_special_commands(int argc, char *const argv[]) {
 	}
 
 	else if (strcmp(argv[0], "cpwd") == 0) {
-		if(chdir(argv[1]) == -1) {
+		char buffer[255];
+		long size;
+		if(getcwd(buffer, sizeof(buffer)) == NULL) {
 			err = errno;
-			printf("chdir %s failed with %s\n", argv[0], strerror(err));
+			printf("getcwd %s failed with %s\n", argv[0], strerror(err));
 		}
 		else {
 			wait(NULL);
-			printf("Changed to directory: %s\n", getcwd(curr_path, 100));
-		}     
+			printf("Current directory: %s\n", buffer);
+		}
+
 		exit(0);
 	}
 
