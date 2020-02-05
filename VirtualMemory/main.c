@@ -30,10 +30,9 @@ void initialize_register_array() {
  * Utility function to print the entire contents of memory
  */
 void print_memory() {
-	int x;
 	for (int y = 0; y < 4; y++) {
-		for (x = 0; x < 16; x++) {
-			printf("0x%x, ", memory[x*y + x]);
+		for (int x = 0; x < 16; x++) {
+			printf("0x%04x, ", memory[16*y + x]);
 		}
 		printf("\n");
 	}
@@ -60,7 +59,6 @@ int load(int process_id, int virtual_address) {
  * TODO
  */
 void store(int process_id, int virtual_address, int value) {
-
 }
 
 
@@ -110,5 +108,12 @@ void loop_repl() {
 
 int main() {
 	initialize_register_array();
+	print_memory();
+
+	unsigned char foo = 65;
+	unsigned char bar = 66;
+	memory[16] = foo;
+	memory[17] = bar;
+
 	print_memory();
 }
