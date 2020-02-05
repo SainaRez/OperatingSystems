@@ -1,6 +1,7 @@
 #include <stdio.h>
+#include <stdbool.h>
 
-#define SIZE 128 // TODO what's SIZE
+#define SIZE 64
 #define PROMPT "Instruction? "
 #define MAX_PROCESSES 4
 
@@ -13,10 +14,33 @@ unsigned char memory[SIZE];
  * yet.
  **/
 int page_table_register_array[MAX_PROCESSES];
-// Initialize all page_table_registers to -1
-for (each i from 0 to 3) {
-	page_table_register_array[i] = -1;
+
+
+/** 
+ * Initialize all page_table_registers to -1
+ */
+void initialize_register_array() {
+	for (int i = 0; i < 4; i++) {
+		page_table_register_array[i] = -1;
+	}
 }
+
+
+/**
+ * Utility function to print the entire contents of memory
+ */
+void print_memory() {
+	int x;
+	for (int y = 0; y < 4; y++) {
+		for (x = 0; x < 16; x++) {
+			printf("0x%x, ", memory[x*y + x]);
+		}
+		printf("\n");
+	}
+
+	printf("\n");
+}
+
 
 /**
  * Returns true if the given process has a page table initialized into memory yet
@@ -85,5 +109,6 @@ void loop_repl() {
 }
 
 int main() {
-	printf("Hello world!");
+	initialize_register_array();
+	print_memory();
 }
