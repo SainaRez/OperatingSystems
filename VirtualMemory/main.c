@@ -91,14 +91,9 @@ void map(int process_id, int virtual_address, int value) {
  */
 void process_commmand(int process_id, char instruction_type, int virtual_address, int value) {
 	// TODO Don't do this yet, put it off, see if there's any logic that needs to apply for all processes
+	
 }
 
-/**
- * Parses the given string input, and handles it by subsequently calling process_command
- */
-void parse_and_process_command(char *str) {
-	// TODO
-}
 
 /**
  * Loops the read, evaluate, and print loop
