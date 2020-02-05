@@ -2,6 +2,14 @@
 
 #define SIZE 128
 #define PROMPT "Instruction? "
+#define MAX_PROCESSES 4
+
+/** 
+ * Each process will have a simulated hardware register pointing to the start of
+ * their respective page tables. You can simulate these registers with an array
+ * indexed by process id.
+ **/
+int page_table_register_array[MAX_PROCESSES]; 
 
 
 /**
