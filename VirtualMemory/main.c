@@ -2,6 +2,7 @@
 #include <stdbool.h>
 
 #define SIZE 64
+#define PAGE_SIZE 16
 #define PROMPT "Instruction? "
 #define MAX_PROCESSES 4
 
@@ -30,7 +31,7 @@ void initialize_register_array() {
  * Utility function to print the entire contents of memory
  */
 void print_memory() {
-	for (int y = 0; y < 4; y++) {
+	for (int y = 0; y < SIZE/16; y++) {
 		for (int x = 0; x < 16; x++) {
 			printf("0x%04x, ", memory[16*y + x]);
 		}
@@ -59,7 +60,9 @@ int load(int process_id, int virtual_address) {
  * TODO
  */
 void store(int process_id, int virtual_address, int value) {
+
 }
+
 
 
 /**
