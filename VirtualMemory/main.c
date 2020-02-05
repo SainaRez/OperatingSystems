@@ -11,7 +11,6 @@
  * yet.
  **/
 int page_table_register_array[MAX_PROCESSES];
-
 // Initialize all page_table_registers to -1
 for (each i from 0 to 3) {
 	page_table_register_array[i] = -1;
@@ -21,12 +20,7 @@ for (each i from 0 to 3) {
  * Returns true if the given process has a page table initialized into memory yet
  */
 bool does_process_have_page_file(int process_id) {
-	if (page_table_register_array[process_id] == -1) {
-		return false;
-	} 
-
-	return true;
-
+	return (page_table_register_array[process_id] == -1);
 }
 
 /**
