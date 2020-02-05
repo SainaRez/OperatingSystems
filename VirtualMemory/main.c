@@ -1,8 +1,10 @@
 #include <stdio.h>
 
-#define SIZE 128
+#define SIZE 128 // TODO what's SIZE
 #define PROMPT "Instruction? "
 #define MAX_PROCESSES 4
+
+unsigned char memory[SIZE];
 
 /** 
  * Each process will have a simulated hardware register pointing to the start of
