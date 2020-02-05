@@ -72,7 +72,8 @@ void store(int process_id, int virtual_address, int value) {
  * @param int value
  */
 void map(int process_id, int virtual_address, int value) {
-	// TODO
+	// TODO this method can include logic for parameter validation (since
+	// much of it is the same accross all the commands
 }
 
 
