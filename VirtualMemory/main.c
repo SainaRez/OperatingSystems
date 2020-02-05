@@ -9,7 +9,22 @@
  * their respective page tables. You can simulate these registers with an array
  * indexed by process id.
  **/
-int page_table_register_array[MAX_PROCESSES]; 
+int page_table_register_array[MAX_PROCESSES]; // TODO/Suggestion, maybe initialize these values to something like -1?
+
+
+/**
+ * TODO
+ */
+int load(int process_id, int virtual_address) {
+
+}
+
+/**
+ * TODO
+ */
+void store(int process_id, int virtual_address, int value) {
+
+}
 
 
 /**
@@ -21,7 +36,7 @@ int page_table_register_array[MAX_PROCESSES];
  * 	 the page is only readable, i.e., all mapped pages are readable.
  * @param int value
  */
-void map(int process_id, itn virtual_address, int value) {
+void map(int process_id, int virtual_address, int value) {
 	// TODO
 }
 
