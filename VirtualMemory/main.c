@@ -1,6 +1,22 @@
 #include <stdio.h>
 
 #define SIZE 128
+#define PROMPT "Instruction? "
+
+
+/**
+ * TODO
+ *
+ * @param int process_id
+ * @param int value
+ * 	 If value=1 then the page is writeable and readable. If value=0, then 
+ * 	 the page is only readable, i.e., all mapped pages are readable.
+ * @param int value
+ */
+void map(int process_id, itn virtual_address, int value) {
+	// TODO
+}
+
 
 /**
  * TODO
