@@ -73,7 +73,7 @@ void process_commmand(int process_id, char instruction_type, int virtual_address
 /**
  * Parses the given string input, and handles it by subsequently calling process_command
  */
-void parse_and_process_command(char *str[]) {
+void parse_and_process_command(char *str) {
 	// TODO
 }
 
