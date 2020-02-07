@@ -10,7 +10,7 @@ unsigned char memory[SIZE];
 
 /** 
  * Each process will have a simulated hardware register pointing to the start of
- * their respective page tables. You can simulate these registers with an array
+ * their respective page tables. These registers are simulated with an array
  * indexed by process id. Values are initialized to -1 when there is no page table
  * yet.
  **/
@@ -23,6 +23,15 @@ int page_table_register_array[MAX_PROCESSES];
 void initialize_register_array() {
     for (int i = 0; i < 4; i++) {
         page_table_register_array[i] = -1;
+    }
+}
+
+/**
+ * Prints the contents of the page_table_register_array
+ */
+void print_page_table() {
+    for (int i = 0; i < MAX_PROCESSES; ++i) {
+        printf("PageTable[%i] = %i\n", i, page_table_register_array[i]);
     }
 }
 
@@ -94,6 +103,7 @@ void store(int process_id, int virtual_address, int value) {
 void map(int process_id, int virtual_address, int value) {
     int virtual_page = (virtual_address - (virtual_address % PAGE_SIZE)) / PAGE_SIZE;
 
+
 }
 
 
@@ -141,14 +151,18 @@ void loop_repl() {
 }
 
 int main() {
-    map(0, 17, 0);
     initialize_register_array();
-    print_memory();
+    print_page_table();
+    map(0, 17, 0);
+
+
+    // Below is just a demo of memory printing
+    print_memory(); // Before
 
     unsigned char foo = 255;
     unsigned char bar = 0x65;
     memory[16] = foo;
     memory[17] = bar;
 
-    print_memory();
+    print_memory(); // After
 }
