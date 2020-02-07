@@ -33,7 +33,7 @@ void initialize_register_array() {
 void print_memory() {
     for (int y = 0; y < SIZE / 16; y++) {
         for (int x = 0; x < 16; x++) {
-            printf("0x%04x, ", memory[16 * y + x]);
+            printf("0x%02x, ", memory[16 * y + x]);
         }
         printf("\n");
     }
@@ -50,14 +50,25 @@ bool does_process_have_page_file(int process_id) {
 }
 
 /**
- * TODO
+ * @param process_id Int between 0 and 3 specifying which process
+ * @param virtual_address
+ *      An integer value in the range [0,63] specifying the virtual memory
+ *      location for givenprocess
  */
 int load(int process_id, int virtual_address) {
 
 }
 
 /**
- * TODO
+ * Store instructs the memory manager to write the supplied value into the physical
+ * memory location associated with the provided virtual address, performing
+ * translation and page swapping as necessary.
+ *
+ * @param process_id Int between 0 and 3 specifying which process
+ * @param virtual_address
+ *      An integer value in the range [0,63] specifying the virtual memory
+ *      location for givenprocess
+ * @param value
  */
 void store(int process_id, int virtual_address, int value) {
 
@@ -65,17 +76,24 @@ void store(int process_id, int virtual_address, int value) {
 
 
 /**
- * TODO
+ * Tells the memory manager to allocate a physical page, i.e., create a mapping
+ * in the page table between a virtual and physical address. The manager must determine
+ * the appropriate virtual page number using the virtual_address. For example, a virtual_address
+ * of 3 corresponds to virtual page 0.
  *
- * @param int process_id
+ * Permissions can remapped after being set by subsequent map commands.
+ *
+ * @param process_id Int between 0 and 3 specifying which process
+ * @param virtual_address
+ *      An integer value in the range [0,63] specifying the virtual memory
+ *      location for given process
  * @param int value
  * 	 If value=1 then the page is writeable and readable. If value=0, then 
  * 	 the page is only readable, i.e., all mapped pages are readable.
- * @param int value
  */
 void map(int process_id, int virtual_address, int value) {
-    // TODO this method can include logic for parameter validation (since
-    // much of it is the same accross all the commands
+    int virtual_page = (virtual_address - (virtual_address % PAGE_SIZE)) / PAGE_SIZE;
+
 }
 
 
@@ -123,14 +141,14 @@ void loop_repl() {
 }
 
 int main() {
+    map(0, 17, 0);
     initialize_register_array();
     print_memory();
 
-    unsigned char foo = 65;
-    unsigned char bar = 66;
+    unsigned char foo = 255;
+    unsigned char bar = 0x65;
     memory[16] = foo;
     memory[17] = bar;
 
     print_memory();
-
 }
