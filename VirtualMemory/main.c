@@ -112,6 +112,14 @@ void load(int process_id, int virtual_address) {
  * @param value
  */
 void store(int process_id, int virtual_address, int value) {
+    int page_table_of_process = page_table_register_array[process_id];
+
+    if (page_table_of_process == -1) {
+        fprintf(stderr, "Error: No page table set up for process %i", process_id);
+        return;
+    }
+
+    // TODO
 
 }
 
@@ -149,7 +157,7 @@ void map(int process_id, int virtual_address, int value) {
         create_page_table_for_process(process_id);
     }
 
-
+    // TODO, populate the page table with the new mapping.
 
     return;
 }
