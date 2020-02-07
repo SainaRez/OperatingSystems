@@ -14,16 +14,21 @@ unsigned char memory[SIZE];
  * Each process will have a simulated hardware register pointing to the start of
  * their respective page tables. These registers are simulated with an array
  * indexed by process id. Values are initialized to -1 when there is no page table
- * yet.
+ * yet. (Initialization is done by initialize_register_array())
  **/
 int page_table_register_array[MAX_PROCESSES];
+
+/**
+ * A list of which pages a free. Free pages have a value of false
+ */
+bool page_use_status_array[SIZE / PAGE_SIZE];
 
 
 /** 
  * Initialize all page_table_registers to -1
  */
 void initialize_register_array() {
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < MAX_PROCESSES; i++) {
         page_table_register_array[i] = -1;
     }
 }
@@ -33,10 +38,35 @@ void initialize_register_array() {
  */
 void print_page_table() {
     for (int i = 0; i < MAX_PROCESSES; ++i) {
-        printf("PageTable[%i] = %i\n", i, page_table_register_array[i]);
+        printf("PageTable location of process %i = %i\n", i, page_table_register_array[i]);
     }
 }
 
+/**
+ * Prints the state of which pages are free
+ */
+void print_page_use_status() {
+    for (int i = 0; i < SIZE/PAGE_SIZE; ++i) {
+        printf("Page %i use status?: %s\n", i, page_use_status_array[i] ? "true" : "false");
+    }
+}
+
+
+/**
+ * Finds the next available page in memory.
+ * @return The Page # of the page, such as 0,1,2, or 3.
+ */
+int next_free_page_number() {
+    for (int i = 0; i < SIZE/PAGE_SIZE; ++i) {
+        if (page_use_status_array[i] == false) {
+            return i;
+        }
+    }
+
+    // TODO handle no free memory case gracefully, or document this
+    fprintf(stderr, "Error: No available pages left");
+    exit(EXIT_FAILURE);
+}
 
 /**
  * Utility function to print the entire contents of memory
@@ -54,10 +84,10 @@ void print_memory() {
 
 
 /**
- * Returns true if the given process has a page table initialized into memory yet
+ * Returns true if the given process has a page table initialized into memory
  */
 bool does_process_have_page_file(int process_id) {
-    return (page_table_register_array[process_id] == -1);
+    return (page_table_register_array[process_id] != -1);
 }
 
 /**
@@ -104,8 +134,16 @@ void store(int process_id, int virtual_address, int value) {
  */
 void map(int process_id, int virtual_address, int value) {
     int virtual_page = (virtual_address - (virtual_address % PAGE_SIZE)) / PAGE_SIZE;
+    if (does_process_have_page_file(process_id) == false) {
+        // TODO couple this logic in a function maybe?
+        int next_free_frame = next_free_page_number();
+        page_use_status_array[next_free_frame] = true; // Marking the frame as used
+        page_table_register_array[process_id] = next_free_frame*PAGE_SIZE; // Setting the register to point to the new frame
+        printf("Put page table for PID %i into physical frame %i\n", process_id, next_free_frame);
+    }
 
 
+    return;
 }
 
 
@@ -113,7 +151,7 @@ void map(int process_id, int virtual_address, int value) {
  * TODO
  *
  * @param
- * @param char instruction_type[]
+ * @param char instruction_type
  * 	one of {m, s, l}, where 
  * 	- m represents map,
  * 	- s represents store, and
@@ -138,6 +176,12 @@ void process_command(int process_id, char instruction_type, int virtual_address,
         exit(EXIT_FAILURE);
     }
 
+    if (instruction_type == 'm') {
+        // TODO validate value
+        map(process_id, virtual_address, value);
+    }
+
+    // TODO store, load
 }
 
 
@@ -163,14 +207,11 @@ void loop_repl() {
         char command_char = '\0';
         if (strcmp(command, "map") == 0) {
             command_char = 'm';
-        }
-        else if (strcmp(command, "store") == 0) {
+        } else if (strcmp(command, "store") == 0) {
             command_char = 's';
-        }
-        else if (strcmp(command, "load") == 0) {
+        } else if (strcmp(command, "load") == 0) {
             command_char = 'l';
-        }
-        else {
+        } else {
             fprintf(stderr, "Command %s not recognized.", command);
             exit(EXIT_FAILURE);
         }
@@ -187,6 +228,9 @@ void loop_repl() {
 int main() {
     initialize_register_array();
     print_page_table();
+    print_page_use_status();
+
+
     map(0, 17, 0);
     loop_repl();
 
