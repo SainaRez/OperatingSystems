@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #define SIZE 64
 #define PAGE_SIZE 16
@@ -9,6 +10,10 @@
 #define MAX_PROCESSES 4
 
 unsigned char memory[SIZE];
+
+struct Page_Table {
+        unsigned char data[PAGE_SIZE];
+};
 
 /** 
  * Each process will have a simulated hardware register pointing to the start of
@@ -64,7 +69,7 @@ int next_free_page_frame_number() {
     }
 
     // TODO handle no free memory case gracefully, don't just exit
-    fprintf(stderr, "Error: No available pages left");
+    fprintf(stderr, "Error: No available pages left\n");
     exit(EXIT_FAILURE);
 }
 
@@ -75,10 +80,11 @@ void print_memory() {
     for (int y = 0; y < SIZE / 16; y++) {
         for (int x = 0; x < 16; x++) {
             printf("0x%02x, ", memory[16 * y + x]);
+            // Use below to print in integer form instead of hexadecimal
+            // printf("%03i, ", memory[16 * y + x]);
         }
         printf("\n");
     }
-
     printf("\n");
 }
 
@@ -90,36 +96,100 @@ bool does_process_have_page_file(int process_id) {
     return (page_table_register_array[process_id] != -1);
 }
 
+
+/**
+ * Converts a virtual address into a virtual page number.
+ * {0..15} -> 0
+ * {16..31} -> 1
+ * {32..47} -> 2
+ * {48..63} -> 3
+ *
+ * @param virtual_address (an int in the range [0,63])
+ * @return The virtual page number, an int in the range 0,3
+ */
+int get_virtual_page_of_address(int virtual_address) {
+    return (virtual_address - (virtual_address % PAGE_SIZE)) / PAGE_SIZE;
+}
+
+/**
+ * Returns the physical page frame where the virtual page is located in memory.
+ *
+ * get_physical_page_of_virtual will exit if given a virtual_page not mapped to physical memory.
+ *
+ * @param process_id int between 0 and 3 specifying which process
+ * @param virtual_page Int between 0 and 3 specifying which virtual page to look for
+ * @return Int between 0 and 3 specifying which physical page frame the virtual is mapped to
+ */
+int get_physical_page_of_virtual(const int process_id, const int virtual_page) {
+    // TODO read pagefile to get mapping
+    return 1;
+}
+
 /**
  * @param process_id Int between 0 and 3 specifying which process
  * @param virtual_address
  *      An integer value in the range [0,63] specifying the virtual memory
  *      location for given process
  */
-void load(int process_id, int virtual_address) {
+void load(const int process_id, const int virtual_address) {
+    if (does_process_have_page_file(process_id) == false) {
+        fprintf(stderr, "Error: No page table set up for process %i\n", process_id);
+        return;
+    }
 
+    const int virtual_page = get_virtual_page_of_address(virtual_address);
+    const int offset = virtual_address % PAGE_SIZE;
+
+    const int physical_page = get_physical_page_of_virtual(process_id, virtual_page);
+
+    printf("The value %i is at virtual address %i\n", memory[16 * physical_page + offset], virtual_address);
 }
+
 
 /**
  * Store instructs the memory manager to write the supplied value into the physical
  * memory location associated with the provided virtual address, performing
  * translation and page swapping as necessary.
  *
+ *
  * @param process_id Int between 0 and 3 specifying which process
  * @param virtual_address
  *      An integer value in the range [0,63] specifying the virtual memory
  *      location for given process
  * @param value
+ *      An integer value in the range [0,255] specifying the value to set in memory
  */
 void store(int process_id, int virtual_address, int value) {
-    int page_table_of_process = page_table_register_array[process_id];
-
-    if (page_table_of_process == -1) {
-        fprintf(stderr, "Error: No page table set up for process %i", process_id);
+    if (does_process_have_page_file(process_id) == false) {
+        fprintf(stderr, "Error: No page table set up for process %i\n", process_id);
         return;
     }
 
+    //
+    const int page_table_address = page_table_register_array[process_id];
+    assert(page_table_address % PAGE_SIZE == 0);
+    const int virtual_page = get_virtual_page_of_address(virtual_address);
     // TODO
+    page_table_contains_mapping_for_virtual_page((struct Page_Table*) page_table_address, virtual_page);
+
+    int offset = virtual_address % PAGE_SIZE;
+
+    const int physical_page = get_physical_page_of_virtual(process_id, virtual_page);
+
+
+    // TODO check page table at page_table_address for mapping from virtual_page -> writable | physical address
+    if (false) {
+        printf("Error: writes are not allowed to this page\n");
+    }
+
+    const int physical_page_frame = 1; // TODO
+
+    memory[physical_page_frame * 16 + offset] = (unsigned char) value;
+
+    const int physical_address = 17; // TODO
+
+    // TODO
+    printf("Stored value %i at virtual address %i (physical address %i)\n", value, virtual_address, physical_address);
 
 }
 
@@ -134,6 +204,7 @@ void create_page_table_for_process(int process_id) {
     page_table_register_array[process_id] = next_free_frame * PAGE_SIZE; // Setting the register to point to new frame
     printf("Put page table for PID %i into physical frame %i\n", process_id, next_free_frame);
 }
+
 
 /**
  * Tells the memory manager to allocate a physical page, i.e., create a mapping
@@ -152,12 +223,26 @@ void create_page_table_for_process(int process_id) {
  * 	 the page is only readable, i.e., all mapped pages are readable.
  */
 void map(int process_id, int virtual_address, int value) {
-    int virtual_page = (virtual_address - (virtual_address % PAGE_SIZE)) / PAGE_SIZE;
     if (does_process_have_page_file(process_id) == false) {
         create_page_table_for_process(process_id);
     }
 
-    // TODO, populate the page table with the new mapping.
+    int virtual_page = get_virtual_page_of_address(virtual_address);
+    // TODO check page file for existing mapping of virtual_page -> physical frame page
+    if (false) {
+        printf("Updating permissions for virtual page %i (frame %i)\n", virtual_page, 0); // TODO page
+        printf("Error: virtual page %i is already mapped with rw_bit=1\n", virtual_page);
+        return;
+    }
+
+    // Else, there is no existing mapping, so create one
+    const int physical_page_frame = next_free_page_frame_number();
+    page_use_status_array[physical_page_frame] = true; // mark the frame as in use
+    // TODO, populate the page table with the new mapping, (virtual_page -> writable|physical_page)
+
+    printf("Mapped virtual address %i (page %i) into physical frame %i\n", virtual_address, virtual_page,
+           physical_page_frame);
+
 
     return;
 }
@@ -183,36 +268,33 @@ void map(int process_id, int virtual_address, int value) {
  */
 void process_command(int process_id, char instruction_type, int virtual_address, int value) {
     if (process_id < 0 || process_id > 3) {
-        fprintf(stderr, "Error: Process ID %i is out of range", process_id);
+        fprintf(stderr, "Error: Process ID %i is out of range\n", process_id);
         exit(EXIT_FAILURE);
     }
 
     if (virtual_address < 0 || virtual_address > 63) {
-        fprintf(stderr, "Error: virtual address %i is out of range", virtual_address);
+        fprintf(stderr, "Error: virtual address %i is out of range\n", virtual_address);
         exit(EXIT_FAILURE);
     }
 
     if (value < 0 || value > 255) {
-        fprintf(stderr, "Error: virtual address %i is out of range", virtual_address);
+        fprintf(stderr, "Error: virtual address %i is out of range\n", virtual_address);
         exit(EXIT_FAILURE);
     }
 
     if (instruction_type == 'm') {
         if (value > 1) {
-            fprintf(stderr, "Error: Illegal value argument %i passed with command map", value);
+            fprintf(stderr, "Error: Illegal value argument %i passed with command map\n", value);
             return;
         }
         map(process_id, virtual_address, value);
-    }
-
-    else if (instruction_type == 's') {
+        return;
+    } else if (instruction_type == 's') {
         store(process_id, virtual_address, value);
-    }
-    else if (instruction_type == 'l') {
+    } else if (instruction_type == 'l') {
         load(process_id, virtual_address);
-    }
-    else {
-        fprintf(stderr, "Illegal instruction_type %c", instruction_type);
+    } else {
+        fprintf(stderr, "Illegal instruction_type %c\n", instruction_type);
         exit(EXIT_FAILURE);
     }
 }
@@ -245,7 +327,7 @@ void loop_repl() {
         } else if (strcmp(command, "load") == 0) {
             command_char = 'l';
         } else {
-            fprintf(stderr, "Command %s not recognized.", command);
+            fprintf(stderr, "Command %s not recognized.\n", command);
             exit(EXIT_FAILURE);
         }
 
@@ -279,7 +361,11 @@ void test_map() {
 int main() {
     initialize_register_array();
 
-    test_map();
+    memory[19] = 0xFF;
+    map(0, 0, 0);
+    load(0, 3);
+
+    //test_map();
 
     loop_repl();
 }
