@@ -5,3 +5,4 @@ ThreeCommander/multi
 *.o
 *.O
 *.exe
+*debug/
