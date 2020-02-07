@@ -6,3 +6,4 @@ ThreeCommander/multi
 *.O
 *.exe
 *debug/
+.idea/

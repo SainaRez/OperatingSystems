@@ -46,7 +46,7 @@ void print_page_table() {
  * Prints the state of which pages are free
  */
 void print_page_use_status() {
-    for (int i = 0; i < SIZE/PAGE_SIZE; ++i) {
+    for (int i = 0; i < SIZE / PAGE_SIZE; ++i) {
         printf("Page %i use status?: %s\n", i, page_use_status_array[i] ? "true" : "false");
     }
 }
@@ -56,14 +56,14 @@ void print_page_use_status() {
  * Finds the next available page in memory.
  * @return The Page # of the page, such as 0,1,2, or 3.
  */
-int next_free_page_number() {
-    for (int i = 0; i < SIZE/PAGE_SIZE; ++i) {
+int next_free_page_frame_number() {
+    for (int i = 0; i < SIZE / PAGE_SIZE; ++i) {
         if (page_use_status_array[i] == false) {
             return i;
         }
     }
 
-    // TODO handle no free memory case gracefully, or document this
+    // TODO handle no free memory case gracefully, don't just exit
     fprintf(stderr, "Error: No available pages left");
     exit(EXIT_FAILURE);
 }
@@ -96,7 +96,7 @@ bool does_process_have_page_file(int process_id) {
  *      An integer value in the range [0,63] specifying the virtual memory
  *      location for given process
  */
-int load(int process_id, int virtual_address) {
+void load(int process_id, int virtual_address) {
 
 }
 
@@ -117,6 +117,17 @@ void store(int process_id, int virtual_address, int value) {
 
 
 /**
+ * Creates a page table for the given process_id in the next available frame of physical memory.
+ * @param process_id
+ */
+void create_page_table_for_process(int process_id) {
+    int next_free_frame = next_free_page_frame_number();
+    page_use_status_array[next_free_frame] = true; // Marking the frame as used
+    page_table_register_array[process_id] = next_free_frame * PAGE_SIZE; // Setting the register to point to new frame
+    printf("Put page table for PID %i into physical frame %i\n", process_id, next_free_frame);
+}
+
+/**
  * Tells the memory manager to allocate a physical page, i.e., create a mapping
  * in the page table between a virtual and physical address. The manager must determine
  * the appropriate virtual page number using the virtual_address. For example, a virtual_address
@@ -135,12 +146,9 @@ void store(int process_id, int virtual_address, int value) {
 void map(int process_id, int virtual_address, int value) {
     int virtual_page = (virtual_address - (virtual_address % PAGE_SIZE)) / PAGE_SIZE;
     if (does_process_have_page_file(process_id) == false) {
-        // TODO couple this logic in a function maybe?
-        int next_free_frame = next_free_page_number();
-        page_use_status_array[next_free_frame] = true; // Marking the frame as used
-        page_table_register_array[process_id] = next_free_frame*PAGE_SIZE; // Setting the register to point to the new frame
-        printf("Put page table for PID %i into physical frame %i\n", process_id, next_free_frame);
+        create_page_table_for_process(process_id);
     }
+
 
 
     return;
@@ -148,19 +156,24 @@ void map(int process_id, int virtual_address, int value) {
 
 
 /**
- * TODO
+ * Validates the given parameters, and runs the appropriate function associated with the given
+ * command/instruction_type.
  *
- * @param
+ * Will print to stderr and exit if invalid parameters are given.
+ *
+ * @param process_id Int between 0 and 3 specifying which process
  * @param char instruction_type
  * 	one of {m, s, l}, where 
  * 	- m represents map,
  * 	- s represents store, and
  * 	- l represents load
- * @param
- * @param 
+ * @param virtual_address
+ *      An integer value in the range [0,63] specifying the virtual memory
+ *      location for given process
+ * @param int value
+ *      An integer in the range [0,255].
  */
 void process_command(int process_id, char instruction_type, int virtual_address, int value) {
-
     if (process_id < 0 || process_id > 3) {
         fprintf(stderr, "Error: Process ID %i is out of range", process_id);
         exit(EXIT_FAILURE);
@@ -177,11 +190,23 @@ void process_command(int process_id, char instruction_type, int virtual_address,
     }
 
     if (instruction_type == 'm') {
-        // TODO validate value
+        if (value > 1) {
+            fprintf(stderr, "Error: Illegal value argument %i passed with command map", value);
+            return;
+        }
         map(process_id, virtual_address, value);
     }
 
-    // TODO store, load
+    else if (instruction_type == 's') {
+        store(process_id, virtual_address, value);
+    }
+    else if (instruction_type == 'l') {
+        load(process_id, virtual_address);
+    }
+    else {
+        fprintf(stderr, "Illegal instruction_type %c", instruction_type);
+        exit(EXIT_FAILURE);
+    }
 }
 
 
@@ -222,26 +247,31 @@ void loop_repl() {
         fflush(stdout);
         fflush(stdin);
     }
+}
 
+/**
+ * A simple script that tests a series of map commands. Use from main to see if map is working.
+ */
+void test_map() {
+    print_page_table();
+    print_page_use_status();
+    print_memory();
+
+    process_command(0, 'm', 0, 0);
+    process_command(0, 'm', 17, 1);
+    process_command(0, 'm', 17, 0);
+    process_command(2, 'm', 0, 0);
+    process_command(1, 'm', 0, 0);
+    process_command(3, 'm', 0, 1);
+    print_page_table();
+    print_page_use_status();
+    print_memory();
 }
 
 int main() {
     initialize_register_array();
-    print_page_table();
-    print_page_use_status();
 
+    test_map();
 
-    map(0, 17, 0);
     loop_repl();
-
-
-    // Below is just a demo of memory printing
-    print_memory(); // Before
-
-    unsigned char foo = 255;
-    unsigned char bar = 0x65;
-    memory[16] = foo;
-    memory[17] = bar;
-
-    print_memory(); // After
 }
