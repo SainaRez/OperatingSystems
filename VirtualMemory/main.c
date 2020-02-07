@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define SIZE 64
 #define PAGE_SIZE 16
@@ -62,7 +64,7 @@ bool does_process_have_page_file(int process_id) {
  * @param process_id Int between 0 and 3 specifying which process
  * @param virtual_address
  *      An integer value in the range [0,63] specifying the virtual memory
- *      location for givenprocess
+ *      location for given process
  */
 int load(int process_id, int virtual_address) {
 
@@ -76,7 +78,7 @@ int load(int process_id, int virtual_address) {
  * @param process_id Int between 0 and 3 specifying which process
  * @param virtual_address
  *      An integer value in the range [0,63] specifying the virtual memory
- *      location for givenprocess
+ *      location for given process
  * @param value
  */
 void store(int process_id, int virtual_address, int value) {
@@ -119,12 +121,22 @@ void map(int process_id, int virtual_address, int value) {
  * @param
  * @param 
  */
-void process_commmand(int process_id, char instruction_type, int virtual_address, int value) {
+void process_command(int process_id, char instruction_type, int virtual_address, int value) {
 
-    if (3 < process_id && process_id < 0) {
-        printf("process ID is out of range");
+    if (process_id < 0 || process_id > 3) {
+        fprintf(stderr, "Error: Process ID %i is out of range", process_id);
+        exit(EXIT_FAILURE);
     }
 
+    if (virtual_address < 0 || virtual_address > 63) {
+        fprintf(stderr, "Error: virtual address %i is out of range", virtual_address);
+        exit(EXIT_FAILURE);
+    }
+
+    if (value < 0 || value > 255) {
+        fprintf(stderr, "Error: virtual address %i is out of range", virtual_address);
+        exit(EXIT_FAILURE);
+    }
 
 }
 
@@ -133,27 +145,50 @@ void process_commmand(int process_id, char instruction_type, int virtual_address
  * Loops the read, evaluate, and print loop
  */
 void loop_repl() {
-    int pid, vir_addrs, value;
-    char command[512], exit_check[512];
 
-    while (1) {
+    while (true) {
+        int pid, virtual_address, value;
+        char command[8] = {'\0'};
 
-        printf("Instruction?  ");
-        scanf("%i,%s,%i,%i\n", &pid, command, &vir_addrs, &value);
+        printf(PROMPT);
 
-        printf("Are you done? (type yes or no) \n");
-        scanf("%s", exit_check);
-
-        if (strcmp(exit_check, "yes") == 0) {
-            exit(1);
+        // Source: https://stackoverflow.com/a/12910012/4225094
+        int num_scanned_values = scanf("%i,%7[^,^\n],%i,%i", &pid, command, &virtual_address, &value);
+        if (num_scanned_values != 4) {
+            fprintf(stderr, "Illegal command input. Scanf could only read %i values instead of the expected 4",
+                    num_scanned_values);
+            exit(EXIT_FAILURE);
         }
+
+        char command_char = '\0';
+        if (strcmp(command, "map") == 0) {
+            command_char = 'm';
+        }
+        else if (strcmp(command, "store") == 0) {
+            command_char = 's';
+        }
+        else if (strcmp(command, "load") == 0) {
+            command_char = 'l';
+        }
+        else {
+            fprintf(stderr, "Command %s not recognized.", command);
+            exit(EXIT_FAILURE);
+        }
+
+        process_command(pid, command_char, virtual_address, value);
+
+        // fflush just to be safe.
+        fflush(stdout);
+        fflush(stdin);
     }
+
 }
 
 int main() {
     initialize_register_array();
     print_page_table();
     map(0, 17, 0);
+    loop_repl();
 
 
     // Below is just a demo of memory printing
