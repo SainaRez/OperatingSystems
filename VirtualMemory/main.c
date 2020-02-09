@@ -10,12 +10,21 @@
 #define MAX_PROCESSES 4
 
 unsigned char memory[SIZE];
+const bool verbose = true;
 
-struct Page_Table {
-        unsigned char data[PAGE_SIZE];
-};
+typedef struct Entry {
+    unsigned char is_used; // == 1 if the entry is populated
+    unsigned char virtual_page;
+    unsigned char physical_page;
+    unsigned char writable;
+} Entry;
 
-/** 
+#define ENTRIES_PER_PAGE_TABLE 4
+typedef struct Page_Table {
+    struct Entry entries[ENTRIES_PER_PAGE_TABLE];
+} Page_Table;
+
+/**
  * Each process will have a simulated hardware register pointing to the start of
  * their respective page tables. These registers are simulated with an array
  * indexed by process id. Values are initialized to -1 when there is no page table
@@ -121,9 +130,21 @@ int get_virtual_page_of_address(int virtual_address) {
  * @return Int between 0 and 3 specifying which physical page frame the virtual is mapped to
  */
 int get_physical_page_of_virtual(const int process_id, const int virtual_page) {
-    // TODO read pagefile to get mapping
-    return 1;
+    const int page_table_address = page_table_register_array[process_id];
+    assert(page_table_address % PAGE_SIZE == 0);
+
+    Page_Table *page_table = (Page_Table *) &memory[page_table_address];
+
+    for (int i = 0; i < ENTRIES_PER_PAGE_TABLE; ++i) {
+        if (page_table->entries[i].virtual_page == virtual_page) {
+            return page_table->entries[i].physical_page;
+        }
+    }
+
+    fprintf(stderr, "Error: Mapping not found for process %i and virtual page %i", process_id, virtual_page);
+    exit(EXIT_FAILURE);
 }
+
 
 /**
  * @param process_id Int between 0 and 3 specifying which process
@@ -138,11 +159,14 @@ void load(const int process_id, const int virtual_address) {
     }
 
     const int virtual_page = get_virtual_page_of_address(virtual_address);
-    const int offset = virtual_address % PAGE_SIZE;
 
+    // TODO check if there is a mapping first
     const int physical_page = get_physical_page_of_virtual(process_id, virtual_page);
 
-    printf("The value %i is at virtual address %i\n", memory[16 * physical_page + offset], virtual_address);
+    const int offset = virtual_address % PAGE_SIZE;
+    const int physical_address = PAGE_SIZE * physical_page + offset;
+
+    printf("The value %i is at virtual address %i\n", memory[physical_address], virtual_address);
 }
 
 
@@ -165,32 +189,22 @@ void store(int process_id, int virtual_address, int value) {
         return;
     }
 
-    //
-    const int page_table_address = page_table_register_array[process_id];
-    assert(page_table_address % PAGE_SIZE == 0);
     const int virtual_page = get_virtual_page_of_address(virtual_address);
-    // TODO
-    // page_table_contains_mapping_for_virtual_page((struct Page_Table*) page_table_address, virtual_page);
 
-    int offset = virtual_address % PAGE_SIZE;
-
-    const int physical_page = get_physical_page_of_virtual(process_id, virtual_page);
-
-
-    // TODO check page table at page_table_address for mapping from virtual_page -> writable | physical address
+    // TODO check if there is a mapping first
+    // Check if the page table at page_table_address in memory[] contains a mapping from virtual_page
+    // to a physical address.
+    // TODO If the mapping exists, check if it is writable
     if (false) {
         printf("Error: writes are not allowed to this page\n");
     }
+    const int physical_page_frame = get_physical_page_of_virtual(process_id, virtual_page);
 
-    const int physical_page_frame = 1; // TODO
+    const int offset = virtual_address % PAGE_SIZE;
+    const int physical_address = physical_page_frame * PAGE_SIZE + offset;
+    memory[physical_address] = (unsigned char) value;
 
-    memory[physical_page_frame * 16 + offset] = (unsigned char) value;
-
-    const int physical_address = 17; // TODO
-
-    // TODO
     printf("Stored value %i at virtual address %i (physical address %i)\n", value, virtual_address, physical_address);
-
 }
 
 
@@ -239,10 +253,20 @@ void map(int process_id, int virtual_address, int value) {
     const int physical_page_frame = next_free_page_frame_number();
     page_use_status_array[physical_page_frame] = true; // mark the frame as in use
     // TODO, populate the page table with the new mapping, (virtual_page -> writable|physical_page)
+    Page_Table* page_table = (Page_Table *) &memory[page_table_register_array[process_id]];
+    for (int i = 0; i < ENTRIES_PER_PAGE_TABLE; ++i) {
+        if (page_table->entries[i].is_used == false) {
+            Entry* new_map_entry = &page_table->entries[i];
+            new_map_entry->is_used = true;
+            new_map_entry->virtual_page = virtual_page;
+            new_map_entry->physical_page = physical_page_frame;
+            new_map_entry->writable = value;
+            break;
+        }
+    }
 
     printf("Mapped virtual address %i (page %i) into physical frame %i\n", virtual_address, virtual_page,
            physical_page_frame);
-
 
     return;
 }
@@ -343,29 +367,69 @@ void loop_repl() {
  * A simple script that tests a series of map commands. Use from main to see if map is working.
  */
 void test_map() {
-    print_page_table();
-    print_page_use_status();
-    print_memory();
-
-    process_command(0, 'm', 0, 0);
+    process_command(0, 'm', 5, 0);
     process_command(0, 'm', 17, 1);
-    process_command(0, 'm', 17, 0);
-    process_command(2, 'm', 0, 0);
+    process_command(0, 'm', 19, 0);
+    process_command(2, 'm', 4, 0);
     process_command(1, 'm', 0, 0);
     process_command(3, 'm', 0, 1);
+
     print_page_table();
     print_page_use_status();
     print_memory();
 }
 
+void test_easy_extended() {
+    map(3, 25, 1);
+    map(3, 55, 1);
+    store(3, 30, 255);
+    store(3, 31, 127);
+    store(3, 17, 16);
+    load(3, 30);
+    load(3, 31);
+    load(3, 17);
+    store(3, 49, 77);
+    load(3, 49);
+
+    print_memory();
+}
+
+void test_easy() {
+    map(2, 20, 1);
+    store(2, 20, 255);
+    load(2, 20);
+    print_memory();
+}
+
 int main() {
     initialize_register_array();
+    test_easy_extended();
 
+    exit(0);
+    // TODO this is some temp testing stuff
+    Page_Table *page_table = &memory[PAGE_SIZE];
+    memory[16] = 0x01;
+    memory[17] = 0x03;
+    memory[18] = 0x01;
+    print_memory();
+    Entry *entry = &page_table->entries[2];
+
+    entry->virtual_page = 1;
+    entry->physical_page = 3;
+    entry->writable = true;
+    printf("%i\n", (int) entry->virtual_page);
+    printf("%i\n", (int) entry->physical_page);
+    if (entry->writable) {
+        printf("Writable!\n");
+    }
+
+
+    print_memory();
+    exit(0);
+    test_map();
     memory[19] = 0xFF;
     map(0, 0, 0);
     load(0, 3);
-
-    // test_map();
 
     loop_repl();
 }
