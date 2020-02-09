@@ -1,5 +1,5 @@
-memory_manager:
-	gcc -o memory_manager memory_manager.c
+main:
+	gcc -o main main.c
 
 clean:
-	rm -f memory_manager.o memory_manager
+	rm -f main.o main

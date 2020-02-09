@@ -170,7 +170,7 @@ void store(int process_id, int virtual_address, int value) {
     assert(page_table_address % PAGE_SIZE == 0);
     const int virtual_page = get_virtual_page_of_address(virtual_address);
     // TODO
-    page_table_contains_mapping_for_virtual_page((struct Page_Table*) page_table_address, virtual_page);
+    // page_table_contains_mapping_for_virtual_page((struct Page_Table*) page_table_address, virtual_page);
 
     int offset = virtual_address % PAGE_SIZE;
 
@@ -365,7 +365,7 @@ int main() {
     map(0, 0, 0);
     load(0, 3);
 
-    //test_map();
+    // test_map();
 
     loop_repl();
 }
