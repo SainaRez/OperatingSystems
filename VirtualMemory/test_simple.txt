@@ -1,0 +1,10 @@
+1,map,50,0
+1,map,51,1
+1,store,63,255
+1,load,63,0
+
+# test_simple should demonstrate that
+1.) a mapping can be made,
+2.) that it's read/write status can be updated,
+3.) that data can be stored
+4.) that data can be read

@@ -7,3 +7,9 @@
 3,store,32,254
 3,store,47,253
 3,store,48,255
+3,load,32,0
+3,load,47,0
+3,load,48,0
+3,load,31,0
+3,load,33,0
+2,load,33,0
