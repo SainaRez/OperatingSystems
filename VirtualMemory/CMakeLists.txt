@@ -1,3 +1,3 @@
 cmake_minimum_required (VERSION 2.8.11)
-project (HELLO)
+project (VirtualMemory)
 add_executable(main main.c)

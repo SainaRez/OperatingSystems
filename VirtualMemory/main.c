@@ -67,22 +67,6 @@ void print_page_use_status() {
 
 
 /**
- * Finds the next available page in memory.
- * @return The Page # of the page, such as 0,1,2, or 3.
- */
-int next_free_page_frame_number() {
-    for (int i = 0; i < SIZE / PAGE_SIZE; ++i) {
-        if (page_use_status_array[i] == false) {
-            return i;
-        }
-    }
-
-    // TODO handle no free memory case gracefully, don't just exit
-    fprintf(stderr, "Error: No available pages left\n");
-    exit(EXIT_FAILURE);
-}
-
-/**
  * Utility function to print the entire contents of memory
  */
 void print_memory() {
@@ -99,9 +83,44 @@ void print_memory() {
 
 
 /**
+ * Returns true if there is still at least on available free page.
+ */
+bool check_free_pages() {
+    for (int i = 0; i < SIZE / PAGE_SIZE; ++i) {
+        if (page_use_status_array[i] == false) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+/**
+ * Finds the next available page in memory. There must be memory free, or else this method exits. Use check_free_pages
+ * to determine if there is a free page.
+ *
+ * @see check_free_pages()
+ *
+ * @return The Page # of the page, such as 0,1,2, or 3.
+ */
+int next_free_page_frame_number() {
+    for (int i = 0; i < SIZE / PAGE_SIZE; ++i) {
+        if (page_use_status_array[i] == false) {
+            return i;
+        }
+    }
+
+    fprintf(stderr, "Error: No available pages left\n");
+    exit(EXIT_FAILURE);
+}
+
+
+
+/**
  * Returns true if the given process has a page table initialized into memory
  */
-bool does_process_have_page_file(int process_id) {
+bool does_process_have_page_file(const int process_id) {
     return (page_table_register_array[process_id] != -1);
 }
 
@@ -116,7 +135,7 @@ bool does_process_have_page_file(int process_id) {
  * @param virtual_address (an int in the range [0,63])
  * @return The virtual page number, an int in the range 0,3
  */
-int get_virtual_page_of_address(int virtual_address) {
+int get_virtual_page_of_address(const int virtual_address) {
     return (virtual_address - (virtual_address % PAGE_SIZE)) / PAGE_SIZE;
 }
 
@@ -191,7 +210,7 @@ void load(const int process_id, const int virtual_address) {
  * @param value
  *      An integer value in the range [0,255] specifying the value to set in memory
  */
-void store(int process_id, int virtual_address, int value) {
+void store(const int process_id, const int virtual_address, const int value) {
     if (does_process_have_page_file(process_id) == false) {
         fprintf(stderr, "Error: No page table set up for process %i\n", process_id);
         return;
@@ -223,7 +242,7 @@ void store(int process_id, int virtual_address, int value) {
  * Creates a page table for the given process_id in the next available frame of physical memory.
  * @param process_id
  */
-void create_page_table_for_process(int process_id) {
+void create_page_table_for_process(const int process_id) {
     int next_free_frame = next_free_page_frame_number();
     page_use_status_array[next_free_frame] = true; // Marking the frame as used
     page_table_register_array[process_id] = next_free_frame * PAGE_SIZE; // Setting the register to point to new frame
@@ -247,8 +266,12 @@ void create_page_table_for_process(int process_id) {
  * 	 If value=1 then the page is writeable and readable. If value=0, then 
  * 	 the page is only readable, i.e., all mapped pages are readable.
  */
-void map(int process_id, int virtual_address, int value) {
+void map(const int process_id, const int virtual_address, const int value) {
     if (does_process_have_page_file(process_id) == false) {
+        if (check_free_pages() == false) { // TODO, should this check for 2 free pages? Ask TA
+            printf("Error: No more free pages in memory.\n");
+            return;
+        }
         create_page_table_for_process(process_id);
     }
 
@@ -266,7 +289,12 @@ void map(int process_id, int virtual_address, int value) {
         return;
     }
 
-    // Else, there is no existing mapping, so create one
+    // Else, there is no existing mapping, so create one if there is space
+    if (check_free_pages() == false) {
+        printf("Error: No more free pages in memory.\n");
+        return; // TODO See related todo above, should this undo the page_table that was created?
+    }
+
     const int physical_page_frame = next_free_page_frame_number();
     page_use_status_array[physical_page_frame] = true; // mark the frame as in use
 
@@ -305,7 +333,7 @@ void map(int process_id, int virtual_address, int value) {
  * @param int value
  *      An integer in the range [0,255].
  */
-void process_command(int process_id, char instruction_type, int virtual_address, int value) {
+void process_command(const int process_id, const char instruction_type, const int virtual_address, const int value) {
     if (process_id < 0 || process_id > 3) {
         fprintf(stderr, "Error: Process ID %i is out of range\n", process_id);
         exit(EXIT_FAILURE);
@@ -317,7 +345,7 @@ void process_command(int process_id, char instruction_type, int virtual_address,
     }
 
     if (value < 0 || value > 255) {
-        fprintf(stderr, "Error: virtual address %i is out of range\n", virtual_address);
+        fprintf(stderr, "Error: given value %i is out of range\n", value);
         exit(EXIT_FAILURE);
     }
 
@@ -342,7 +370,6 @@ void process_command(int process_id, char instruction_type, int virtual_address,
  * Loops the read, evaluate, and print loop
  */
 void loop_repl() {
-
     while (true) {
         int pid, virtual_address, value;
         char command[8] = {'\0'};
@@ -378,21 +405,8 @@ void loop_repl() {
 }
 
 /**
- * A simple script that tests a series of map commands. Use from main to see if map is working.
+ * test_easy_extended performs some commands that won't cause any errors or deviate from standard behavior.
  */
-void test_map() {
-    process_command(0, 'm', 5, 0);
-    process_command(0, 'm', 17, 1);
-    process_command(0, 'm', 19, 0);
-    process_command(2, 'm', 4, 0);
-    process_command(1, 'm', 0, 0);
-    process_command(3, 'm', 0, 1);
-
-    print_page_table();
-    print_page_use_status();
-    print_memory();
-}
-
 void test_easy_extended() {
     map(3, 25, 1);
     map(3, 55, 1);
@@ -408,18 +422,19 @@ void test_easy_extended() {
     print_memory();
 }
 
+/**
+ * A quick test that checks to see if map, store, and load in the simplest use case.
+ */
 void test_easy() {
-    map(2, 20, 1);
-    store(2, 20, 255);
-    load(2, 20);
-    print_memory();
+    map(0, 0, 1);
+    store(0, 12, 24);
+    load(0, 12);
 }
 
 int main() {
     initialize_register_array();
-    // test_easy();
-    // test_easy_extended();
-    // test_map();
+    test_easy();
+    test_easy_extended();
 
     loop_repl();
 }
