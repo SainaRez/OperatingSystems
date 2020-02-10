@@ -38,7 +38,7 @@ int page_table_register_array[MAX_PROCESSES];
 bool page_use_status_array[SIZE / PAGE_SIZE];
 
 
-/** 
+/**
  * Initialize all page_table_registers to -1
  */
 void initialize_register_array() {
@@ -379,12 +379,12 @@ void loop_repl() {
         // Source: https://stackoverflow.com/a/12910012/4225094
         int num_scanned_values = scanf("%i,%7[^,^\n],%i,%i", &pid, command, &virtual_address, &value);
         if (num_scanned_values != 4) {
-            fprintf(stderr, "Illegal command input. Scanf could only read %i values instead of the expected 4",
+            fprintf(stderr, "Illegal command input. Scanf could only read %i values instead of the expected 4\n",
                     num_scanned_values);
             exit(EXIT_FAILURE);
         }
 
-        char command_char = '\0';
+        char command_char;
         if (strcmp(command, "map") == 0) {
             command_char = 'm';
         } else if (strcmp(command, "store") == 0) {
@@ -431,10 +431,11 @@ void test_easy() {
     load(0, 12);
 }
 
-int main() {
+
+int main(int argc, char *argv[]) {
     initialize_register_array();
-    test_easy();
-    test_easy_extended();
+    //test_easy();
+    //test_easy_extended();
 
     loop_repl();
 }
