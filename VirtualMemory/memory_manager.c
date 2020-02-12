@@ -7,41 +7,99 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 
-#define PTBR 4
-#define MAX_MEMORY 64
-#define FREE_MEMORY
+#define PTBR_SIZE 4
+#define MAX_MEMORY_SIZE 64
+#define FREE_MEMORY_SIZE 4
+#define PAGE_TABLE_ENTRY_NUM 4
+#define FRAME_SIZE 16
 
-unsidgned char memory[MAX_MEMORY];
+unsigned char memory[MAX_MEMORY_SIZE];
 
-int page_table_base_register[PTBR];
+int page_table_base_register[PTBR_SIZE];
 
-int available_memory[FREE_MEMORY];
+int available_memory[FREE_MEMORY_SIZE];
+
+typedef struct Entry {
+    unsigned char protectionBits;
+    unsigned char is_used;
+    unsigned char virtual_page;
+    unsigned char physical_page;
+} Entry;
+
+typedef struct Page_Table {
+    struct Entry entries[PAGE_TABLE_ENTRY_NUM];
+} Page_Table;
 
 void initialize_arrays(){
-    for(int i = 0; i < PTBR; i++){
+    for(int i = 0; i < PTBR_SIZE; i++){
         page_table_base_register[i] = -1;
     }
 
-    for(int i = 0; i < FREE_MEMORY; i++){
+    for(int i = 0; i < FREE_MEMORY_SIZE; i++){
         available_memory[i] = 0;
     }
     return;
 }
 
-
-// Maps  the virtual memory tothe physical memory
-void map(int pid){
-    if (page_table_base_register[pid] == -1) {
-        
-        for(int i = 0; i < FREE_MEMORY; i++) {
-            if (available_memory[i] == 0) {
-                available_memory[i] = 1; 
-                page_table_base_register[pid] = i;
-                exit(1);
+//checks if a memory is available and retunr the first index
+int free_memory_index(int pid) {
+    for (int i = 0; i < FREE_MEMORY_SIZE; i++) {
+        if (available_memory[i] == 0) {
+            available_memory[i] = 1;
+            page_table_base_register[pid] = i * FRAME_SIZE;
+            return i;
+        }
+        else {
+            if (i == FREE_MEMORY_SIZE - 1) {
+                printf("No frame available");
+                return -1;
             }
         }
     }
+}
 
+// Maps  the virtual memory tothe physical memory
+void map(int pid){
+    int memory_index;
+    if (page_table_base_register[pid] == -1) {
+        memory_index = free_memory_index(pid);
+        if (memory_index == -1) {
+            printf("no memory is available");
+            return;
+        }
+        else {
+            int virtual_page = (virtual_address - (virtual_addres % FRAME_SIZE)) / FRAME_SIZE;
+            Entry *page_table_base_register = 
+        }
+    }
+
+
+
+
+
+    return;
+    // if (page_table_base_register[pid] == -1) {
+        
+    //     for(int i = 0; i < FREE_MEMORY_SIZE; i++) {
+    //         if (available_memory[i] == 0) {
+    //             available_memory[i] = 1; 
+    //             page_table_base_register[pid] = i;
+    //             exit(1);
+    //         }
+    //         else {
+    //             if(i == FREE_MEMORY_SIZE-1) {
+    //                 printf("No frame available");
+    //                 return;
+    //             }
+    //         }
+    //     }
+        
+    //     //int memory_location = (page_table_base_register[pid] * 16) + page;
+    // }
+    // else {
+    //     printf("Page Table is already created for this PID");
+    //     return;
+    // }
 }
 
 // Instructs the memory manager to write  the supplied value
@@ -57,20 +115,20 @@ void load(){
 
 }
 
-void process_command(int pid, char command, int vir_addrs, int value){
+void process_command(const int pid, const char *command, const  int vir_addrs, const int value){
 
     if (pid < 0 && pid > 3){
         printf("PID out of range");
     }
 
-    if (strcmp(command, "map")){
-        map(pid, vir_addrs, value);
+    if (strcmp(command, "map") == 0){
+        //map(pid, vir_addrs, value);
 
     }
-    else if (strcmp(command, "store")) {
+    else if (strcmp(command, "store") == 0) {
 
     }
-    else if (strcmp(command, "load")) {
+    else if (strcmp(command, "load") == 0) {
 
     }
     else {
@@ -83,28 +141,27 @@ void process_command(int pid, char command, int vir_addrs, int value){
 
 void loop_repl(int argc, char* argv[]){
 
-    int pid, vir_addrs, value;
-    char command[512], exit_check[512];
+    int value;
+    int pid, vir_addrs;
+    char command[7], exit_check[4];
     
-    // while(1){
+    while(1){
 
-    //     printf("Instruction?  ");
-    //     int arg_count = scanf("%i,%s,%i,%i\n", &pid, command, &vir_addrs, &value);
-    //     if (arg_count != 4){
-    //         printf("Wrong number of inputs");
-    //     }
-    //     printf("count: %d\n",  arg_count);
-    //     printf("Are you done? (type yes or no) \n");
-    //     scanf("%s", exit_check);
+        printf("Instruction? ");
+        int arg_count = scanf("%i,%6[^,^\n],%i,%i", &pid, command, &vir_addrs, &value);
+        if (arg_count != 4){
+            printf("Wrong number of inputs");
+        }
+        printf("count: %d\n",  arg_count);
+        printf("Are you done? (type yes or no) \n");
+        scanf("%s", exit_check);
 
-    //     if (strcmp(exit_check, "yes") == 0){
-    //         exit(1);
-    //     }
-    // }
-    pid = 1;
-    vir_addrs = 2;
-    //command = "map";
-    value = 0;
+        if (strcmp(exit_check, "yes") == 0){
+            exit(1);
+        }
+        process_command(pid, command, vir_addrs, value);
+    }
+    
 }
 
 
