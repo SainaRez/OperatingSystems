@@ -33,7 +33,7 @@ typedef struct Page_Table {
     struct Entry entries[PAGE_TABLE_ENTRY_NUM];
 } Page_Table;
 
-//FILE *swap_space;
+FILE *swap_space;
 
 void initialize_arrays(){
     for(int i = 0; i < PTBR_SIZE; i++){
@@ -159,6 +159,8 @@ void map(int pid, int virtual_address, unsigned char value){
                 int memory_address = page_table_base_register[pid];
                 Page_Table *table = (Page_Table*) &memory[memory_address];
                 table->entries[0] = page_table_entry;
+
+                printf("Mapped virtual address %i (page %i) into physical frame %i\n", virtual_address, virtual_page, memory_index);
 
                 printf("printing the in use values\n");
                 for (int i = 0; i < PAGE_TABLE_ENTRY_NUM; i++) {
@@ -358,8 +360,7 @@ void loop_repl(int argc, char* argv[]){
     char command[7], exit_check[4];
     initialize_arrays();
 
-    //FILE *swap_space;
-    //swap_space = fopen("swap_space.txt", "w+");
+    swap_space = fopen("swap_space.txt", "w+");
 
     
     while(1){
