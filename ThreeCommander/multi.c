@@ -318,6 +318,8 @@ bool wait_for_process() {
 	return false;
 }
 
+// Checks if a given value in the givnen array
+
 int valueinarray(int val, int arr[], int argc) {
 	int i;
 	for(i = 0; i < argc; i++) {

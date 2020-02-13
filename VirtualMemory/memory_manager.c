@@ -25,13 +25,15 @@ typedef struct Entry {
     unsigned char physical_page;
     unsigned char protectionBits;
     unsigned char present;
-    unsigned char free;
+    unsigned char in_use;
 
 } Entry;
 
 typedef struct Page_Table {
     struct Entry entries[PAGE_TABLE_ENTRY_NUM];
 } Page_Table;
+
+//FILE *swap_space;
 
 void initialize_arrays(){
     for(int i = 0; i < PTBR_SIZE; i++){
@@ -86,22 +88,65 @@ Entry* get_entry_of_virtual_page(int vir_page, int memory_address) {
     return NULL;
 }
 
+// Checks if a given value in the givnen array
+// It also takes the number of elements in the array
+
+int valueinarray(int val, int arr[], int argc) {
+	int i;
+	for(i = 0; i < argc; i++) {
+		if(arr[i] == val)
+			return 1;
+	}
+	return 0;
+}
+
+// Kick out the first page that is not a table
+int which_page_to_swap() {
+    for (int i; i < PAGE_TABLE_ENTRY_NUM; i ++) {
+        if (valueinarray((i * PAGE_SIZE),  page_table_base_register, PTBR_SIZE) == 0) {
+            return i;
+        }
+        else {
+            continue;
+        }
+    }
+    printf("Error: All memory slots hold a page table\n");
+    return -1;
+
+}
+
+// void swap() {
+//     int page_index = which_page_to_swap();
+//     int page_address_in_memory = page_table_base_register[page_index * PAGE_SIZE];
+//     //long current_position = ftell(swap_space);
+//     //printf("current_position: %ld", current_position);
+//     //fwrite(&memory[page_address_in_memory], sizeof(char), PAGE_SIZE, swap_space);
+    
+    
+//     //int file_descriptor = fileno(swap_space);
+//     //lseek(f_stream, , )
+// }
+
+
+
+
 // Maps the virtual memory to the physical memory
 void map(int pid, int virtual_address, unsigned char value){
     int memory_index;
     if (page_table_base_register[pid] == -1) {  //it means that process isn't mapped at all
         memory_index = free_memory_index(); //get the index of first free memory
         if (memory_index == -1) {
-            printf("Error: No memory is available for the page table\n");
-            return;
+            printf("Warning: No memory is available for the page table\n");
+            printf("Swapping a page to file");
+            //swap();
         }
         else {
             // Create a page table at the memory address in page_table_base_register
             page_table_base_register[pid] = memory_index * PAGE_SIZE;
             printf("Put page table for PID %i into physical frame %i\n", pid, memory_index);
             
-            // Now we check the memory again for the entry this time (last time was page table)
-            if (free_memory_index() == -1) { //not sure needs to be confirmed
+            // Now we check the memory again for the page that is being mapped to belong to that process (last time was page table)
+            if (free_memory_index() == -1) { 
                 printf("No Memory is available for entry\n");
             }
             else {
@@ -122,9 +167,23 @@ void map(int pid, int virtual_address, unsigned char value){
     else { //process is mapped before so we check for the specific virtual page
         int virtual_page = get_virtual_page(virtual_address);
         Entry *page_table_entry = get_entry_of_virtual_page(virtual_page, page_table_base_register[pid]);
+        
         if (page_table_entry == NULL) {
             Entry page_table_entry = {virtual_page, memory_index, value, 1, 1};
-            //appned it to the entreis
+            int memory_address = page_table_base_register[pid];
+            //Page_Table *table = (Page_Table*) &memory[memory_address];
+            
+            // for (int i = 0; i < PAGE_TABLE_ENTRY_NUM; i++) {
+            //     if (table->entries[i].in_use == 0) {
+            //         table->entries[i] = page_table_entry;
+            //     }
+            //     else {
+            //         if (i == PAGE_TABLE_ENTRY_NUM - 1) {
+            //             printf("Error: All the entries are in use\n");
+            //             return;
+            //         }
+            //     }
+            // }
             printf("Mapped virtual address %i (page %i) into physical frame %i\n", virtual_address, virtual_page,
             memory_index);
         }
@@ -233,12 +292,12 @@ void process_command(int pid, char *command, int vir_addrs, int value){
         map(pid, vir_addrs, value);
 
     }
-    else if (strcmp(command, "store") == 0) {
-        store(pid, vir_addrs, value);
-    }
-    else if (strcmp(command, "load") == 0) {
-        load(pid, vir_addrs);
-    }
+    // else if (strcmp(command, "store") == 0) {
+    //     store(pid, vir_addrs, value);
+    // }
+    // else if (strcmp(command, "load") == 0) {
+    //     load(pid, vir_addrs);
+    // }
     else {
         printf("Command not supported\n");
     }
@@ -251,6 +310,10 @@ void loop_repl(int argc, char* argv[]){
     int pid, vir_addrs;
     char command[7], exit_check[4];
     initialize_arrays();
+
+    //FILE *swap_space;
+    //swap_space = fopen("swap_space.txt", "w+");
+
     
     while(1){
 
@@ -278,6 +341,7 @@ void loop_repl(int argc, char* argv[]){
 
 int main(int argc, char* argv[]){
 
+    
     loop_repl(argc, argv);
     
     return 0;

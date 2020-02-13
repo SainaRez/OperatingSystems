@@ -167,6 +167,47 @@ Entry *get_entry_of_virtual_page(const int process_id, const int virtual_page) {
     return NULL;
 }
 
+// Checks if a given value in the givnen array
+// It also takes the number of elements in the array
+
+int valueinarray(int val, int arr[], int argc) {
+	int i;
+	for(i = 0; i < argc; i++) {
+		if(arr[i] == val)
+			return 1;
+	}
+	return 0;
+}
+
+// Kick out the first page that is not a table
+int which_page_to_swap() {
+    for (int i; i < ENTRIES_PER_PAGE_TABLE; i ++) {
+        if (valueinarray((i * PAGE_SIZE),  page_table_register_array, MAX_PROCESSES) == 0) {
+            return i;
+        }
+        else {
+            continue;
+        }
+    }
+    printf("Error: All memory slots hold a page table\n");
+    return -1;
+}
+
+void swap() {
+    int page_index = which_page_to_swap();
+    int page_address_in_memory = page_table_base_register[page_index * PAGE_SIZE];
+    long current_position = ftell(swap_space);
+    printf("current_position: %ld", current_position);
+    //fwrite(&memory[page_address_in_memory], sizeof(char), PAGE_SIZE, swap_space);
+    
+    
+    //int file_descriptor = fileno(swap_space);
+    //lseek(f_stream, , )
+}
+
+
+
+
 
 /**
  * @param process_id Int between 0 and 3 specifying which process
