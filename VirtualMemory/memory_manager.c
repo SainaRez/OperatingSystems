@@ -70,13 +70,27 @@ int get_virtual_page(int virtual_address) {
     return virtual_page;
 }
 
+// Gets the virtual page
+// Accesses the page table based on the memory address
+// Looks for the entry that has that virtual page number
+
+Entry get_entry_of_virtual_page(int vir_addr, int memory_address) {
+    Page_Table table = memory[memory_address];
+    for (int i = 0; i < PAGE_TABLE_ENTRY_NUM; i++) {
+        if (table.entries[i].virtual_page == vir_addr) {
+            return table.entries[i];
+        }
+    }
+    return NULL;
+}
+
 // Maps the virtual memory to the physical memory
 void map(int pid, int virtual_address, unsigned char value){
     int memory_index;
     if (page_table_base_register[pid] == -1) {  //it means that process isn't mapped yet
         memory_index = free_memory_index(pid); //get the index of first free memory
         if (memory_index == -1) {
-            printf("No memory is available");
+            printf("Error: No memory is available\n");
             return;
         }
         else {
@@ -85,34 +99,97 @@ void map(int pid, int virtual_address, unsigned char value){
         }
     }
     else {
-        printf("Memory already mapped");
+        printf("Warning: Memory already mapped\n");
+        return;
+    }
+    for (int i = 0; i < PTBR_SIZE; i++) {
+        printf("index %i in available memory: %i\n", i, available_memory[i]);
+        printf("index %i in page table base register: %d\n", i,
+         page_table_base_register[i]);
     }
 
-    return;
-    
+    return;  
 }
 
-// Instructs the memory manager to write  the supplied value
+
+
+// Instructs the memory manager to write the supplied value
 //into the physical memory location associated with the provided
 //virtual address
-void store(){
+void store(int pid, int virtual_address, int value){
+    //Frist check if process is mapped
+    int memory_address = page_table_base_register[pid];
+    if (memory_address == -1) {
+        printf("Error: Memory is not mapped");
+        return;
+    }
+    else {
+        int virtual_page = get_virtual_page(virtual_address);
+        Entry entry = get_entry_of_virtual_page(virtual_address, memory_address);
+        if (entry == NULL) {
+            printf("Error: No entry with the given virtual address was found\n");
+            return;
+        }
+        else {
+            // Frist check if it has write acess
+            if (entry.protectionBits == 0) {
+                printf("Entry does not privide write acess");
+                return;
+            }
+            else {
+                int frame = entry.physical_page;
+                int offset = virtual_address % PAGE_SIZE;
+                int physical_address = (frame * PAGE_SIZE) + offset;
+                memory[physical_address] = value;
+                printf("Stored value %i at virtual address %i (physical address %i)\n", value, virtual_address, physical_address);
+            }
+        }
 
+    }
+    return;
 }
 
 // Instructs the  memory manager to return the byte stored at the
 //memory location specified by virtual_address
-void load(){
-
+void load(int pid, int virtual_address){
+    //Frist check if process is mapped
+    int memory_address = page_table_base_register[pid];
+    if (memory_address == -1) {
+        printf("Error: Memory is not mapped");
+        return;
+    }
+    else {
+        int virtual_page = get_virtual_page(virtual_address);
+        Entry entry = get_entry_of_virtual_page(virtual_address, memory_address);
+        if (entry == NULL) {
+            printf("Error: No entry with the given virtual address was found\n");
+            return;
+        }
+        else {
+            int frame = entry.physical_page;
+            int offset = virtual_address % PAGE_SIZE;
+            int physical_address = (frame * PAGE_SIZE) + offset;
+            printf("The value %i is at virtual address %i\n", memory[physical_address], virtual_address);
+        }
+    return;
 }
 
-void process_command(int pid, char *command, int vir_addrs, unsigned char value){
 
-    if (pid < 0 && pid > 3){
-        printf("PID out of range");
+void process_command(int pid, char *command, int vir_addrs, int value){
+
+    if (pid < 0 || pid > 3) {
+        printf("Error: PID out of range\n");
+    }
+    if (vir_addrs < 0 || vir_addrs > 63) {
+        printf("Error: virtual address out of memory range\n");
+    }
+    if (value < 0 || value > 1) {
+        printf("value: %c\n", value);
+        printf("Error: protection value not supported\n");
     }
 
-    if (strcmp(command, "map") == 0){
-        //map(pid, vir_addrs, value);
+    if (strcmp(command, "map") == 0) {
+        map(pid, vir_addrs, value);
 
     }
     else if (strcmp(command, "store") == 0) {
@@ -122,35 +199,37 @@ void process_command(int pid, char *command, int vir_addrs, unsigned char value)
         //load();
     }
     else {
-        printf("Command not supported");
+        printf("Command not supported\n");
     }
-
-
-
+    return;
 }
 
 void loop_repl(int argc, char* argv[]){
 
-    unsigned char value;
+    int value;
     int pid, vir_addrs;
     char command[7], exit_check[4];
+    initialize_arrays();
     
     while(1){
 
         printf("Instruction? ");
-        int arg_count = scanf("%i,%6[^,^\n],%i,%c", &pid, command, &vir_addrs, &value);
+        int arg_count = scanf("%i,%6[^,^\n],%i,%i", &pid, command, &vir_addrs, &value);
         if (arg_count != 4){
             printf("Wrong number of inputs");
         }
         printf("count: %d\n",  arg_count);
-        printf("Are you done? (type yes or no) \n");
-        scanf("%s", exit_check);
 
-        if (strcmp(exit_check, "yes") == 0){
-            exit(1);
-        }
         process_command(pid, command, vir_addrs, value);
+
+        // printf("Are you done? (type yes or no) \n");
+        // scanf("%s", exit_check);
+
+        // if (strcmp(exit_check, "yes") == 0){
+        //     exit(1);
+        //}
     }
+    return;
     
 }
 
