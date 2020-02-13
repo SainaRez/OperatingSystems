@@ -134,7 +134,7 @@ int which_page_to_swap() {
 void map(int pid, int virtual_address, unsigned char value){
     int memory_index;
     if (page_table_base_register[pid] == -1) {  //it means that process isn't mapped at all
-        printf("Entered the no mapped process statement\n");
+        //printf("Entered the no mapped process statement\n");
         memory_index = free_memory_index(); //get the index of first free memory
         if (memory_index == -1) {
             printf("Warning: No memory is available for the page table\n");
@@ -169,21 +169,11 @@ void map(int pid, int virtual_address, unsigned char value){
                 for (int i = 0; i < PAGE_TABLE_ENTRY_NUM; i++) {
                     printf("Entry %i physical frame value: %i\n", i, table->entries[i].physical_page);
                 }
-
-                
-                // Page_Table *new_table;
-                // new_table->entries[0] = page_table_entry;
-                
-                // int memory_address = page_table_base_register[pid];
-                // new_table = (Page_Table *) &memory[memory_address];
-                // //(Page_Table *) &memory[memory_address] = &new_table;
-
             }            
         }
     }
-    // Is it possible to initialize the free variable so we just check that?
     else { //process is mapped before so we check for the specific virtual page
-        printf("Entered the already mapped process statement\n");
+        //printf("Entered the already mapped process statement\n");
         memory_index = free_memory_index();
         if (memory_index == -1) {
             printf("Error: No memery available\n");
@@ -230,9 +220,7 @@ void map(int pid, int virtual_address, unsigned char value){
                 } 
                 return;
             }
-
         }
-
     }
     printf("available_memory:\n");
     for (int i = 0; i < PTBR_SIZE; i++) {
@@ -247,7 +235,6 @@ void map(int pid, int virtual_address, unsigned char value){
 
     return;  
 }
-
 
 
 // Instructs the memory manager to write the supplied value
