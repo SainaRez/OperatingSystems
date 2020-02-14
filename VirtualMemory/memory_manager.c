@@ -3,9 +3,7 @@
 #include <string.h>
 #include <errno.h> // should always include errno when doing system calls to debug
 #include <stdlib.h> // included for exit()
-#include <sys/wait.h>
 #include <sys/time.h>
-#include <sys/resource.h>
 
 #define PTBR_SIZE 4
 #define MAX_MEMORY_SIZE 64
