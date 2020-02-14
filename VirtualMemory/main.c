@@ -300,7 +300,7 @@ void map(const int process_id, const int virtual_address, const int value) {
     if (does_process_have_page_file(process_id) == false) {
         if (check_free_pages() == false) { // TODO, should this check for 2 free pages? Ask TA
             printf("Error: No more free pages in memory.\n");
-            swap();
+            //swap();
         }
         create_page_table_for_process(process_id);
     }
@@ -322,7 +322,7 @@ void map(const int process_id, const int virtual_address, const int value) {
     // Else, there is no existing mapping, so create one if there is space
     if (check_free_pages() == false) {
         printf("Error: No more free pages in memory.\n");
-        swap();
+        // swap();
         //return; // TODO See related todo above, should this undo the page_table that was created?
     }
 
