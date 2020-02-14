@@ -43,6 +43,8 @@ typedef struct Page_Table {
 } Page_Table;
 
 
+#define REGISTER_SWAPPED -2
+#define REGISTER_EMPTY -1
 /**
  * Each process will have a simulated hardware register pointing to the start of
  * their respective page tables. These registers are simulated with an array
@@ -57,12 +59,14 @@ int page_table_register_array[MAX_PROCESSES];
 bool page_use_status_array[SIZE / PAGE_SIZE];
 
 
+void clear_physical_page(const int address);
+
 /**
  * Initialize all page_table_registers to -1
  */
 void initialize_register_array() {
     for (int i = 0; i < MAX_PROCESSES; i++) {
-        page_table_register_array[i] = -1;
+        page_table_register_array[i] = REGISTER_EMPTY;
     }
 }
 
@@ -176,7 +180,7 @@ int next_free_page_frame_number() {
  * Returns true if the given process has a page table initialized into memory
  */
 bool does_process_have_page_file(const int process_id) {
-    return (page_table_register_array[process_id] != -1);
+    return (page_table_register_array[process_id] != REGISTER_EMPTY);
 }
 
 
@@ -236,6 +240,51 @@ bool is_page_table(int memory_address) {
     return false;
 }
 
+
+/**
+ * Copies the contents of the swap space located at swap_address into the simulated memory
+ * at the given address
+ * @param swap_address Memory address in swap space.
+ * @param physical_memory_address Memory address in physical space
+ */
+void copy_swap_page_to_memory(int swap_address, int physical_memory_address) {
+    assert(swap_address % 16 == 0);
+    assert(physical_memory_address % 16 == 0);
+
+    // Open file
+    FILE *swap = fopen("swap_space.bin", "rb");
+    if (swap == NULL) {
+        fprintf(stderr, "Error: Failed to open swap_space.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Seek to address
+    fseek(swap, swap_address, SEEK_SET);
+
+    // Read contents and store in memory[]
+    Page *physical_page = (Page *) &memory[physical_memory_address];
+    fread(physical_page, sizeof(Page), 1, swap);
+
+    fclose(swap);
+}
+
+
+/**
+ * Copies the contents of the memory at location page, and writes it to the swap file at location swap_address.
+ * @param page A pointer to the page in memory whose contents are to be copied
+ * @param swap_address The address in swap space memory where the contents are to be written
+ */
+void copy_memory_page_to_disc(Page *page, int swap_address) {
+    assert(swap_address % PAGE_SIZE == 0);
+    assert(page != NULL);
+
+    FILE *swap = fopen("swap_space.bin", "wb");
+    fseek(swap, swap_address, SEEK_SET);
+    fwrite(page, sizeof(Page), PAGE_SIZE, swap);
+    fclose(swap);
+}
+
+
 /**
  * Determines which page should be swapped to disc. Prioritizes not swapping page_tables, or
  * memory related to the given process_id. Should not be called when there are still free
@@ -257,9 +306,9 @@ int which_page_to_swap(int process_id) {
     }
 
     // There are no pages that aren't page tables, so let's pick a page table to swap
-    const int relevant_page_table_address = page_table_register_array[process_id];
+    const int relevantPageTableAddress = page_table_register_array[process_id];
     for (int i = 0; i < SIZE; i = i + PAGE_SIZE) {
-        if (relevant_page_table_address == i) {
+        if (relevantPageTableAddress == i) {
             continue;
         }
 
@@ -282,6 +331,88 @@ void update_page_table_for_swap_out(Entry *entry, int swap_address) {
 
     entry->physical_page = swap_address;
     entry->status = ENTRY_STATUS_SWAPPED;
+}
+
+
+/**
+ * Returns the associated page_table_entry for the given physical address.
+ * The given address must be an address that is mapped to by a process.
+ *
+ * @param physical_address Address such as 0, 16, 32, or 48
+ * @return A pointer to the Page_Table Entry which contains a mapping to the physical address
+ */
+Entry *get_page_table_entry_of_address(const int physical_address) {
+    assert(physical_address % 16 == 0);
+    const int physical_page = physical_address / 16;
+
+    for (int a = 0; a < SIZE; a = a + PAGE_SIZE) {
+        if (is_page_table(a) == false) {
+            continue;
+        }
+        for (int x = 0; x < ENTRIES_PER_PAGE_TABLE; ++x) {
+            Entry *entry = (Entry *) &memory[a + x * sizeof(Entry)];
+            if (entry->status == ENTRY_STATUS_PRESENT &&
+                entry->physical_page == physical_page) {
+                return entry;
+            }
+        }
+    }
+
+    fprintf(stderr, "Error: No entry found for given address %i\n", physical_address);
+    exit(EXIT_FAILURE);
+}
+
+/**
+ * swap() will select a page of memory to be swapped to disc, and execute that swap.
+ *
+ * @param process_id The process id which is causing a swap
+ * @return The page_address which is now free
+ */
+int swap(const int process_id) {
+    // Figure out which page to swap
+    const int page_address = which_page_to_swap(process_id);
+    const int frame_number = page_address / PAGE_SIZE;
+    const bool page_table = is_page_table(page_address);
+    Page *page = (Page *) &memory[page_address];
+
+    // Figure out where to swap the page to, and copy the memory there.
+    const int swap_address = page_address * process_id; // TODO, where to copy to (this is temp)
+    copy_memory_page_to_disc(page, swap_address);
+
+    // Mark the page moved as now being free;
+    page_use_status_array[frame_number] = false;
+
+    printf("Swapped frame %i to disc at swap slot %i\n", frame_number, swap_address);
+
+    if (page_table == false) {
+        // If it's not a page table, update the associated page table entry of whatever memory just got moved
+        Entry *entry = get_page_table_entry_of_address(page_address);
+        update_page_table_for_swap_out(entry, swap_address);
+    }
+    else if (page_table == true) {
+        // If it was a page table, indicate that it's moved in the registers
+        for (int i = 0; i < MAX_PROCESSES; ++i) {
+            if (page_table_register_array[i] == page_address) {
+                page_table_register_array[i] = REGISTER_SWAPPED;
+                // TODO indicate where the page table is stored
+            }
+        }
+    }
+
+    clear_physical_page(page_address);
+    return frame_number;
+}
+
+/**
+ * Empties the contents of memory at the given address to all 0's
+ * @param page_address Address such as 0, 16, 32, 48
+ */
+void clear_physical_page(const int page_address) {
+    assert(page_address % 16 == 0);
+    Page *page = (Page *) &memory[page_address];
+    for (int i = 0; i < PAGE_SIZE; ++i) {
+        page->bytes[i] = 0;
+    }
 }
 
 
@@ -386,7 +517,7 @@ void map(const int process_id, const int virtual_address, const int value) {
     if (does_process_have_page_file(process_id) == false) {
         if (check_free_pages() == false) { // TODO, should this check for 2 free pages? Ask TA
             printf("Error: No more free pages in memory.\n");
-            //swap();
+            swap(process_id);
         }
         create_page_table_for_process(process_id);
     }
@@ -408,8 +539,7 @@ void map(const int process_id, const int virtual_address, const int value) {
     // Else, there is no existing mapping, so create one if there is space
     if (check_free_pages() == false) {
         printf("Error: No more free pages in memory.\n");
-        // swap();
-        //return; // TODO See related todo above, should this undo the page_table that was created?
+        swap(process_id);
     }
 
     const int physical_page_frame = next_free_page_frame_number();
@@ -522,49 +652,6 @@ void loop_repl() {
 }
 
 
-/**
- * Copies the contents of the swap space located at swap_address into the simulated memory
- * at the given address
- * @param swap_address Memory address in swap space.
- * @param physical_memory_address Memory address in physical space
- */
-void copy_swap_page_to_memory(int swap_address, int physical_memory_address) {
-    assert(swap_address % 16 == 0);
-    assert(physical_memory_address % 16 == 0);
-
-    // Open file
-    FILE *swap = fopen("swap_space.bin", "rb");
-    if (swap == NULL) {
-        fprintf(stderr, "Error: Failed to open swap_space.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    // Seek to address
-    fseek(swap, swap_address, SEEK_SET);
-
-    // Read contents and store in memory[]
-    Page *physical_page = (Page *) &memory[physical_memory_address];
-    fread(physical_page, sizeof(Page), 1, swap);
-
-    fclose(swap);
-}
-
-
-/**
- * Copies the contents of the memory at location page, and writes it to the swap file at location swap_address.
- * @param page A pointer to the page in memory whose contents are to be copied
- * @param swap_address The address in swap space memory where the contents are to be written
- */
-void copy_memory_page_to_disc(Page *page, int swap_address) {
-    assert(swap_address % PAGE_SIZE == 0);
-    assert(page != NULL);
-
-    FILE *swap = fopen("swap_space.bin", "wb");
-    fseek(swap, swap_address, SEEK_SET);
-    fwrite(page, sizeof(Page), PAGE_SIZE, swap);
-    fclose(swap);
-}
-
 
 /**
  * A quick test that checks to see if map, store, and load in the simplest use case.
@@ -586,13 +673,21 @@ void test_read_write_disc() {
     print_memory();
 }
 
+void test_swap() {
+    map(0, 0, 1);
+    map(1, 0, 1);
+    map(2, 0, 1);
+    map(3, 0, 1);
+
+}
+
 int main(int argc, char *argv[]) {
     initialize_register_array();
     remove("swap_space.bin");
 
-    test_read_write_disc();
+    test_swap();
+    //test_read_write_disc();
     //test_easy();
-    //test_easy_extended();
 
     loop_repl();
 }
