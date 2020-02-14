@@ -174,7 +174,7 @@ void map(int pid, int virtual_address, unsigned char value){
         if (memory_index == -1) {
             printf("Warning: No memory is available for the page table\n");
             printf("Swapping a page to file");
-            swap_to_disk();
+            //swap_to_disk();
             //return;
         }
         else {
@@ -186,7 +186,7 @@ void map(int pid, int virtual_address, unsigned char value){
             memory_index = free_memory_index();
             if (memory_index == -1) { 
                 printf("No Memory is available for entry\n");
-                swap_to_disk();
+                //swap_to_disk();
             }
             else {
                 int virtual_page = get_virtual_page(virtual_address);
@@ -215,7 +215,7 @@ void map(int pid, int virtual_address, unsigned char value){
         memory_index = free_memory_index();
         if (memory_index == -1) {
             printf("Error: No memery available\n");
-            swap_to_disk();
+            //swap_to_disk();
             //return;
         }
         else {
