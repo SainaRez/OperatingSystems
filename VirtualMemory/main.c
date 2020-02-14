@@ -123,23 +123,22 @@ void print_memory() {
 /**
  * Prints the contents of the swap file, if it exists.
  */
-// void print_swap() {
-//     FILE *swap;
-//     fopen_s(&swap, "swap_space.bin", "rb");
-//     if (swap == NULL) { return; }
+void print_swap() {
+    FILE *swap = fopen("swap_space.bin", "rb");
+    if (swap == NULL) { return; }
 
-//     int i = 0;
-//     int byte;
-//     while ((byte = getc(swap)) != EOF) {
-//         if (i % PAGE_SIZE * 2 == 0) {
-//             printf("\n");
-//         }
-//         i++;
-//         printf("%02x,", byte);
-//     }
-//     fclose(swap);
-//     printf("EOF\n");
-// }
+    int i = 0;
+    int byte;
+    while ((byte = getc(swap)) != EOF) {
+        if (i % PAGE_SIZE * 2 == 0) {
+            printf("\n");
+        }
+        i++;
+        printf("%02x,", byte);
+    }
+    fclose(swap);
+    printf("EOF\n");
+}
 
 
 /**
@@ -215,7 +214,7 @@ Entry *get_entry_of_virtual_page(const int process_id, const int virtual_page) {
 
     for (int i = 0; i < ENTRIES_PER_PAGE_TABLE; ++i) {
         Entry *entry = &page_table->entries[i];
-        if (entry->status == false) {
+        if (entry->status == ENTRY_STATUS_EMPTY) {
             continue;
         }
         if (entry->virtual_page == virtual_page) {
@@ -364,6 +363,9 @@ Entry *get_page_table_entry_of_address(const int physical_address) {
     exit(EXIT_FAILURE);
 }
 
+int swap_counter = 0;
+
+
 /**
  * swap() will select a page of memory to be swapped to disc, and execute that swap.
  *
@@ -378,7 +380,7 @@ int swap(const int process_id) {
     Page *page = (Page *) &memory[page_address];
 
     // Figure out where to swap the page to, and copy the memory there.
-    const int swap_address = (page_address + 16) * process_id; // TODO, where to copy to (this is temp)
+    const int swap_address = PAGE_SIZE * ++swap_counter; // TODO, where to copy to (this is temp)
     copy_memory_page_to_disc(page, swap_address);
 
     // Mark the page moved as now being free;
@@ -401,7 +403,7 @@ int swap(const int process_id) {
     }
 
     clear_physical_page(page_address);
-    return frame_number;
+    return page_address;
 }
 
 
@@ -420,7 +422,6 @@ void clear_physical_page(const int page_address) {
 /**
  * Checks to see if a page table is in memory for the process, and loads it into memory
  * from swap if it isn't.
- *
  */
 void prepare_page_table(int process_id) {
     assert(does_process_have_page_file(process_id));
@@ -429,9 +430,11 @@ void prepare_page_table(int process_id) {
         // If the page_table is on swap space, move it back to memory
         const int swap_address_of_page_table = swapped_page_table_register_array[process_id];
         const int newly_free_physical_address = swap(process_id); // TODO - assumes no free memory, is this safe?
-
+        assert(page_use_status_array[newly_free_physical_address / 16] == false);
         copy_swap_page_to_memory(swap_address_of_page_table, newly_free_physical_address);
+        page_use_status_array[newly_free_physical_address / 16] = true;
 
+        printf("Put page table for PID %i into physical frame %i", process_id, newly_free_physical_address);
         swapped_page_table_register_array[process_id] = 0;
         page_table_register_array[process_id] = newly_free_physical_address;
     }
@@ -455,8 +458,22 @@ void load(const int process_id, const int virtual_address) {
 
     Entry *page_table_entry = get_entry_of_virtual_page(process_id, virtual_page);
     if (page_table_entry == NULL) {
-        fprintf(stderr, "Error: No mapping found for given virtual address %i\n", virtual_address);
+        printf("Error: No mapping found for given virtual address %i\n", virtual_address);
         return;
+    }
+
+    if (page_table_entry->status == ENTRY_STATUS_SWAPPED) {
+        // If the page_table is on swap space, move it back to memory and update page_table
+        const int swap_address_of_page = page_table_entry->physical_page;
+        const int newly_free_physical_address = swap(process_id);
+
+        // TODO duplicate code with store(), can probably be refactored
+        printf("Swapped disk slot %i into frame %i\n", swap_address_of_page,
+               newly_free_physical_address / PAGE_SIZE);
+
+        copy_swap_page_to_memory(swap_address_of_page, newly_free_physical_address);
+        page_use_status_array[newly_free_physical_address % 16] = true;
+        page_table_entry->physical_page = newly_free_physical_address / 16;
     }
 
     const int physical_page = page_table_entry->physical_page;
@@ -497,6 +514,19 @@ void store(const int process_id, const int virtual_address, const int value) {
     if (page_table_entry->writable == false) {
         printf("Error: writes are not allowed to this page\n");
         return;
+    }
+    if (page_table_entry->status == ENTRY_STATUS_SWAPPED) {
+        // If the page_table is on swap space, move it back to memory and update page_table
+        const int swap_address_of_page = page_table_entry->physical_page;
+        const int newly_free_physical_address = swap(process_id);
+
+        printf("Swapped disk slot %i into frame %i\n", swap_address_of_page,
+               newly_free_physical_address / PAGE_SIZE);
+
+        copy_swap_page_to_memory(swap_address_of_page, newly_free_physical_address);
+        assert(page_use_status_array[newly_free_physical_address % 16]);
+        page_use_status_array[newly_free_physical_address % 16] = true;
+        page_table_entry->physical_page = newly_free_physical_address / 16;
     }
     const int physical_page_frame = page_table_entry->physical_page;
 
@@ -548,6 +578,7 @@ void map(const int process_id, const int virtual_address, const int value) {
         prepare_page_table(process_id);
     }
 
+    // Get the entry of the virtual page from the page table, if it exists.
     int virtual_page = get_virtual_page_of_address(virtual_address);
     Entry *page_table_entry = get_entry_of_virtual_page(process_id, virtual_page);
     if (page_table_entry != NULL) {
@@ -564,7 +595,7 @@ void map(const int process_id, const int virtual_address, const int value) {
 
     // Else, there is no existing mapping, so create one if there is space
     if (check_free_pages() == false) {
-        printf("Error: No more free pages in memory.\n");
+        printf("Error: No more free pages in memory.\n"); // TODO remove
         swap(process_id);
     }
 
@@ -700,9 +731,14 @@ void test_read_write_disc() {
 
 void test_swap() {
     map(0, 0, 1);
+    map(0, 48, 1);
+    map(0, 16, 1);
+    map(0, 32, 1);
+    store(0, 0, 255);
     map(1, 0, 1);
-    map(2, 0, 1);
-    map(3, 0, 1);
+    // map(2, 0, 1);
+    // map(3, 0, 1);
+    // load(0, 0);
 
 }
 
