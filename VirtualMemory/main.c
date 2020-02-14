@@ -517,14 +517,15 @@ void prepare_page_table(int process_id) {
     assert(does_process_have_page_file(process_id));
 
     if (page_table_register_array[process_id] == REGISTER_SWAPPED) {
-
         // If the page_table is on swap space, move it back to memory
-        const int swapped_address = swap(process_id);
-        swapped_page_table_register_array[process_id];
-        // TODO finish this code
-    }
+        const int swap_address_of_page_table = swapped_page_table_register_array[process_id];
+        const int newly_free_physical_address = swap(process_id); // TODO - assumes no free memory, is this safe?
 
-    // TODO check if the page_table is swapped, and handle it if so.
+        copy_swap_page_to_memory(swap_address_of_page_table, newly_free_physical_address);
+
+        swapped_page_table_register_array[process_id] = 0;
+        page_table_register_array[process_id] = newly_free_physical_address;
+    }
 }
 
 
@@ -629,10 +630,13 @@ void create_page_table_for_process(const int process_id) {
 void map(const int process_id, const int virtual_address, const int value) {
     if (does_process_have_page_file(process_id) == false) {
         if (check_free_pages() == false) {
-            printf("Error: No more free pages in memory.\n");
+            printf("Error: No more free pages in memory.\n"); // TODO remove
             swap(process_id);
         }
         create_page_table_for_process(process_id);
+    } else {
+        // If there already is a page_table, make sure it is not in swap space.
+        prepare_page_table(process_id);
     }
 
     int virtual_page = get_virtual_page_of_address(virtual_address);
