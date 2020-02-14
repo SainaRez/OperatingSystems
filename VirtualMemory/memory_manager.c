@@ -33,6 +33,10 @@ typedef struct Page_Table {
     struct Entry entries[PAGE_TABLE_ENTRY_NUM];
 } Page_Table;
 
+typedef struct Page {
+    unsigned char bytes[PAGE_SIZE];
+} Page;
+
 FILE *swap_space;
 
 // Initializes the page_table_base_register (-1) and the availables memory arrays (zeros)
@@ -159,8 +163,8 @@ void swap_back_to_memory(int offset, int available_memory_index) {
 
 
     while (i < PAGE_SIZE) {
-        memory[i + memory_start_address] = token;
-        token = strtok(line, NULL);
+        memory[i + memory_start_address] = *token;
+        token = strtok(NULL, " ");
     }
     return;
 
@@ -212,8 +216,8 @@ void map(int pid, int virtual_address, unsigned char value){
         if (memory_index == -1) {
             printf("Warning: No memory is available for the page table\n");
             printf("Swapping a page to file");
-            //swap_to_disk();
-            //return;
+            int disk_address = swap_to_disk();
+            update_page_table_for_swap_out(pid, virtual_address, disk_address);
         }
         else {
             // Create a page table at the memory address in page_table_base_register
@@ -224,7 +228,8 @@ void map(int pid, int virtual_address, unsigned char value){
             memory_index = free_memory_index();
             if (memory_index == -1) { 
                 printf("No Memory is available for entry\n");
-                //swap_to_disk();
+                int disk_address = swap_to_disk();
+                update_page_table_for_swap_out(pid, virtual_address, disk_address);
             }
             else {
                 int virtual_page = get_virtual_page(virtual_address);
@@ -254,7 +259,7 @@ void map(int pid, int virtual_address, unsigned char value){
         if (memory_index == -1) {
             printf("Error: No memery available\n");
             int disk_address = swap_to_disk();
-            update_page_table_for_swap(pid, virtual_address, disk_address);
+            update_page_table_for_swap_out(pid, virtual_address, disk_address);
                 
             //return;
         }
@@ -453,11 +458,19 @@ void loop_repl(int argc, char* argv[]){
     
 }
 
+void test_read_write_disc() {
+    map(3, 17, 1);
+    store(3, 16, 255);
+    store(3, 31, 15);
+    Page *page_to_move = (Page *) &memory[16];
+}
+
 
 int main(int argc, char* argv[]){
 
     
-    loop_repl(argc, argv);
+    //loop_repl(argc, argv);
+    test_read_write_disc();
     
     return 0;
 }
