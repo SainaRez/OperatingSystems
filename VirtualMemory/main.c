@@ -378,7 +378,7 @@ int swap(const int process_id) {
     Page *page = (Page *) &memory[page_address];
 
     // Figure out where to swap the page to, and copy the memory there.
-    const int swap_address = (page_address + 1 ) * process_id; // TODO, where to copy to (this is temp)
+    const int swap_address = (page_address + 1) * process_id; // TODO, where to copy to (this is temp)
     copy_memory_page_to_disc(page, swap_address);
 
     // Mark the page moved as now being free;
@@ -390,8 +390,7 @@ int swap(const int process_id) {
         // If it's not a page table, update the associated page table entry of whatever memory just got moved
         Entry *entry = get_page_table_entry_of_address(page_address);
         update_page_table_for_swap_out(entry, swap_address);
-    }
-    else if (page_table == true) {
+    } else if (page_table == true) {
         // If it was a page table, indicate that it's moved in the registers
         for (int i = 0; i < MAX_PROCESSES; ++i) {
             if (page_table_register_array[i] == page_address) {
@@ -419,17 +418,16 @@ void clear_physical_page(const int page_address) {
 }
 
 /**
- * Checks to see if a page table is set up for a process
+ * Checks to see if a page table is in memory for the process, and loads it into memory
+ * from swap if it isn't.
+ *
  */
 void prepare_page_table(int process_id) {
-    if (does_process_have_page_file(process_id) == false) {
-        fprintf(stderr, "Error: No page table set up for process %i\n", process_id);
-        return;
-    }
+    assert(does_process_have_page_file(process_id));
 
-    // TODO
     if (page_table_register_array[process_id] == REGISTER_SWAPPED) {
-        // If the page_table is on swap space, move it back
+
+        // If the page_table is on swap space, move it back to memory
         const int swapped_address = swap(process_id);
         swapped_page_table_register_array[process_id];
         // TODO finish this code
@@ -446,6 +444,10 @@ void prepare_page_table(int process_id) {
  *      location for given process
  */
 void load(const int process_id, const int virtual_address) {
+    if (does_process_have_page_file(process_id) == false) {
+        fprintf(stderr, "Error: No page table set up for process %i\n", process_id);
+        return;
+    }
     prepare_page_table(process_id);
 
     const int virtual_page = get_virtual_page_of_address(virtual_address);
@@ -478,9 +480,13 @@ void load(const int process_id, const int virtual_address) {
  *      An integer value in the range [0,255] specifying the value to set in memory
  */
 void store(const int process_id, const int virtual_address, const int value) {
+    if (does_process_have_page_file(process_id) == false) {
+        fprintf(stderr, "Error: No page table set up for process %i\n", process_id);
+        return;
+    }
     prepare_page_table(process_id);
-    const int virtual_page = get_virtual_page_of_address(virtual_address);
 
+    const int virtual_page = get_virtual_page_of_address(virtual_address);
     Entry *page_table_entry = get_entry_of_virtual_page(process_id, virtual_page);
 
     if (page_table_entry == NULL) {
@@ -666,7 +672,6 @@ void loop_repl() {
         fflush(stdin);
     }
 }
-
 
 
 /**
