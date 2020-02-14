@@ -16,7 +16,7 @@ const bool verbose = true;
 #define ENTRY_STATUS_PRESENT 1
 #define ENTRY_STATUS_SWAPPED 2
 
-FILE * swap_file;
+FILE *swap_file;
 
 /**
  * An Entry is a single mapping of a virtual page to a location in swap or memory.
@@ -279,14 +279,10 @@ void copy_memory_page_to_disc(Page *page, int swap_address) {
     assert(swap_address % PAGE_SIZE == 0);
     assert(page != NULL);
 
-    printf("Copying page to swap address %i\n", swap_address);
-
-    print_swap();
-    FILE *swap = fopen("swap_space.bin", "r+");
+    FILE *swap = fopen("swap_space.bin", "r+b");
     fseek(swap, swap_address, SEEK_SET);
     fwrite(page, sizeof(Page), 1, swap);
     fclose(swap);
-    print_swap();
 }
 
 
@@ -391,7 +387,7 @@ int swap(const int process_id) {
     // Mark the page moved as now being free;
     page_use_status_array[frame_number] = false;
 
-    printf("Swapped frame %i to disc at swap slot %i\n", frame_number, swap_address);
+    printf("Swapped frame %i to disc at swap slot %i\n", frame_number, swap_address / PAGE_SIZE);
 
     if (page_table == false) {
         // If it's not a page table, update the associated page table entry of whatever memory just got moved
@@ -477,7 +473,7 @@ void load(const int process_id, const int virtual_address) {
                newly_free_physical_address / PAGE_SIZE);
 
         copy_swap_page_to_memory(swap_address_of_page, newly_free_physical_address);
-        page_use_status_array[newly_free_physical_address % 16] = true;
+        page_use_status_array[newly_free_physical_address / PAGE_SIZE] = true;
         page_table_entry->status = ENTRY_STATUS_PRESENT;
         page_table_entry->physical_page = newly_free_physical_address / 16;
     }
@@ -576,7 +572,6 @@ void create_page_table_for_process(const int process_id) {
 void map(const int process_id, const int virtual_address, const int value) {
     if (does_process_have_page_file(process_id) == false) {
         if (check_free_pages() == false) {
-            printf("Error: No more free pages in memory.\n"); // TODO remove
             swap(process_id);
         }
         create_page_table_for_process(process_id);
@@ -602,7 +597,6 @@ void map(const int process_id, const int virtual_address, const int value) {
 
     // Else, there is no existing mapping, so create one if there is space
     if (check_free_pages() == false) {
-        printf("Error: No more free pages in memory.\n"); // TODO remove
         swap(process_id);
     }
 
@@ -740,23 +734,71 @@ void test_swap() {
     map(0, 0, 1);
     store(0, 0, 255);
     map(0, 16, 1);
-    store(0,16, 15);
+    store(0, 16, 254);
     map(0, 32, 1);
+    store(0, 32, 253);
     map(0, 48, 1);
-    store(0, 48, 255);
-    load(0,48);
+    store(0, 48, 252);
     map(1, 0, 1);
-    map(1, 0, 0);
+    store(1, 1, 255);
+    map(1, 16, 1);
+    store(1, 17, 254);
+    map(1, 32, 1);
+    store(1, 33, 253);
+    map(1, 48, 1);
+    store(1, 49, 252);
+    map(2, 0, 1);
+    store(2, 2, 15);
+    map(2, 16, 1);
+    store(2, 18, 14);
+    map(2, 32, 1);
+    store(2, 34, 13);
+    map(2, 48, 1);
+    store(2, 50, 12);
+    map(3, 0, 1);
+    store(3, 4, 255);
+    map(3, 16, 1);
+    store(3, 20, 255);
+    map(3, 32, 1);
+    store(3, 36, 255);
+    map(3, 48, 1);
+    store(3, 52, 255);
     load(0,48);
+    load(0,32);
+    load(0,16);
+    load(0,0);
+    load(2, 18);
+    load(2, 2);
+    load(2, 34);
+    load(2, 50);
+    load(3, 52);
+    load(3, 36);
+    load(3, 20);
+    load(3, 4);
+    load(1, 1);
+    load(1, 17);
+    load(1, 33);
+    load(1, 49);
+    map(2, 20, 0);
+    map(2, 10, 0);
+    load(2, 18);
+    store(2, 25, 170);
+    map(2, 20, 1);
+    store(2, 25, 170);
+    load(2, 25);
+    load(2, 18);
+    load(0, 16);
+    load(3, 4);
+    load(1,33);
 }
 
 void test_memory() {
-    map(0,0,1);
-    store(0,0,255);
+    map(0, 0, 1);
+    store(0, 0, 255);
     print_swap();
-    map(0,16,1);
-    map(0,32,1);
-    map(0,48,1);
+    map(0, 16, 1);
+    map(0, 32, 1);
+    map(0, 48, 1);
     print_swap();
     map(1, 48, 1);
     print_swap();
@@ -765,7 +807,7 @@ void test_memory() {
 int main(int argc, char *argv[]) {
     initialize_register_array();
     remove("swap_space.bin");
-    FILE* temp = fopen("swap_space.bin", "w");
+    FILE *temp = fopen("swap_space.bin", "w");
     fclose(temp);
 
     //test_memory();
