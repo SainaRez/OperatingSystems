@@ -11,7 +11,8 @@
 
 unsigned char memory[SIZE];
 const bool verbose = true;
-int current_disk_address = 0;
+int current_file_address = 0;
+
 
 #define ENTRY_STATUS_EMPTY 0
 #define ENTRY_STATUS_PRESENT 1
@@ -57,7 +58,7 @@ typedef struct Page_Table {
 int page_table_register_array[MAX_PROCESSES];
 int swapped_page_table_register_array[MAX_PROCESSES];
 
-Queue* queue = createQueue();
+
 
 /**
  * A list of which pages a free. Free pages have a value of false
@@ -166,28 +167,32 @@ typedef struct Queue {
 } Queue; 
   
 // A utility function to create a new linked list node. 
-struct QNode* newNode(int k) 
+QNode* newNode(int k) 
 { 
-    struct QNode* temp = (struct QNode*)malloc(sizeof(struct QNode)); 
+    //struct QNode* temp = (struct QNode*)malloc(sizeof(struct QNode)); 
+    QNode* temp;
     temp->key = k; 
     temp->next = NULL; 
     return temp; 
 };
   
 // A utility function to create an empty queue 
-struct Queue* createQueue() 
+Queue* createQueue() 
 { 
-    struct Queue* q = (struct Queue*)malloc(sizeof(struct Queue)); 
+    Queue* q = (Queue*)malloc(sizeof(Queue)); 
+    //Queue* q;
     q->front = q->rear = NULL; 
     return q; 
-} Queue;
+}
   
 // The function to add a key k to q 
-void enQueue(struct Queue* q, int k) 
+void enQueue(Queue* q, int k) 
 { 
     // Create a new LL node 
-    struct QNode* temp = newNode(k); 
-  
+    //struct QNode* temp = newNode(k); 
+      QNode* temp = newNode(k); 
+
+
     // If queue is empty, then new node is front and rear both 
     if (q->rear == NULL) { 
         q->front = q->rear = temp; 
@@ -200,14 +205,15 @@ void enQueue(struct Queue* q, int k)
 } 
   
 // Function to remove a key from given queue q 
-void deQueue(struct Queue* q) 
+int deQueue(Queue* q) 
 { 
     // If queue is empty, return NULL. 
     if (q->front == NULL) 
-        return; 
+        return -1; 
   
     // Store previous front and move front one node ahead 
-    struct QNode* temp = q->front; 
+    QNode* temp = q->front; 
+    int node_value = temp->key;
   
     q->front = q->front->next; 
   
@@ -215,8 +221,11 @@ void deQueue(struct Queue* q)
     if (q->front == NULL) 
         q->rear = NULL; 
   
-    free(temp); 
+    return temp->key;
+    //free(temp); 
 } 
+
+Queue* queue;
 
 // End of Queue Section 
 
@@ -363,10 +372,8 @@ void copy_swap_page_to_memory(int swap_address, int physical_memory_address) {
     
     fread(physical_page, sizeof(Page), 1, swap_file);
 
-    Page *page;
-    fwrite(zeros, sizeof(char), PAGE_SIZE, swap_file);
     clear_disk_after_swap();
-    enQueue(swap_address);
+    enQueue(queue, swap_address);
     fclose(swap_file);
 }
 
@@ -377,9 +384,9 @@ void copy_swap_page_to_memory(int swap_address, int physical_memory_address) {
  * @param page A pointer to the page in memory whose contents are to be copied
  * @param swap_address The address in swap space memory where the contents are to be written
  */
-void copy_memory_page_to_disc(Page *page) {
+int copy_memory_page_to_disc(Page *page) {
     int disk_address;
-    if (deQueue(queue) == NULL) {
+    if (deQueue(queue) == -1) {
         // Put it at the end of the file (current location in file)
         disk_address = current_file_address;
         current_file_address += 1;
@@ -416,7 +423,6 @@ int which_page_to_swap(int process_id) {
     // For each page in memory
     for (int i = 0; i < SIZE; i = i + PAGE_SIZE) {
         if (is_page_table(i) == false) {
-
             // TODO avoid swapping pages associated with PID
             return i;
         }
@@ -494,10 +500,7 @@ int swap(const int process_id) {
     Page *page = (Page *) &memory[page_address];
 
     // Figure out where to swap the page to, and copy the memory there.
-    int swap_address;
-
-    const int swap_address = (page_address + 1) * process_id; 
-    swap_address = copy_memory_page_to_disc(page);
+    int swap_address = copy_memory_page_to_disc(page);
 
     // Mark the page moved as now being free;
     page_use_status_array[frame_number] = false;
@@ -810,7 +813,7 @@ void test_read_write_disc() {
     store(3, 16, 255);
     store(3, 31, 15);
     Page *page_to_move = (Page *) &memory[16];
-    copy_memory_page_to_disc(page_to_move, 16);
+    copy_memory_page_to_disc(page_to_move);
     //print_swap();
     copy_swap_page_to_memory(16, 32);
     print_memory();
@@ -824,9 +827,11 @@ void test_swap() {
 
 }
 
+
 int main(int argc, char *argv[]) {
     initialize_register_array();
     remove("swap_space.bin");
+    queue = createQueue();
 
     test_swap();
     //test_read_write_disc();
