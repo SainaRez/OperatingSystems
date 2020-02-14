@@ -11,6 +11,7 @@
 
 unsigned char memory[SIZE];
 const bool verbose = true;
+int current_disk_address = 0;
 
 #define ENTRY_STATUS_EMPTY 0
 #define ENTRY_STATUS_PRESENT 1
@@ -53,6 +54,8 @@ typedef struct Page_Table {
  **/
 int page_table_register_array[MAX_PROCESSES];
 int swapped_page_table_register_array[MAX_PROCESSES];
+
+Queue* queue = createQueue();
 
 /**
  * A list of which pages a free. Free pages have a value of false
@@ -140,6 +143,80 @@ void print_memory() {
 //     fclose(swap);
 //     printf("EOF\n");
 // }
+
+
+/**
+ * Implementation of Queue
+ * This code is taking from the internet
+ * source: 
+ */
+
+// A linked list (LL) node to store a queue entry 
+typedef struct QNode { 
+    int key; 
+    struct QNode* next; 
+} QNode;
+  
+// The queue, front stores the front node of LL and rear stores the 
+// last node of LL 
+typedef struct Queue { 
+    struct QNode *front, *rear; 
+} Queue; 
+  
+// A utility function to create a new linked list node. 
+struct QNode* newNode(int k) 
+{ 
+    struct QNode* temp = (struct QNode*)malloc(sizeof(struct QNode)); 
+    temp->key = k; 
+    temp->next = NULL; 
+    return temp; 
+};
+  
+// A utility function to create an empty queue 
+struct Queue* createQueue() 
+{ 
+    struct Queue* q = (struct Queue*)malloc(sizeof(struct Queue)); 
+    q->front = q->rear = NULL; 
+    return q; 
+} Queue;
+  
+// The function to add a key k to q 
+void enQueue(struct Queue* q, int k) 
+{ 
+    // Create a new LL node 
+    struct QNode* temp = newNode(k); 
+  
+    // If queue is empty, then new node is front and rear both 
+    if (q->rear == NULL) { 
+        q->front = q->rear = temp; 
+        return; 
+    } 
+  
+    // Add the new node at the end of queue and change rear 
+    q->rear->next = temp; 
+    q->rear = temp; 
+} 
+  
+// Function to remove a key from given queue q 
+void deQueue(struct Queue* q) 
+{ 
+    // If queue is empty, return NULL. 
+    if (q->front == NULL) 
+        return; 
+  
+    // Store previous front and move front one node ahead 
+    struct QNode* temp = q->front; 
+  
+    q->front = q->front->next; 
+  
+    // If front becomes NULL, then change rear also as NULL 
+    if (q->front == NULL) 
+        q->rear = NULL; 
+  
+    free(temp); 
+} 
+
+// End of Queue Section 
 
 
 /**
@@ -274,14 +351,26 @@ void copy_swap_page_to_memory(int swap_address, int physical_memory_address) {
  * @param page A pointer to the page in memory whose contents are to be copied
  * @param swap_address The address in swap space memory where the contents are to be written
  */
-void copy_memory_page_to_disc(Page *page, int swap_address) {
-    assert(swap_address % PAGE_SIZE == 0);
+void copy_memory_page_to_disc(Page *page) {
+    int disk_address;
+    if (deQueue(queue) == NULL) {
+        // Put it at the end of the file (current location in file)
+        disk_address = current_file_address;
+        current_file_address += 1;
+    }
+    else {
+        // Otherwise pop the address of the last swaped out page
+        int disk_address = deQueue(queue); 
+    }
+    
+    assert(disk_address % PAGE_SIZE == 0);
     assert(page != NULL);
 
     FILE *swap = fopen("swap_space.bin", "wb");
-    fseek(swap, swap_address, SEEK_SET);
+    fseek(swap, disk_address, SEEK_SET);
     fwrite(page, sizeof(Page), PAGE_SIZE, swap);
     fclose(swap);
+    return disk_address;
 }
 
 
@@ -378,8 +467,10 @@ int swap(const int process_id) {
     Page *page = (Page *) &memory[page_address];
 
     // Figure out where to swap the page to, and copy the memory there.
+    int swap_address;
+
     const int swap_address = (page_address + 1) * process_id; // TODO, where to copy to (this is temp)
-    copy_memory_page_to_disc(page, swap_address);
+    swap_address = copy_memory_page_to_disc(page);
 
     // Mark the page moved as now being free;
     page_use_status_array[frame_number] = false;
