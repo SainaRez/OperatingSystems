@@ -65,14 +65,6 @@ void initialize_register_array() {
 
 
 /**
- * Clears the contents of the swap file
- */
-void clear_swap() {
-    remove("swap_space.bin");
-}
-
-
-/**
  * Prints the contents of the page_table_register_array
  */
 void print_page_table() {
@@ -118,6 +110,28 @@ void print_memory() {
         printf("\n");
     }
     printf("\n");
+}
+
+
+/**
+ * Prints the contents of the swap file, if it exists.
+ */
+void print_swap() {
+    FILE *swap;
+    fopen_s(&swap, "swap_space.bin", "rb");
+    if (swap == NULL) { return; }
+
+    int i = 0;
+    int byte;
+    while ((byte = getc(swap)) != EOF) {
+        if (i % PAGE_SIZE * 2 == 0) {
+            printf("\n");
+        }
+        i++;
+        printf("%02x,", byte);
+    }
+    fclose(swap);
+    printf("EOF\n");
 }
 
 
@@ -470,28 +484,6 @@ void loop_repl() {
 
 
 /**
- * Prints the contents of the swap file, if it exists.
- */
-void print_swap() {
-    FILE *swap;
-    fopen_s(&swap, "swap_space.bin", "rb");
-    if (swap == NULL) { return; }
-
-    int i = 0;
-    int byte;
-    while ((byte = getc(swap)) != EOF) {
-        if (i % PAGE_SIZE == 0) {
-            printf("\n");
-        }
-        i++;
-        printf("%02x,", byte);
-    }
-    fclose(swap);
-    printf("EOF\n");
-}
-
-
-/**
  * Copies the contents of the swap space located at swap_address into the simulated memory
  * at the given address
  * @param swap_address Memory address in swap space.
@@ -518,6 +510,7 @@ void copy_swap_page_to_memory(int swap_address, int physical_memory_address) {
     fclose(swap);
 }
 
+
 /**
  * Copies the contents of the memory at location page, and writes it to the swap file at location swap_address.
  * @param page A pointer to the page in memory whose contents are to be copied
@@ -526,12 +519,12 @@ void copy_swap_page_to_memory(int swap_address, int physical_memory_address) {
 void copy_memory_page_to_disc(Page *page, int swap_address) {
     assert(swap_address % PAGE_SIZE == 0);
     assert(page != NULL);
+
     FILE *swap = fopen("swap_space.bin", "wb");
     fseek(swap, swap_address, SEEK_SET);
     fwrite(page, sizeof(Page), PAGE_SIZE, swap);
     fclose(swap);
 }
-
 
 
 /**
@@ -550,13 +543,13 @@ void test_read_write_disc() {
     Page *page_to_move = (Page *) &memory[16];
     copy_memory_page_to_disc(page_to_move, 16);
     print_swap();
-    copy_swap_page_to_memory(16, 48);
+    copy_swap_page_to_memory(16, 32);
     print_memory();
 }
 
 int main(int argc, char *argv[]) {
     initialize_register_array();
-    clear_swap();
+    remove("swap_space.bin");
 
     test_read_write_disc();
     //test_easy();
