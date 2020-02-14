@@ -238,21 +238,35 @@ bool is_page_table(int memory_address) {
 
 /**
  * Determines which page should be swapped to disc. Prioritizes not swapping page_tables, or
- * memory related to the given process_id.
+ * memory related to the given process_id. Should not be called when there are still free
+ * pages
+ *
+ * @see check_free_pages()
  *
  * @param process_id The process id which is causing a swap.
  * @return An address, such as 0, 16, 32, or 48.
  */
 int which_page_to_swap(int process_id) {
-    for (int i = 0; i < SIZE / PAGE_SIZE; ++i) {
+    assert(check_free_pages() == false);
+
+    // For each page in memory
+    for (int i = 0; i < SIZE; i = i + PAGE_SIZE) {
         if (is_page_table(i) == false) {
             return i;
         }
     }
 
-    // TODO
+    // There are no pages that aren't page tables, so let's pick a page table to swap
+    const int relevant_page_table_address = page_table_register_array[process_id];
+    for (int i = 0; i < SIZE; i = i + PAGE_SIZE) {
+        if (relevant_page_table_address == i) {
+            continue;
+        }
 
-    fprintf(stderr, "Error: All memory slots hold a page table\n");
+        return i;
+    }
+
+    fprintf(stderr, "Error: reached unreachable code.\n");
     exit(EXIT_FAILURE);
 }
 
@@ -304,7 +318,6 @@ void load(const int process_id, const int virtual_address) {
  * Store instructs the memory manager to write the supplied value into the physical
  * memory location associated with the provided virtual address, performing
  * translation and page swapping as necessary.
- *
  *
  * @param process_id Int between 0 and 3 specifying which process
  * @param virtual_address
