@@ -17,6 +17,8 @@ int current_disk_address = 0;
 #define ENTRY_STATUS_PRESENT 1
 #define ENTRY_STATUS_SWAPPED 2
 
+FILE *swap_file;
+
 /**
  * An Entry is a single mapping of a virtual page to a location in swap or memory.
  */
@@ -317,6 +319,24 @@ bool is_page_table(int memory_address) {
     return false;
 }
 
+/**
+ * Clears the disk content after the page is swapped out of the disk
+ */
+void clear_disk_after_swap() {
+    
+    swap_file = fopen("swap_space.bin", "wb");
+    
+    unsigned char zeros[5];
+    for (int i = 0; i < 5; i++) {
+    zeros[i] = 0;
+    }
+    Page *page = (Page *) zeros;
+
+    fwrite(page, sizeof(char), PAGE_SIZE, swap_file);
+    fclose(swap_file);
+    return;
+}
+
 
 /**
  * Copies the contents of the swap space located at swap_address into the simulated memory
@@ -329,21 +349,27 @@ void copy_swap_page_to_memory(int swap_address, int physical_memory_address) {
     assert(physical_memory_address % 16 == 0);
 
     // Open file
-    FILE *swap = fopen("swap_space.bin", "rb");
-    if (swap == NULL) {
+    swap_file = fopen("swap_space.bin", "rb");
+    if (swap_file == NULL) {
         fprintf(stderr, "Error: Failed to open swap_space.\n");
         exit(EXIT_FAILURE);
     }
 
     // Seek to address
-    fseek(swap, swap_address, SEEK_SET);
+    fseek(swap_file, swap_address, SEEK_SET);
 
     // Read contents and store in memory[]
     Page *physical_page = (Page *) &memory[physical_memory_address];
-    fread(physical_page, sizeof(Page), 1, swap);
+    
+    fread(physical_page, sizeof(Page), 1, swap_file);
 
-    fclose(swap);
+    Page *page;
+    fwrite(zeros, sizeof(char), PAGE_SIZE, swap_file);
+    clear_disk_after_swap();
+    enQueue(swap_address);
+    fclose(swap_file);
 }
+
 
 
 /**
@@ -366,10 +392,10 @@ void copy_memory_page_to_disc(Page *page) {
     assert(disk_address % PAGE_SIZE == 0);
     assert(page != NULL);
 
-    FILE *swap = fopen("swap_space.bin", "wb");
-    fseek(swap, disk_address, SEEK_SET);
-    fwrite(page, sizeof(Page), PAGE_SIZE, swap);
-    fclose(swap);
+    swap_file = fopen("swap_space.bin", "wb");
+    fseek(swap_file, disk_address, SEEK_SET);
+    
+    fclose(swap_file);
     return disk_address;
 }
 
@@ -390,6 +416,7 @@ int which_page_to_swap(int process_id) {
     // For each page in memory
     for (int i = 0; i < SIZE; i = i + PAGE_SIZE) {
         if (is_page_table(i) == false) {
+
             // TODO avoid swapping pages associated with PID
             return i;
         }
@@ -469,7 +496,7 @@ int swap(const int process_id) {
     // Figure out where to swap the page to, and copy the memory there.
     int swap_address;
 
-    const int swap_address = (page_address + 1) * process_id; // TODO, where to copy to (this is temp)
+    const int swap_address = (page_address + 1) * process_id; 
     swap_address = copy_memory_page_to_disc(page);
 
     // Mark the page moved as now being free;
