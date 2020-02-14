@@ -12,6 +12,9 @@
 unsigned char memory[SIZE];
 const bool verbose = true;
 
+/**
+ * An Entry is a single mapping of a virtual page to a location in swap or memory.
+ */
 typedef struct Entry {
     unsigned char is_used; // == 1 if the entry is populated
     unsigned char virtual_page;
@@ -19,7 +22,18 @@ typedef struct Entry {
     unsigned char writable;
 } Entry;
 
+/**
+ * Any page in memory can be referred to with this struct
+ */
+typedef struct Page {
+    unsigned char bytes[16];
+} Page;
+
 #define ENTRIES_PER_PAGE_TABLE 4
+/**
+ * A Page_Table is a specific type of page that stores mappings of virtual memory
+ * to physical memory for processes.
+ */
 typedef struct Page_Table {
     struct Entry entries[ENTRIES_PER_PAGE_TABLE];
 } Page_Table;
@@ -118,7 +132,6 @@ int next_free_page_frame_number() {
 }
 
 
-
 /**
  * Returns true if the given process has a page table initialized into memory
  */
@@ -173,29 +186,26 @@ Entry *get_entry_of_virtual_page(const int process_id, const int virtual_page) {
 // It also takes the number of elements in the array
 
 int valueinarray(int val, int arr[], int argc) {
-	int i;
-	for(i = 0; i < argc; i++) {
-		if(arr[i] == val)
-			return 1;
-	}
-	return 0;
+    int i;
+    for (i = 0; i < argc; i++) {
+        if (arr[i] == val)
+            return 1;
+    }
+    return 0;
 }
 
 // Kick out the first page that is not a table
 int which_page_to_swap() {
-    for (int i; i < ENTRIES_PER_PAGE_TABLE; i ++) {
-        if (valueinarray((i * PAGE_SIZE),  page_table_register_array, MAX_PROCESSES) == 0) {
+    for (int i; i < ENTRIES_PER_PAGE_TABLE; i++) {
+        if (valueinarray((i * PAGE_SIZE), page_table_register_array, MAX_PROCESSES) == 0) {
             return i;
-        }
-        else {
+        } else {
             continue;
         }
     }
     //printf("Error: All memory slots hold a page table\n");
     return -1;
 }
-
-
 
 
 /**
@@ -462,11 +472,15 @@ void test_easy() {
     load(0, 12);
 }
 
+void swap_memory_page_to_disc() {
+
+}
+
 void test_read_write_disc() {
     map(3, 17, 1);
     store(3, 17, 255);
     // Memory now contains 255,0,0... in page 1 or memory[16]
-    Page_Table* page_to_move = (Page_Table*) &memory[16];
+    Page_Table *page_to_move = (Page_Table *) &memory[16];
     //swap_memory_page_to_disc(page_to_move, 0); TODO write stubs
     // Memory should not contain anything in page 1
     print_memory();
