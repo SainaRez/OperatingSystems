@@ -10,6 +10,9 @@
 #define FREE_MEMORY_SIZE 4
 #define PAGE_TABLE_ENTRY_NUM 4
 #define PAGE_SIZE 16
+#define STATUS_Empty 0
+#define STATUS_USED_PRESENT 1
+#define STATUS_USED_NOT_PRESENT 2
 
 unsigned char memory[MAX_MEMORY_SIZE];
 
@@ -22,8 +25,7 @@ typedef struct Entry {
     unsigned char virtual_page;
     unsigned char physical_page;
     unsigned char protectionBits;
-    unsigned char present;
-    unsigned char in_use;
+    unsigned char status;
 
 } Entry;
 
@@ -119,20 +121,21 @@ int swap_page_table() {
     
 }
 
-void swap_to_disk() {
+int swap_to_disk() {
     
-    swap_space = fopen("swap_space.txt", "w+");
+    swap_space = fopen("swap_space.txt", "wb");
 
     int page_index = which_page_to_swap();
     int page_address_in_memory = page_table_base_register[page_index * PAGE_SIZE];
     
     
     //fprintf(swap_space, "%d ", offset);  // Prints the line number
-	for (int i= 0; i < PAGE_SIZE; i++) {   
-		fprintf(swap_space, "%u ", memory[page_address_in_memory + i]);
-    }
+	//for (int i= 0; i < PAGE_SIZE; i++) {   
+		//fprintf(swap_space, "%u ", memory[page_address_in_memory + i]);
+   // }
+
+    fwrite(&memory[page_address_in_memory], sizeof(char), PAGE_SIZE, swap_space);
     
-// ?? Are they all in one line
 
     int offset = ftell(swap_space);
     fclose(swap_space);
@@ -141,26 +144,55 @@ void swap_to_disk() {
     //lseek(f_stream, , )
 }
 
-void swap_back_to_memory(int offset) {
+void swap_back_to_memory(int offset, int available_memory_index) {
    
-    swap_space = fopen("swap_space.txt", "w+");
+    swap_space = fopen("swap_space.txt", "rb");
     fseek(swap_space, offset, SEEK_SET);
     char* line;
-    fegets(line, PAGE_SIZE, swap_space);
+    fgets(line, PAGE_SIZE, swap_space);
     
+    int memory_start_address = available_memory_index * PAGE_SIZE;
     int i = 0;
     char page_array[PAGE_SIZE];
+    char *token;
     token = strtok(line, " ");
-    
+
+
     while (i < PAGE_SIZE) {
-        page_array[i] = token;
+        memory[i + memory_start_address] = token;
         token = strtok(line, NULL);
     }
     return;
 
 }
 
+void update_page_table_for_swap_out(int pid, int virtual_address, int offset) {
+    int virtual_page = get_virtual_page(virtual_address);
+    Entry *page_table_entry = get_entry_of_virtual_page(virtual_page, page_table_base_register[pid]);
+    if (page_table_entry == NULL) {
+        printf("Error: Did not find a mapped memory for the given virtual address");
+        return;
+    }
+    else {
+        page_table_entry->physical_page = offset;
+        page_table_entry->status = STATUS_USED_NOT_PRESENT;
+    }
+    return;
+}
 
+// void update_page_table_for_swap_in(int pid, int virtual_address, int offset) {
+//     int virtual_page = get_virtual_page(virtual_address);
+//     Entry *page_table_entry = get_entry_of_virtual_page(virtual_page, page_table_base_register[pid]);
+//     if (page_table_entry == NULL) {
+//         printf("Error: Did not find a mapped memory for the given virtual address");
+//         return;
+//     }
+//     else {
+//         page_table_entry->physical_page = offset;
+//         page_table_entry->status = STATUS_USED_PRESENT;
+//     }
+//     return;
+// }
 
 
 // Maps the virtual memory to the physical memory
@@ -188,7 +220,7 @@ void map(int pid, int virtual_address, unsigned char value){
             }
             else {
                 int virtual_page = get_virtual_page(virtual_address);
-                Entry page_table_entry = {virtual_page, memory_index, value, 1, 1};
+                Entry page_table_entry = {virtual_page, memory_index, value, STATUS_USED_PRESENT};
                
                 int memory_address = page_table_base_register[pid];
                 Page_Table *table = (Page_Table*) &memory[memory_address];
@@ -198,7 +230,7 @@ void map(int pid, int virtual_address, unsigned char value){
 
                 printf("printing the in use values\n");
                 for (int i = 0; i < PAGE_TABLE_ENTRY_NUM; i++) {
-                    printf("Entry %i in use value: %i\n", i, table->entries[i].in_use);
+                    printf("Entry %i in use value: %i\n", i, table->entries[i].status);
                 }
 
                 printf("printing the in physical frame value:\n");
@@ -213,7 +245,9 @@ void map(int pid, int virtual_address, unsigned char value){
         memory_index = free_memory_index();
         if (memory_index == -1) {
             printf("Error: No memery available\n");
-            //swap_to_disk();
+            int disk_address = swap_to_disk();
+            update_page_table_for_swap(pid, virtual_address, disk_address);
+                
             //return;
         }
         else {
@@ -221,13 +255,13 @@ void map(int pid, int virtual_address, unsigned char value){
             Entry *page_table_entry = get_entry_of_virtual_page(virtual_page, page_table_base_register[pid]);
         
             if (page_table_entry == NULL) {
-                Entry page_table_entry = {virtual_page, memory_index, value, 1, 1};
+                Entry page_table_entry = {virtual_page, memory_index, value, STATUS_USED_PRESENT};
                 int memory_address = page_table_base_register[pid];
                 Page_Table *table = (Page_Table*) &memory[memory_address];
 
                 // printf("printing the in use values\n");
                 // for (int i = 0; i < PAGE_TABLE_ENTRY_NUM; i++) {
-                //     printf("Entry %i in use value: %i\n", i, table->entries[i].in_use);
+                //     printf("Entry %i in use value: %i\n", i, table->entries[i].status);
                 // }
 
                 // printf("printing the in physical frame value:\n");
@@ -236,7 +270,7 @@ void map(int pid, int virtual_address, unsigned char value){
                 // }
                 
                 for (int i = 0; i < PAGE_TABLE_ENTRY_NUM; i++) {
-                    if (table->entries[i].in_use == 0) {
+                    if (table->entries[i].status == 0) {
                         table->entries[i] = page_table_entry;
                         break;
                     }
