@@ -282,8 +282,8 @@ void copy_memory_page_to_disc(Page *page, int swap_address) {
     printf("Copying page to swap address %i\n", swap_address);
 
     print_swap();
-    FILE *swap = fopen("swap_space.bin", "wb");
-    fseek(swap, swap_address, SEEK_END);
+    FILE *swap = fopen("swap_space.bin", "r+");
+    fseek(swap, swap_address, SEEK_SET);
     fwrite(page, sizeof(Page), 1, swap);
     fclose(swap);
     print_swap();
@@ -371,7 +371,6 @@ Entry *get_page_table_entry_of_address(const int physical_address) {
 
 int swap_counter = 0;
 
-
 /**
  * swap() will select a page of memory to be swapped to disc, and execute that swap.
  *
@@ -386,7 +385,7 @@ int swap(const int process_id) {
     Page *page = (Page *) &memory[page_address];
 
     // Figure out where to swap the page to, and copy the memory there.
-    const int swap_address = PAGE_SIZE * swap_counter++; // TODO, where to copy to (this is temp)
+    const int swap_address = PAGE_SIZE * swap_counter++;
     copy_memory_page_to_disc(page, swap_address);
 
     // Mark the page moved as now being free;
@@ -744,17 +743,11 @@ void test_swap() {
     store(0,16, 15);
     map(0, 32, 1);
     map(0, 48, 1);
-    print_swap();
     store(0, 48, 255);
-    print_swap();
     load(0,48);
-    print_swap();
     map(1, 0, 1);
-    print_swap();
     map(1, 0, 0);
-    print_swap();
-
-
+    load(0,48);
 }
 
 void test_memory() {
@@ -772,9 +765,11 @@ void test_memory() {
 int main(int argc, char *argv[]) {
     initialize_register_array();
     remove("swap_space.bin");
+    FILE* temp = fopen("swap_space.bin", "w");
+    fclose(temp);
 
-    test_memory();
-    //test_swap();
+    //test_memory();
+    test_swap();
     //test_read_write_disc();
     //test_easy();
 
