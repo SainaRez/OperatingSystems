@@ -26,7 +26,7 @@ typedef struct Entry {
  * Any page in memory can be referred to with this struct
  */
 typedef struct Page {
-    unsigned char bytes[16];
+    unsigned char bytes[PAGE_SIZE];
 } Page;
 
 #define ENTRIES_PER_PAGE_TABLE 4
@@ -472,26 +472,96 @@ void test_easy() {
     load(0, 12);
 }
 
-void swap_memory_page_to_disc() {
+/**
+ * Prints the contents of the swap file, if it exists.
+ */
+void print_swap() {
+    FILE *swap;
+    fopen_s(&swap, "swap_space.bin", "rb");
+    if (swap == NULL) { return; }
 
+    int i = 0;
+    int byte;
+    while ((byte = getc(swap)) != EOF) {
+        if (i % PAGE_SIZE == 0) {
+            printf("\n");
+        }
+        i++;
+        printf("%02x,", byte);
+    }
+    fclose(swap);
+    printf("EOF\n");
+}
+
+void print_page(Page *page) {
+    assert(page != NULL);
+    for (int i = 0; i < PAGE_SIZE; ++i) {
+        printf("%02x", page->bytes[i]);
+    }
+    printf("\n");
+}
+
+/**
+ * Copies the contents of the swap space located at swap_address into the simulated memory
+ * at the given address
+ * @param swap_address Memory address in swap space.
+ * @param physical_memory_address Memory address in physical space
+ */
+void copy_swap_page_to_memory(int swap_address, int physical_memory_address) {
+    assert(swap_address % 16 == 0);
+    assert(physical_memory_address % 16 == 0);
+
+    FILE *swap = fopen("swap_space.bin", "rb");
+    if (swap == NULL) {
+        fprintf(stderr, "Error: Failed to open swap_space.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    Page *physical_page = (Page *) &memory[physical_memory_address];
+    fread(physical_page, sizeof(Page), 1, swap);
+
+    print_page(physical_page);
+
+    fclose(swap);
+}
+
+/**
+ * Copies the contents of the memory at location page, and writes it to the swap file at location swap_address.
+ * @param page A pointer to the page in memory whose contents are to be copied
+ * @param swap_address The address in swap space memory where the contents are to be written
+ */
+void copy_memory_page_to_disc(Page *page, int swap_address) {
+    FILE *swap = fopen("swap_space.bin", "wb");
+    fwrite(page, sizeof(Page), PAGE_SIZE, swap);
+    fclose(swap);
+}
+
+/**
+ * Clears the contents of the swap file
+ */
+void clear_swap() {
+    remove("swap_space.bin");
 }
 
 void test_read_write_disc() {
     map(3, 17, 1);
-    store(3, 17, 255);
+    store(3, 16, 255);
+    store(3, 31, 15);
     // Memory now contains 255,0,0... in page 1 or memory[16]
-    Page_Table *page_to_move = (Page_Table *) &memory[16];
-    //swap_memory_page_to_disc(page_to_move, 0); TODO write stubs
+    Page *page_to_move = (Page *) &memory[16];
+    copy_memory_page_to_disc(page_to_move, 0);
     // Memory should not contain anything in page 1
-    print_memory();
-    //swap_disc_page_to_memory(0, &memory[32]); TODO write stubs
-    // Memory should contain 255,0,0... in page 2 or memory[32]
+    print_swap();
+    copy_swap_page_to_memory(0, 48);
+    // Memory should contain 255,0,0... in page 3 or memory[48]
     print_memory();
 }
 
 int main(int argc, char *argv[]) {
     initialize_register_array();
+    clear_swap();
 
+    test_read_write_disc();
     //test_easy();
     //test_easy_extended();
 
