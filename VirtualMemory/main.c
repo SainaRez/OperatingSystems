@@ -211,7 +211,7 @@ Entry *get_entry_of_virtual_page(const int process_id, const int virtual_page) {
 
     for (int i = 0; i < ENTRIES_PER_PAGE_TABLE; ++i) {
         Entry *entry = &page_table->entries[i];
-        if (entry->is_used == false) {
+        if (entry->status == false) {
             continue;
         }
         if (entry->virtual_page == virtual_page) {
@@ -404,9 +404,9 @@ void map(const int process_id, const int virtual_address, const int value) {
 
     Page_Table *page_table = (Page_Table *) &memory[page_table_register_array[process_id]];
     for (int i = 0; i < ENTRIES_PER_PAGE_TABLE; ++i) {
-        if (page_table->entries[i].is_used == false) {
+        if (page_table->entries[i].status == false) {
             Entry *new_map_entry = &page_table->entries[i];
-            new_map_entry->is_used = true;
+            new_map_entry->status = ENTRY_STATUS_PRESENT;
             new_map_entry->virtual_page = virtual_page;
             new_map_entry->physical_page = physical_page_frame;
             new_map_entry->writable = value;
