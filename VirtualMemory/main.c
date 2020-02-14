@@ -299,7 +299,6 @@ int which_page_to_swap(int process_id) {
     // For each page in memory
     for (int i = 0; i < SIZE; i = i + PAGE_SIZE) {
         if (is_page_table(i) == false) {
-            // TODO avoid swapping pages associated with PID
             return i;
         }
     }
@@ -710,26 +709,6 @@ void loop_repl() {
 }
 
 
-/**
- * A quick test that checks to see if map, store, and load in the simplest use case.
- */
-void test_easy() {
-    map(0, 0, 1);
-    store(0, 12, 24);
-    load(0, 12);
-}
-
-void test_read_write_disc() {
-    map(3, 17, 1);
-    store(3, 16, 255);
-    store(3, 31, 15);
-    Page *page_to_move = (Page *) &memory[16];
-    copy_memory_page_to_disc(page_to_move, 16);
-    //print_swap();
-    copy_swap_page_to_memory(16, 32);
-    print_memory();
-}
-
 void test_swap() {
     map(0, 0, 1);
     store(0, 0, 255);
@@ -790,18 +769,11 @@ void test_swap() {
     load(0, 16);
     load(3, 4);
     load(1, 33);
-}
-
-void test_memory() {
-    map(0, 0, 1);
-    store(0, 0, 255);
-    print_swap();
-    map(0, 16, 1);
-    map(0, 32, 1);
-    map(0, 48, 1);
-    print_swap();
-    map(1, 48, 1);
-    print_swap();
+    map(0,0,0);
+    map(1,0,0);
+    map(2,0,0);
+    map(3,0,0);
+    load(0,16);
 }
 
 int main(int argc, char *argv[]) {
@@ -810,10 +782,7 @@ int main(int argc, char *argv[]) {
     FILE *temp = fopen("swap_space.bin", "w");
     fclose(temp);
 
-    //test_memory();
     test_swap();
-    //test_read_write_disc();
-    //test_easy();
 
     loop_repl();
 }
