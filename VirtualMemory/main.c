@@ -277,10 +277,14 @@ void copy_memory_page_to_disc(Page *page, int swap_address) {
     assert(swap_address % PAGE_SIZE == 0);
     assert(page != NULL);
 
+    printf("Copying page to swap address %i\n", swap_address);
+
+    print_swap();
     FILE *swap = fopen("swap_space.bin", "wb");
-    fseek(swap, swap_address, SEEK_SET);
+    fseek(swap, swap_address, SEEK_END);
     fwrite(page, sizeof(Page), 1, swap);
     fclose(swap);
+    print_swap();
 }
 
 
@@ -751,11 +755,24 @@ void test_swap() {
 
 }
 
+void test_memory() {
+    map(0,0,1);
+    store(0,0,255);
+    print_swap();
+    map(0,16,1);
+    map(0,32,1);
+    map(0,48,1);
+    print_swap();
+    map(1, 48, 1);
+    print_swap();
+}
+
 int main(int argc, char *argv[]) {
     initialize_register_array();
     remove("swap_space.bin");
 
-    test_swap();
+    test_memory();
+    //test_swap();
     //test_read_write_disc();
     //test_easy();
 
