@@ -462,10 +462,22 @@ void test_easy() {
     load(0, 12);
 }
 
+void test_read_write_disc() {
+    map(3, 17, 1);
+    store(3, 17, 255);
+    // Memory now contains 255,0,0... in page 1 or memory[16]
+    Page_Table* page_to_move = (Page_Table*) &memory[16];
+    //swap_memory_page_to_disc(page_to_move, 0); TODO write stubs
+    // Memory should not contain anything in page 1
+    print_memory();
+    //swap_disc_page_to_memory(0, &memory[32]); TODO write stubs
+    // Memory should contain 255,0,0... in page 2 or memory[32]
+    print_memory();
+}
 
 int main(int argc, char *argv[]) {
-    
     initialize_register_array();
+
     //test_easy();
     //test_easy_extended();
 
