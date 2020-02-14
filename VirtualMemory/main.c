@@ -10,13 +10,11 @@
 #define MAX_PROCESSES 4
 
 unsigned char memory[SIZE];
-const bool verbose = true;
 
 #define ENTRY_STATUS_EMPTY 0
 #define ENTRY_STATUS_PRESENT 1
 #define ENTRY_STATUS_SWAPPED 2
 
-FILE *swap_file;
 
 /**
  * An Entry is a single mapping of a virtual page to a location in swap or memory.
@@ -61,7 +59,6 @@ int swapped_page_table_register_array[MAX_PROCESSES];
  */
 bool page_use_status_array[SIZE / PAGE_SIZE];
 
-void clear_physical_page(const int address);
 
 /**
  * Initialize all page_table_registers to -1
@@ -365,7 +362,22 @@ Entry *get_page_table_entry_of_address(const int physical_address) {
     exit(EXIT_FAILURE);
 }
 
-int swap_counter = 0;
+
+/**
+ * Empties the contents of memory at the given address to all 0's
+ * @param page_address Address such as 0, 16, 32, 48
+ */
+void clear_physical_page(const int page_address) {
+    assert(page_address % 16 == 0);
+    Page *page = (Page *) &memory[page_address];
+    for (int i = 0; i < PAGE_SIZE; ++i) {
+        page->bytes[i] = 0;
+    }
+}
+
+
+int swap_counter = 0; /** Increments to keep track of latest free space in memory */
+
 
 /**
  * swap() will select a page of memory to be swapped to disc, and execute that swap.
@@ -409,18 +421,6 @@ int swap(const int process_id) {
 
 
 /**
- * Empties the contents of memory at the given address to all 0's
- * @param page_address Address such as 0, 16, 32, 48
- */
-void clear_physical_page(const int page_address) {
-    assert(page_address % 16 == 0);
-    Page *page = (Page *) &memory[page_address];
-    for (int i = 0; i < PAGE_SIZE; ++i) {
-        page->bytes[i] = 0;
-    }
-}
-
-/**
  * Checks to see if a page table is in memory for the process, and loads it into memory
  * from swap if it isn't.
  */
@@ -430,7 +430,7 @@ void prepare_page_table(int process_id) {
     if (page_table_register_array[process_id] == REGISTER_SWAPPED) {
         // If the page_table is on swap space, move it back to memory
         const int swap_address_of_page_table = swapped_page_table_register_array[process_id];
-        const int newly_free_physical_address = swap(process_id); // TODO - assumes no free memory, is this safe?
+        const int newly_free_physical_address = swap(process_id);
         assert(page_use_status_array[newly_free_physical_address / 16] == false);
         copy_swap_page_to_memory(swap_address_of_page_table, newly_free_physical_address);
         page_use_status_array[newly_free_physical_address / 16] = true;
@@ -763,10 +763,10 @@ void test_swap() {
     store(3, 36, 255);
     map(3, 48, 1);
     store(3, 52, 255);
-    load(0,48);
-    load(0,32);
-    load(0,16);
-    load(0,0);
+    load(0, 48);
+    load(0, 32);
+    load(0, 16);
+    load(0, 0);
     load(2, 18);
     load(2, 2);
     load(2, 34);
@@ -789,7 +789,7 @@ void test_swap() {
     load(2, 18);
     load(0, 16);
     load(3, 4);
-    load(1,33);
+    load(1, 33);
 }
 
 void test_memory() {
