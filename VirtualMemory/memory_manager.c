@@ -35,6 +35,7 @@ typedef struct Page_Table {
 
 FILE *swap_space;
 
+// Initializes the page_table_base_register (-1) and the availables memory arrays (zeros)
 void initialize_arrays(){
     for(int i = 0; i < PTBR_SIZE; i++){
         page_table_base_register[i] = -1;
@@ -46,8 +47,9 @@ void initialize_arrays(){
     return;
 }
 
-//checks if a memory is available and return the first index of the free memory. If none is available,
-//it returns -1
+// Checks if a memory is available and return the first index of the free memory. If none is available,
+// it returns -1
+
 int free_memory_index() {
     for (int i = 0; i < FREE_MEMORY_SIZE; i++) {
         if (available_memory[i] == 0) {
@@ -115,17 +117,50 @@ int which_page_to_swap() {
 
 }
 
-// void swap() {
-//     int page_index = which_page_to_swap();
-//     int page_address_in_memory = page_table_base_register[page_index * PAGE_SIZE];
-//     //long current_position = ftell(swap_space);
-//     //printf("current_position: %ld", current_position);
-//     //fwrite(&memory[page_address_in_memory], sizeof(char), PAGE_SIZE, swap_space);
+int swap_page_table() {
+    
+}
+
+void swap_to_disk() {
+    
+    swap_space = fopen("swap_space.txt", "w+");
+
+    int page_index = which_page_to_swap();
+    int page_address_in_memory = page_table_base_register[page_index * PAGE_SIZE];
     
     
-//     //int file_descriptor = fileno(swap_space);
-//     //lseek(f_stream, , )
-// }
+    //fprintf(swap_space, "%d ", offset);  // Prints the line number
+	for (int i= 0; i < PAGE_SIZE; i++) {   
+		fprintf(swap_space, "%u ", memory[page_address_in_memory + i]);
+    }
+    
+// ?? Are they all in one line
+
+    int offset = ftell(swap_space);
+    fclose(swap_space);
+    return offset;
+    //int file_descriptor = fileno(swap_space);
+    //lseek(f_stream, , )
+}
+
+void swap_back_to_memory(int offset) {
+   
+    swap_space = fopen("swap_space.txt", "w+");
+    fseek(swap_space, offset, SEEK_SET);
+    char* line;
+    fegets(line, PAGE_SIZE, swap_space);
+    
+    int i = 0;
+    char page_array[PAGE_SIZE];
+    token = strtok(line, " ");
+    
+    while (i < PAGE_SIZE) {
+        page_array[i] = token;
+        token = strtok(line, NULL);
+    }
+    return;
+
+}
 
 
 
@@ -139,8 +174,8 @@ void map(int pid, int virtual_address, unsigned char value){
         if (memory_index == -1) {
             printf("Warning: No memory is available for the page table\n");
             printf("Swapping a page to file");
-            //swap();
-            return;
+            swap_to_disk();
+            //return;
         }
         else {
             // Create a page table at the memory address in page_table_base_register
@@ -151,6 +186,7 @@ void map(int pid, int virtual_address, unsigned char value){
             memory_index = free_memory_index();
             if (memory_index == -1) { 
                 printf("No Memory is available for entry\n");
+                swap_to_disk();
             }
             else {
                 int virtual_page = get_virtual_page(virtual_address);
@@ -179,7 +215,8 @@ void map(int pid, int virtual_address, unsigned char value){
         memory_index = free_memory_index();
         if (memory_index == -1) {
             printf("Error: No memery available\n");
-            return;
+            swap_to_disk();
+            //return;
         }
         else {
             int virtual_page = get_virtual_page(virtual_address);
@@ -190,15 +227,15 @@ void map(int pid, int virtual_address, unsigned char value){
                 int memory_address = page_table_base_register[pid];
                 Page_Table *table = (Page_Table*) &memory[memory_address];
 
-                printf("printing the in use values\n");
-                for (int i = 0; i < PAGE_TABLE_ENTRY_NUM; i++) {
-                    printf("Entry %i in use value: %i\n", i, table->entries[i].in_use);
-                }
+                // printf("printing the in use values\n");
+                // for (int i = 0; i < PAGE_TABLE_ENTRY_NUM; i++) {
+                //     printf("Entry %i in use value: %i\n", i, table->entries[i].in_use);
+                // }
 
-                printf("printing the in physical frame value:\n");
-                for (int i = 0; i < PAGE_TABLE_ENTRY_NUM; i++) {
-                    printf("Entry %i physical frame value: %i\n", i, table->entries[i].physical_page);
-                }
+                // printf("printing the in physical frame value:\n");
+                // for (int i = 0; i < PAGE_TABLE_ENTRY_NUM; i++) {
+                //     printf("Entry %i physical frame value: %i\n", i, table->entries[i].physical_page);
+                // }
                 
                 for (int i = 0; i < PAGE_TABLE_ENTRY_NUM; i++) {
                     if (table->entries[i].in_use == 0) {
@@ -240,8 +277,8 @@ void map(int pid, int virtual_address, unsigned char value){
 
 
 // Instructs the memory manager to write the supplied value
-//into the physical memory location associated with the provided
-//virtual address
+// into the physical memory location associated with the provided
+// virtual address
 void store(int pid, int virtual_address, int value){
     //Frist check if process is mapped
     int memory_address = page_table_base_register[pid];
@@ -274,7 +311,6 @@ void store(int pid, int virtual_address, int value){
                 printf("Stored value %i at virtual address %i (physical address %i)\n", value, virtual_address, physical_address);
             }
         }
-
     }
     printf("available_memory:\n");
     for (int i = 0; i < PTBR_SIZE; i++) {
@@ -292,7 +328,7 @@ void store(int pid, int virtual_address, int value){
 }
 
 // Instructs the  memory manager to return the byte stored at the
-//memory location specified by virtual_address
+// memory location specified by virtual_address
 void load(int pid, int virtual_address){
     //Frist check if process is mapped
     int memory_address = page_table_base_register[pid];
@@ -317,7 +353,7 @@ void load(int pid, int virtual_address){
     return;
 }
 
-
+// Makes sure that the arguments are valid and calls the function that corresponds to the given command
 void process_command(int pid, char *command, int vir_addrs, int value){
 
     if (pid < 0 || pid > 3) {
@@ -353,15 +389,13 @@ void process_command(int pid, char *command, int vir_addrs, int value){
     return;
 }
 
+// Prints the Instruction prompt every time until the user stops the program
 void loop_repl(int argc, char* argv[]){
 
     int value;
     int pid, vir_addrs;
     char command[7], exit_check[4];
     initialize_arrays();
-
-    swap_space = fopen("swap_space.txt", "w+");
-
     
     while(1){
 
@@ -374,13 +408,6 @@ void loop_repl(int argc, char* argv[]){
         printf("count: %d\n",  arg_count);
 
         process_command(pid, command, vir_addrs, value);
-
-        // printf("Are you done? (type yes or no) \n");
-        // scanf("%s", exit_check);
-
-        // if (strcmp(exit_check, "yes") == 0){
-        //     exit(1);
-        //}
     }
     return;
     
