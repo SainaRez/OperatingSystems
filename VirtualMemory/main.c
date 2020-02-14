@@ -24,6 +24,8 @@ typedef struct Page_Table {
     struct Entry entries[ENTRIES_PER_PAGE_TABLE];
 } Page_Table;
 
+FILE *swap_space;
+
 /**
  * Each process will have a simulated hardware register pointing to the start of
  * their respective page tables. These registers are simulated with an array
@@ -189,22 +191,9 @@ int which_page_to_swap() {
             continue;
         }
     }
-    printf("Error: All memory slots hold a page table\n");
+    //printf("Error: All memory slots hold a page table\n");
     return -1;
 }
-
-void swap() {
-    int page_index = which_page_to_swap();
-    int page_address_in_memory = page_table_base_register[page_index * PAGE_SIZE];
-    long current_position = ftell(swap_space);
-    printf("current_position: %ld", current_position);
-    //fwrite(&memory[page_address_in_memory], sizeof(char), PAGE_SIZE, swap_space);
-    
-    
-    //int file_descriptor = fileno(swap_space);
-    //lseek(f_stream, , )
-}
-
 
 
 
@@ -311,7 +300,7 @@ void map(const int process_id, const int virtual_address, const int value) {
     if (does_process_have_page_file(process_id) == false) {
         if (check_free_pages() == false) { // TODO, should this check for 2 free pages? Ask TA
             printf("Error: No more free pages in memory.\n");
-            return;
+            swap();
         }
         create_page_table_for_process(process_id);
     }
@@ -333,7 +322,8 @@ void map(const int process_id, const int virtual_address, const int value) {
     // Else, there is no existing mapping, so create one if there is space
     if (check_free_pages() == false) {
         printf("Error: No more free pages in memory.\n");
-        return; // TODO See related todo above, should this undo the page_table that was created?
+        swap();
+        //return; // TODO See related todo above, should this undo the page_table that was created?
     }
 
     const int physical_page_frame = next_free_page_frame_number();
@@ -474,6 +464,7 @@ void test_easy() {
 
 
 int main(int argc, char *argv[]) {
+    
     initialize_register_array();
     //test_easy();
     //test_easy_extended();
