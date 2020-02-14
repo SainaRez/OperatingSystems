@@ -22,7 +22,7 @@ const bool verbose = true;
 typedef struct Entry {
     unsigned char status; // == 1 if the entry is populated
     unsigned char virtual_page;
-    unsigned char physical_page;
+    unsigned char physical_page; // Page Frame number, not address
     unsigned char writable;
 } Entry;
 
@@ -279,7 +279,7 @@ void copy_memory_page_to_disc(Page *page, int swap_address) {
 
     FILE *swap = fopen("swap_space.bin", "wb");
     fseek(swap, swap_address, SEEK_SET);
-    fwrite(page, sizeof(Page), PAGE_SIZE, swap);
+    fwrite(page, sizeof(Page), 1, swap);
     fclose(swap);
 }
 
@@ -330,7 +330,7 @@ int which_page_to_swap(int process_id) {
 void update_page_table_for_swap_out(Entry *entry, int swap_address) {
     assert(entry != NULL);
 
-    entry->physical_page = swap_address;
+    entry->physical_page = swap_address / PAGE_SIZE;
     entry->status = ENTRY_STATUS_SWAPPED;
 }
 
@@ -380,7 +380,7 @@ int swap(const int process_id) {
     Page *page = (Page *) &memory[page_address];
 
     // Figure out where to swap the page to, and copy the memory there.
-    const int swap_address = PAGE_SIZE * ++swap_counter; // TODO, where to copy to (this is temp)
+    const int swap_address = PAGE_SIZE * swap_counter++; // TODO, where to copy to (this is temp)
     copy_memory_page_to_disc(page, swap_address);
 
     // Mark the page moved as now being free;
@@ -434,7 +434,7 @@ void prepare_page_table(int process_id) {
         copy_swap_page_to_memory(swap_address_of_page_table, newly_free_physical_address);
         page_use_status_array[newly_free_physical_address / 16] = true;
 
-        printf("Put page table for PID %i into physical frame %i", process_id, newly_free_physical_address);
+        printf("Put page table for PID %i into physical frame %i\n", process_id, newly_free_physical_address);
         swapped_page_table_register_array[process_id] = 0;
         page_table_register_array[process_id] = newly_free_physical_address;
     }
@@ -464,7 +464,7 @@ void load(const int process_id, const int virtual_address) {
 
     if (page_table_entry->status == ENTRY_STATUS_SWAPPED) {
         // If the page_table is on swap space, move it back to memory and update page_table
-        const int swap_address_of_page = page_table_entry->physical_page;
+        const int swap_address_of_page = page_table_entry->physical_page * 16;
         const int newly_free_physical_address = swap(process_id);
 
         // TODO duplicate code with store(), can probably be refactored
@@ -473,6 +473,7 @@ void load(const int process_id, const int virtual_address) {
 
         copy_swap_page_to_memory(swap_address_of_page, newly_free_physical_address);
         page_use_status_array[newly_free_physical_address % 16] = true;
+        page_table_entry->status = ENTRY_STATUS_PRESENT;
         page_table_entry->physical_page = newly_free_physical_address / 16;
     }
 
@@ -516,17 +517,18 @@ void store(const int process_id, const int virtual_address, const int value) {
         return;
     }
     if (page_table_entry->status == ENTRY_STATUS_SWAPPED) {
-        // If the page_table is on swap space, move it back to memory and update page_table
-        const int swap_address_of_page = page_table_entry->physical_page;
+        // If the page is on swap space, move it back to memory and update page_table
+        const int swap_address_of_page = page_table_entry->physical_page * PAGE_SIZE;
         const int newly_free_physical_address = swap(process_id);
 
         printf("Swapped disk slot %i into frame %i\n", swap_address_of_page,
                newly_free_physical_address / PAGE_SIZE);
 
         copy_swap_page_to_memory(swap_address_of_page, newly_free_physical_address);
-        assert(page_use_status_array[newly_free_physical_address % 16]);
-        page_use_status_array[newly_free_physical_address % 16] = true;
-        page_table_entry->physical_page = newly_free_physical_address / 16;
+        page_use_status_array[newly_free_physical_address / PAGE_SIZE] = true;
+        page_table_entry->status = ENTRY_STATUS_PRESENT;
+        page_table_entry->physical_page = newly_free_physical_address / PAGE_SIZE;
+        assert(page_use_status_array[newly_free_physical_address / PAGE_SIZE]);
     }
     const int physical_page_frame = page_table_entry->physical_page;
 
@@ -731,14 +733,21 @@ void test_read_write_disc() {
 
 void test_swap() {
     map(0, 0, 1);
-    map(0, 48, 1);
-    map(0, 16, 1);
-    map(0, 32, 1);
     store(0, 0, 255);
+    map(0, 16, 1);
+    store(0,16, 15);
+    map(0, 32, 1);
+    map(0, 48, 1);
+    print_swap();
+    store(0, 48, 255);
+    print_swap();
+    load(0,48);
+    print_swap();
     map(1, 0, 1);
-    // map(2, 0, 1);
-    // map(3, 0, 1);
-    // load(0, 0);
+    print_swap();
+    map(1, 0, 0);
+    print_swap();
+
 
 }
 
