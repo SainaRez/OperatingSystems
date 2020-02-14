@@ -16,6 +16,8 @@ const bool verbose = true;
 #define ENTRY_STATUS_PRESENT 1
 #define ENTRY_STATUS_SWAPPED 2
 
+FILE * swap_file;
+
 /**
  * An Entry is a single mapping of a virtual page to a location in swap or memory.
  */
