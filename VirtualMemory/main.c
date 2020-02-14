@@ -52,12 +52,12 @@ typedef struct Page_Table {
  * yet. (Initialization is done by initialize_register_array())
  **/
 int page_table_register_array[MAX_PROCESSES];
+int swapped_page_table_register_array[MAX_PROCESSES];
 
 /**
  * A list of which pages a free. Free pages have a value of false
  */
 bool page_use_status_array[SIZE / PAGE_SIZE];
-
 
 void clear_physical_page(const int address);
 
@@ -301,6 +301,7 @@ int which_page_to_swap(int process_id) {
     // For each page in memory
     for (int i = 0; i < SIZE; i = i + PAGE_SIZE) {
         if (is_page_table(i) == false) {
+            // TODO avoid swapping pages associated with PID
             return i;
         }
     }
@@ -318,6 +319,7 @@ int which_page_to_swap(int process_id) {
     fprintf(stderr, "Error: reached unreachable code.\n");
     exit(EXIT_FAILURE);
 }
+
 
 /**
  * Updates the given page table entry to indicate that the associated virtual page
@@ -376,7 +378,7 @@ int swap(const int process_id) {
     Page *page = (Page *) &memory[page_address];
 
     // Figure out where to swap the page to, and copy the memory there.
-    const int swap_address = page_address * process_id; // TODO, where to copy to (this is temp)
+    const int swap_address = (page_address + 1 ) * process_id; // TODO, where to copy to (this is temp)
     copy_memory_page_to_disc(page, swap_address);
 
     // Mark the page moved as now being free;
@@ -394,7 +396,7 @@ int swap(const int process_id) {
         for (int i = 0; i < MAX_PROCESSES; ++i) {
             if (page_table_register_array[i] == page_address) {
                 page_table_register_array[i] = REGISTER_SWAPPED;
-                // TODO indicate where the page table is stored
+                swapped_page_table_register_array[i] = swap_address;
             }
         }
     }
@@ -402,6 +404,7 @@ int swap(const int process_id) {
     clear_physical_page(page_address);
     return frame_number;
 }
+
 
 /**
  * Empties the contents of memory at the given address to all 0's
@@ -415,6 +418,26 @@ void clear_physical_page(const int page_address) {
     }
 }
 
+/**
+ * Checks to see if a page table is set up for a process
+ */
+void prepare_page_table(int process_id) {
+    if (does_process_have_page_file(process_id) == false) {
+        fprintf(stderr, "Error: No page table set up for process %i\n", process_id);
+        return;
+    }
+
+    // TODO
+    if (page_table_register_array[process_id] == REGISTER_SWAPPED) {
+        // If the page_table is on swap space, move it back
+        const int swapped_address = swap(process_id);
+        swapped_page_table_register_array[process_id];
+        // TODO finish this code
+    }
+
+    // TODO check if the page_table is swapped, and handle it if so.
+}
+
 
 /**
  * @param process_id Int between 0 and 3 specifying which process
@@ -423,10 +446,7 @@ void clear_physical_page(const int page_address) {
  *      location for given process
  */
 void load(const int process_id, const int virtual_address) {
-    if (does_process_have_page_file(process_id) == false) {
-        fprintf(stderr, "Error: No page table set up for process %i\n", process_id);
-        return;
-    }
+    prepare_page_table(process_id);
 
     const int virtual_page = get_virtual_page_of_address(virtual_address);
 
@@ -458,11 +478,7 @@ void load(const int process_id, const int virtual_address) {
  *      An integer value in the range [0,255] specifying the value to set in memory
  */
 void store(const int process_id, const int virtual_address, const int value) {
-    if (does_process_have_page_file(process_id) == false) {
-        fprintf(stderr, "Error: No page table set up for process %i\n", process_id);
-        return;
-    }
-
+    prepare_page_table(process_id);
     const int virtual_page = get_virtual_page_of_address(virtual_address);
 
     Entry *page_table_entry = get_entry_of_virtual_page(process_id, virtual_page);
@@ -515,7 +531,7 @@ void create_page_table_for_process(const int process_id) {
  */
 void map(const int process_id, const int virtual_address, const int value) {
     if (does_process_have_page_file(process_id) == false) {
-        if (check_free_pages() == false) { // TODO, should this check for 2 free pages? Ask TA
+        if (check_free_pages() == false) {
             printf("Error: No more free pages in memory.\n");
             swap(process_id);
         }
