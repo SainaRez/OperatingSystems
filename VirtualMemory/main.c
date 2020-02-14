@@ -63,6 +63,15 @@ void initialize_register_array() {
     }
 }
 
+
+/**
+ * Clears the contents of the swap file
+ */
+void clear_swap() {
+    remove("swap_space.bin");
+}
+
+
 /**
  * Prints the contents of the page_table_register_array
  */
@@ -71,6 +80,20 @@ void print_page_table() {
         printf("PageTable location of process %i = %i\n", i, page_table_register_array[i]);
     }
 }
+
+
+/**
+ * Prints the contents of a page. The page can be a page_table or just some memory.
+ * @param page A pointer to a Page in memory.
+ */
+void print_page(Page *page) {
+    assert(page != NULL);
+    for (int i = 0; i < PAGE_SIZE; ++i) {
+        printf("%02x", page->bytes[i]);
+    }
+    printf("\n");
+}
+
 
 /**
  * Prints the state of which pages are free
@@ -445,32 +468,6 @@ void loop_repl() {
     }
 }
 
-/**
- * test_easy_extended performs some commands that won't cause any errors or deviate from standard behavior.
- */
-void test_easy_extended() {
-    map(3, 25, 1);
-    map(3, 55, 1);
-    store(3, 30, 255);
-    store(3, 31, 127);
-    store(3, 17, 16);
-    load(3, 30);
-    load(3, 31);
-    load(3, 17);
-    store(3, 49, 77);
-    load(3, 49);
-
-    print_memory();
-}
-
-/**
- * A quick test that checks to see if map, store, and load in the simplest use case.
- */
-void test_easy() {
-    map(0, 0, 1);
-    store(0, 12, 24);
-    load(0, 12);
-}
 
 /**
  * Prints the contents of the swap file, if it exists.
@@ -493,13 +490,6 @@ void print_swap() {
     printf("EOF\n");
 }
 
-void print_page(Page *page) {
-    assert(page != NULL);
-    for (int i = 0; i < PAGE_SIZE; ++i) {
-        printf("%02x", page->bytes[i]);
-    }
-    printf("\n");
-}
 
 /**
  * Copies the contents of the swap space located at swap_address into the simulated memory
@@ -542,11 +532,15 @@ void copy_memory_page_to_disc(Page *page, int swap_address) {
     fclose(swap);
 }
 
+
+
 /**
- * Clears the contents of the swap file
+ * A quick test that checks to see if map, store, and load in the simplest use case.
  */
-void clear_swap() {
-    remove("swap_space.bin");
+void test_easy() {
+    map(0, 0, 1);
+    store(0, 12, 24);
+    load(0, 12);
 }
 
 void test_read_write_disc() {
