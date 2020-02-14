@@ -12,11 +12,15 @@
 unsigned char memory[SIZE];
 const bool verbose = true;
 
+#define ENTRY_STATUS_EMPTY 0
+#define ENTRY_STATUS_PRESENT 1
+#define ENTRY_STATUS_SWAPPED 2
+
 /**
  * An Entry is a single mapping of a virtual page to a location in swap or memory.
  */
 typedef struct Entry {
-    unsigned char is_used; // == 1 if the entry is populated
+    unsigned char status; // == 1 if the entry is populated
     unsigned char virtual_page;
     unsigned char physical_page;
     unsigned char writable;
@@ -38,7 +42,6 @@ typedef struct Page_Table {
     struct Entry entries[ENTRIES_PER_PAGE_TABLE];
 } Page_Table;
 
-FILE *swap_space;
 
 /**
  * Each process will have a simulated hardware register pointing to the start of
@@ -219,29 +222,52 @@ Entry *get_entry_of_virtual_page(const int process_id, const int virtual_page) {
     return NULL;
 }
 
-// Checks if a given value in the givnen array
-// It also takes the number of elements in the array
-
-int valueinarray(int val, int arr[], int argc) {
-    int i;
-    for (i = 0; i < argc; i++) {
-        if (arr[i] == val)
-            return 1;
-    }
-    return 0;
-}
-
-// Kick out the first page that is not a table
-int which_page_to_swap() {
-    for (int i; i < ENTRIES_PER_PAGE_TABLE; i++) {
-        if (valueinarray((i * PAGE_SIZE), page_table_register_array, MAX_PROCESSES) == 0) {
-            return i;
-        } else {
-            continue;
+/**
+ * Returns true if the given memory address is a page table or not.
+ * @param memory_address A address, such as 0, 16, 32, or 48, in simulated physical memory.
+ * @return True if there is a page table stored at that address.
+ */
+bool is_page_table(int memory_address) {
+    for (int i = 0; i < MAX_PROCESSES; ++i) {
+        if (page_table_register_array[i] == memory_address) {
+            return true;
         }
     }
-    //printf("Error: All memory slots hold a page table\n");
-    return -1;
+    return false;
+}
+
+/**
+ * Determines which page should be swapped to disc. Prioritizes not swapping page_tables, or
+ * memory related to the given process_id.
+ *
+ * @param process_id The process id which is causing a swap.
+ * @return An address, such as 0, 16, 32, or 48.
+ */
+int which_page_to_swap(int process_id) {
+    for (int i = 0; i < SIZE / PAGE_SIZE; ++i) {
+        if (is_page_table(i) == false) {
+            return i;
+        }
+    }
+
+    // TODO
+
+    fprintf(stderr, "Error: All memory slots hold a page table\n");
+    exit(EXIT_FAILURE);
+}
+
+/**
+ * Updates the given page table entry to indicate that the associated virtual page
+ * is now located on swap space, located at swap_address
+ *
+ * @param entry a pointer to the entry for which memory is being swapped
+ * @param swap_address The address in swap space where the memory was copied to
+ */
+void update_page_table_for_swap_out(Entry *entry, int swap_address) {
+    assert(entry != NULL);
+
+    entry->physical_page = swap_address;
+    entry->status = ENTRY_STATUS_SWAPPED;
 }
 
 
