@@ -166,7 +166,15 @@ void swap_back_to_memory(int offset, int available_memory_index) {
 
 }
 
-void update_page_table_for_swap_out(int pid, int virtual_address, int offset) {
+/**
+ * Updates the page table entry for the given process and virtual_address to indicate that the
+ * associated virtual_page is now located on swap space, located at swap_address
+ *
+ * @param pid
+ * @param virtual_address
+ * @param swap_address The address in swap space where the memory was copied to
+ */
+void update_page_table_for_swap_out(int pid, int virtual_address, int swap_address) {
     int virtual_page = get_virtual_page(virtual_address);
     Entry *page_table_entry = get_entry_of_virtual_page(virtual_page, page_table_base_register[pid]);
     if (page_table_entry == NULL) {
@@ -174,7 +182,7 @@ void update_page_table_for_swap_out(int pid, int virtual_address, int offset) {
         return;
     }
     else {
-        page_table_entry->physical_page = offset;
+        page_table_entry->physical_page = swap_address;
         page_table_entry->status = STATUS_USED_NOT_PRESENT;
     }
     return;
