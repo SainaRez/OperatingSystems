@@ -511,16 +511,19 @@ void copy_swap_page_to_memory(int swap_address, int physical_memory_address) {
     assert(swap_address % 16 == 0);
     assert(physical_memory_address % 16 == 0);
 
+    // Open file
     FILE *swap = fopen("swap_space.bin", "rb");
     if (swap == NULL) {
         fprintf(stderr, "Error: Failed to open swap_space.\n");
         exit(EXIT_FAILURE);
     }
 
+    // Seek to address
+    fseek(swap, swap_address, SEEK_SET);
+
+    // Read contents and store in memory[]
     Page *physical_page = (Page *) &memory[physical_memory_address];
     fread(physical_page, sizeof(Page), 1, swap);
-
-    print_page(physical_page);
 
     fclose(swap);
 }
@@ -531,7 +534,10 @@ void copy_swap_page_to_memory(int swap_address, int physical_memory_address) {
  * @param swap_address The address in swap space memory where the contents are to be written
  */
 void copy_memory_page_to_disc(Page *page, int swap_address) {
+    assert(swap_address % PAGE_SIZE == 0);
+    assert(page != NULL);
     FILE *swap = fopen("swap_space.bin", "wb");
+    fseek(swap, swap_address, SEEK_SET);
     fwrite(page, sizeof(Page), PAGE_SIZE, swap);
     fclose(swap);
 }
@@ -547,13 +553,10 @@ void test_read_write_disc() {
     map(3, 17, 1);
     store(3, 16, 255);
     store(3, 31, 15);
-    // Memory now contains 255,0,0... in page 1 or memory[16]
     Page *page_to_move = (Page *) &memory[16];
-    copy_memory_page_to_disc(page_to_move, 0);
-    // Memory should not contain anything in page 1
+    copy_memory_page_to_disc(page_to_move, 16);
     print_swap();
-    copy_swap_page_to_memory(0, 48);
-    // Memory should contain 255,0,0... in page 3 or memory[48]
+    copy_swap_page_to_memory(16, 48);
     print_memory();
 }
 
