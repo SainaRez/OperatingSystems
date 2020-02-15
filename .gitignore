@@ -7,3 +7,4 @@ ThreeCommander/multi
 *.exe
 *debug/
 .idea/
+*.bin

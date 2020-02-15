@@ -13,3 +13,5 @@
 3,load,31,0
 3,load,33,0
 2,load,33,0
+
+# Test that commands can handle illegal arguments

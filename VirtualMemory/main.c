@@ -783,7 +783,7 @@ int main(int argc, char *argv[]) {
     FILE *temp = fopen("swap_space.bin", "w");
     fclose(temp);
 
-    test_swap();
+    // test_swap();
 
     loop_repl();
 }
