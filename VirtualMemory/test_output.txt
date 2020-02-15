@@ -1,0 +1,256 @@
+Running main.o with ./test_simple.txt
+ $ Instruction? 
+-> 1, map, 50, 0
+Put page table for PID 1 into physical frame 0
+Mapped virtual address 50 (page 3) into physical frame 1
+ $ Instruction? 
+-> 1, map, 51, 1
+Updating permissions for virtual page 3 (frame 1)
+ $ Instruction? 
+-> 1, store, 63, 255
+Stored value 255 at virtual address 63 (physical address 31)
+The updated page in memory is now: 000000000000000000000000000000ff
+ $ Instruction? 
+-> 1, load, 63, 0
+The value 255 is at virtual address 63
+ $ Instruction? 
+
+
+Running main.o with ./test_commands.txt
+ $ Instruction? 
+-> 3, map, 10, 1
+Put page table for PID 3 into physical frame 0
+Mapped virtual address 10 (page 0) into physical frame 1
+ $ Instruction? 
+-> 3, map, 32, 1
+Mapped virtual address 32 (page 2) into physical frame 2
+ $ Instruction? 
+-> 3, store, 32, 255
+Stored value 255 at virtual address 32 (physical address 32)
+The updated page in memory is now: ff000000000000000000000000000000
+ $ Instruction? 
+-> 3, map, 32, 0
+Updating permissions for virtual page 2 (frame 2)
+ $ Instruction? 
+-> 3, store, 32, 254
+Error: writes are not allowed to this page
+ $ Instruction? 
+-> 3, map, 32, 1
+Updating permissions for virtual page 2 (frame 2)
+ $ Instruction? 
+-> 3, store, 32, 254
+Stored value 254 at virtual address 32 (physical address 32)
+The updated page in memory is now: fe000000000000000000000000000000
+ $ Instruction? 
+-> 3, store, 47, 253
+Stored value 253 at virtual address 47 (physical address 47)
+The updated page in memory is now: fe0000000000000000000000000000fd
+ $ Instruction? 
+-> 3, store, 48, 255
+Error: No mapping found for given virtual address 48
+ $ Instruction? 
+-> 3, load, 32, 0
+The value 254 is at virtual address 32
+ $ Instruction? 
+-> 3, load, 47, 0
+The value 253 is at virtual address 47
+ $ Instruction? 
+-> 3, load, 48, 0
+Error: No mapping found for given virtual address 48
+ $ Instruction? 
+-> 3, load, 31, 0
+Error: No mapping found for given virtual address 31
+ $ Instruction? 
+-> 3, load, 33, 0
+The value 0 is at virtual address 33
+ $ Instruction? 
+-> 2, load, 33, 0
+Error: No page table set up for process 2
+ $ Instruction? 
+
+
+Running main.o with ./test_extended.txt
+ $ Instruction? 
+-> 0, map, 0, 1
+Put page table for PID 0 into physical frame 0
+Mapped virtual address 0 (page 0) into physical frame 1
+ $ Instruction? 
+-> 0, map, 16, 1
+Mapped virtual address 16 (page 1) into physical frame 2
+ $ Instruction? 
+-> 0, map, 32, 1
+Mapped virtual address 32 (page 2) into physical frame 3
+ $ Instruction? 
+-> 0, map, 48, 1
+Swapped frame 1 to disc at swap slot 0
+Mapped virtual address 48 (page 3) into physical frame 1
+ $ Instruction? 
+-> 2, map, 1, 1
+Swapped frame 1 to disc at swap slot 1
+Put page table for PID 2 into physical frame 1
+Swapped frame 2 to disc at swap slot 2
+Mapped virtual address 1 (page 0) into physical frame 2
+ $ Instruction? 
+-> 2, map, 17, 1
+Swapped frame 2 to disc at swap slot 3
+Mapped virtual address 17 (page 1) into physical frame 2
+ $ Instruction? 
+-> 2, map, 33, 1
+Swapped frame 2 to disc at swap slot 4
+Mapped virtual address 33 (page 2) into physical frame 2
+ $ Instruction? 
+-> 2, map, 49, 1
+Swapped frame 2 to disc at swap slot 5
+Mapped virtual address 49 (page 3) into physical frame 2
+ $ Instruction? 
+-> 1, map, 15, 1
+Swapped frame 2 to disc at swap slot 6
+Put page table for PID 1 into physical frame 2
+Swapped frame 3 to disc at swap slot 7
+Mapped virtual address 15 (page 0) into physical frame 3
+ $ Instruction? 
+-> 1, map, 31, 1
+Swapped frame 3 to disc at swap slot 8
+Mapped virtual address 31 (page 1) into physical frame 3
+ $ Instruction? 
+-> 1, map, 47, 1
+Swapped frame 3 to disc at swap slot 9
+Mapped virtual address 47 (page 2) into physical frame 3
+ $ Instruction? 
+-> 1, map, 63, 1
+Swapped frame 3 to disc at swap slot 10
+Mapped virtual address 63 (page 3) into physical frame 3
+ $ Instruction? 
+-> 0, store, 0, 255
+Swapped frame 3 to disc at swap slot 11
+Swapped disk slot 0 into frame 3
+Stored value 255 at virtual address 0 (physical address 48)
+The updated page in memory is now: ff000000000000000000000000000000
+ $ Instruction? 
+-> 0, store, 16, 254
+Swapped frame 3 to disc at swap slot 12
+Swapped disk slot 32 into frame 3
+Stored value 254 at virtual address 16 (physical address 48)
+The updated page in memory is now: fe000000000000000000000000000000
+ $ Instruction? 
+-> 0, store, 32, 253
+Swapped frame 3 to disc at swap slot 13
+Swapped disk slot 112 into frame 3
+Stored value 253 at virtual address 32 (physical address 48)
+The updated page in memory is now: fd000000000000000000000000000000
+ $ Instruction? 
+-> 0, store, 48, 252
+Swapped frame 3 to disc at swap slot 14
+Swapped disk slot 16 into frame 3
+Stored value 252 at virtual address 48 (physical address 48)
+The updated page in memory is now: fc000000000000000000000000000000
+ $ Instruction? 
+-> 1, store, 1, 255
+Swapped frame 3 to disc at swap slot 15
+Swapped disk slot 128 into frame 3
+Stored value 255 at virtual address 1 (physical address 49)
+The updated page in memory is now: 00ff0000000000000000000000000000
+ $ Instruction? 
+-> 1, store, 17, 255
+Swapped frame 3 to disc at swap slot 16
+Swapped disk slot 144 into frame 3
+Stored value 255 at virtual address 17 (physical address 49)
+The updated page in memory is now: 00ff0000000000000000000000000000
+ $ Instruction? 
+-> 1, store, 33, 255
+Swapped frame 3 to disc at swap slot 17
+Swapped disk slot 160 into frame 3
+Stored value 255 at virtual address 33 (physical address 49)
+The updated page in memory is now: 00ff0000000000000000000000000000
+ $ Instruction? 
+-> 1, store, 49, 255
+Swapped frame 3 to disc at swap slot 18
+Swapped disk slot 176 into frame 3
+Stored value 255 at virtual address 49 (physical address 49)
+The updated page in memory is now: 00ff0000000000000000000000000000
+ $ Instruction? 
+-> 3, map, 8, 1
+Swapped frame 3 to disc at swap slot 19
+Put page table for PID 3 into physical frame 3
+Swapped frame 0 to disc at swap slot 20
+Mapped virtual address 8 (page 0) into physical frame 0
+ $ Instruction? 
+-> 3, map, 20, 1
+Swapped frame 0 to disc at swap slot 21
+Mapped virtual address 20 (page 1) into physical frame 0
+ $ Instruction? 
+-> 3, map, 40, 1
+Swapped frame 0 to disc at swap slot 22
+Mapped virtual address 40 (page 2) into physical frame 0
+ $ Instruction? 
+-> 3, map, 60, 1
+Swapped frame 0 to disc at swap slot 23
+Mapped virtual address 60 (page 3) into physical frame 0
+ $ Instruction? 
+-> 0, load, 0, 0
+Swapped frame 0 to disc at swap slot 24
+Put page table for PID 0 into physical frame 0
+Swapped frame 1 to disc at swap slot 25
+Swapped disk slot 192 into frame 1
+The value 255 is at virtual address 0
+ $ Instruction? 
+-> 0, load, 16, 0
+Swapped frame 1 to disc at swap slot 26
+Swapped disk slot 208 into frame 1
+The value 254 is at virtual address 16
+ $ Instruction? 
+-> 3, load, 5, 0
+Swapped frame 1 to disc at swap slot 27
+Swapped disk slot 336 into frame 1
+The value 0 is at virtual address 5
+ $ Instruction? 
+-> 3, store, 5, 15
+Stored value 15 at virtual address 5 (physical address 21)
+The updated page in memory is now: 00000000000f00000000000000000000
+ $ Instruction? 
+-> 3, load, 5, 0
+The value 15 is at virtual address 5
+ $ Instruction? 
+-> 2, map, 10, 0
+Swapped frame 1 to disc at swap slot 28
+Put page table for PID 2 into physical frame 16
+Updating permissions for virtual page 0 (frame 3)
+ $ Instruction? 
+-> 2, store, 55, 55
+Swapped frame 0 to disc at swap slot 29
+Swapped disk slot 96 into frame 0
+Stored value 55 at virtual address 55 (physical address 7)
+The updated page in memory is now: 00000000000000370000000000000000
+ $ Instruction? 
+-> 0, load, 0, 0
+Swapped frame 0 to disc at swap slot 30
+Put page table for PID 0 into physical frame 0
+Swapped frame 1 to disc at swap slot 31
+Swapped disk slot 416 into frame 1
+The value 255 is at virtual address 0
+ $ Instruction? 
+-> 0, load, 16, 0
+Swapped frame 1 to disc at swap slot 32
+Swapped disk slot 432 into frame 1
+The value 254 is at virtual address 16
+ $ Instruction? 
+-> 0, load, 48, 0
+Swapped frame 1 to disc at swap slot 33
+Swapped disk slot 240 into frame 1
+The value 252 is at virtual address 48
+ $ Instruction? 
+-> 1, load, 17, 0
+Swapped frame 1 to disc at swap slot 34
+Swapped disk slot 272 into frame 1
+The value 255 is at virtual address 17
+ $ Instruction? 
+-> 1, load, 16, 0
+The value 0 is at virtual address 16
+ $ Instruction? 
+-> 2, load, 55, 1
+Swapped frame 1 to disc at swap slot 35
+Put page table for PID 2 into physical frame 16
+Swapped frame 0 to disc at swap slot 36
+Swapped disk slot 480 into frame 0
+The value 55 is at virtual address 55
+ $ Instruction? 

@@ -449,7 +449,7 @@ void prepare_page_table(int process_id) {
  */
 void load(const int process_id, const int virtual_address) {
     if (does_process_have_page_file(process_id) == false) {
-        fprintf(stderr, "Error: No page table set up for process %i\n", process_id);
+        printf("Error: No page table set up for process %i\n", process_id);
         return;
     }
     prepare_page_table(process_id);
@@ -509,7 +509,7 @@ void store(const int process_id, const int virtual_address, const int value) {
     Entry *page_table_entry = get_entry_of_virtual_page(process_id, virtual_page);
 
     if (page_table_entry == NULL) {
-        fprintf(stderr, "Error: No mapping found for given virtual address %i\n", virtual_address);
+        printf("Error: No mapping found for given virtual address %i\n", virtual_address);
         return;
     }
     if (page_table_entry->writable == false) {
