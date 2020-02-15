@@ -6,7 +6,7 @@
 
 #define SIZE 64
 #define PAGE_SIZE 16
-#define PROMPT "Instruction? "
+#define PROMPT " $ Instruction? "
 #define MAX_PROCESSES 4
 
 unsigned char memory[SIZE];
@@ -537,6 +537,8 @@ void store(const int process_id, const int virtual_address, const int value) {
     memory[physical_address] = (unsigned char) value;
 
     printf("Stored value %i at virtual address %i (physical address %i)\n", value, virtual_address, physical_address);
+    printf("The updated page in memory is now: ");
+    print_page((Page *) &memory[physical_page_frame * PAGE_SIZE]);
 }
 
 
@@ -640,18 +642,19 @@ void map(const int process_id, const int virtual_address, const int value) {
 void process_command(const int process_id, const char instruction_type, const int virtual_address, const int value) {
     if (process_id < 0 || process_id > 3) {
         fprintf(stderr, "Error: Process ID %i is out of range\n", process_id);
-        exit(EXIT_FAILURE);
+        return;
     }
 
     if (virtual_address < 0 || virtual_address > 63) {
         fprintf(stderr, "Error: virtual address %i is out of range\n", virtual_address);
-        exit(EXIT_FAILURE);
+        return;
     }
 
     if (value < 0 || value > 255) {
         fprintf(stderr, "Error: given value %i is out of range\n", value);
-        exit(EXIT_FAILURE);
+        return;
     }
+
 
     if (instruction_type == 'm') {
         if (value > 1) {
@@ -700,6 +703,7 @@ void loop_repl() {
             exit(EXIT_FAILURE);
         }
 
+        printf("\n-> %i, %s, %i, %i\n", pid, command, virtual_address, value);
         process_command(pid, command_char, virtual_address, value);
 
         // fflush just to be safe.
