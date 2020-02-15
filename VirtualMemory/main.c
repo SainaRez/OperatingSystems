@@ -71,16 +71,6 @@ void initialize_register_array() {
 
 
 /**
- * Prints the contents of the page_table_register_array
- */
-void print_page_table() {
-    for (int i = 0; i < MAX_PROCESSES; ++i) {
-        printf("PageTable location of process %i = %i\n", i, page_table_register_array[i]);
-    }
-}
-
-
-/**
  * Prints the contents of a page. The page can be a page_table or just some memory.
  * @param page A pointer to a Page in memory.
  */
@@ -94,24 +84,12 @@ void print_page(Page *page) {
 
 
 /**
- * Prints the state of which pages are free
- */
-void print_page_use_status() {
-    for (int i = 0; i < SIZE / PAGE_SIZE; ++i) {
-        printf("Page %i use status?: %s\n", i, page_use_status_array[i] ? "true" : "false");
-    }
-}
-
-
-/**
  * Utility function to print the entire contents of memory
  */
 void print_memory() {
     for (int y = 0; y < SIZE / 16; y++) {
         for (int x = 0; x < 16; x++) {
             printf("0x%02x, ", memory[16 * y + x]);
-            // Use below to print in integer form instead of hexadecimal
-            // printf("%03i, ", memory[16 * y + x]);
         }
         printf("\n");
     }
@@ -196,6 +174,7 @@ int get_virtual_page_of_address(const int virtual_address) {
     return (virtual_address - (virtual_address % PAGE_SIZE)) / PAGE_SIZE;
 }
 
+
 /**
  * Returns a pointer to the Entry where the virtual page mapping is located in memory.
  *
@@ -223,6 +202,7 @@ Entry *get_entry_of_virtual_page(const int process_id, const int virtual_page) {
 
     return NULL;
 }
+
 
 /**
  * Returns true if the given memory address is a page table or not.
@@ -655,7 +635,6 @@ void process_command(const int process_id, const char instruction_type, const in
         return;
     }
 
-
     if (instruction_type == 'm') {
         if (value > 1) {
             fprintf(stderr, "Error: Illegal value argument %i passed with command map\n", value);
@@ -713,81 +692,11 @@ void loop_repl() {
 }
 
 
-void test_swap() {
-    map(0, 0, 1);
-    store(0, 0, 255);
-    map(0, 16, 1);
-    store(0, 16, 254);
-    map(0, 32, 1);
-    store(0, 32, 253);
-    map(0, 48, 1);
-    store(0, 48, 252);
-    map(1, 0, 1);
-    store(1, 1, 255);
-    map(1, 16, 1);
-    store(1, 17, 254);
-    map(1, 32, 1);
-    store(1, 33, 253);
-    map(1, 48, 1);
-    store(1, 49, 252);
-    map(2, 0, 1);
-    store(2, 2, 15);
-    map(2, 16, 1);
-    store(2, 18, 14);
-    map(2, 32, 1);
-    store(2, 34, 13);
-    map(2, 48, 1);
-    store(2, 50, 12);
-    map(3, 0, 1);
-    store(3, 4, 255);
-    map(3, 16, 1);
-    store(3, 20, 255);
-    map(3, 32, 1);
-    store(3, 36, 255);
-    map(3, 48, 1);
-    store(3, 52, 255);
-    load(0, 48);
-    load(0, 32);
-    load(0, 16);
-    load(0, 0);
-    load(2, 18);
-    load(2, 2);
-    load(2, 34);
-    load(2, 50);
-    load(3, 52);
-    load(3, 36);
-    load(3, 20);
-    load(3, 4);
-    load(1, 1);
-    load(1, 17);
-    load(1, 33);
-    load(1, 49);
-    map(2, 20, 0);
-    map(2, 10, 0);
-    load(2, 18);
-    store(2, 25, 170);
-    map(2, 20, 1);
-    store(2, 25, 170);
-    load(2, 25);
-    load(2, 18);
-    load(0, 16);
-    load(3, 4);
-    load(1, 33);
-    map(0,0,0);
-    map(1,0,0);
-    map(2,0,0);
-    map(3,0,0);
-    load(0,16);
-    // TODO copy (and reformat) this into a final_test.txt file or something
-}
-
 int main(int argc, char *argv[]) {
     initialize_register_array();
     remove("swap_space.bin");
     FILE *temp = fopen("swap_space.bin", "w");
     fclose(temp);
-
-    // test_swap();
 
     loop_repl();
 }
