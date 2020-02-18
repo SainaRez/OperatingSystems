@@ -41,4 +41,4 @@ $ ./main < ./test_extended.txt
 To run all three test scripts together, run the bash script Test.sh
 
 
-# Makefile includes multiple files, but main.c is the final and correct version of the Memory Manager program.
+##### Makefile includes multiple files, but main.c is the final and correct version of the Memory Manager program.
