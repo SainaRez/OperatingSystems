@@ -1,7 +1,6 @@
-#Operating Systems
-#Project 1 checkpoint
-#Author: Saina Rezvani, Josh Desmond
-#Date: 01/31/2020
+### Loadable Kernel
+#### Author: Saina Rezvani, Josh Desmond
+##### Date: 01/31/2020
 
 This project includes the boring.c, custom.c and multi.c files.
 
@@ -52,4 +51,4 @@ Running multi:
 $ make
 $ ./multi 1 3
 
-# Makefile includes all three programs and running make one time is sufficient
+##### Makefile includes all three programs and running make one time is sufficient
