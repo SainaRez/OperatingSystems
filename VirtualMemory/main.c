@@ -127,28 +127,6 @@ void print_memory() {
 
 
 /**
- * Prints the contents of the swap file, if it exists.
- */
-// void print_swap() {
-//     FILE *swap;
-//     fopen_s(&swap, "swap_space.bin", "rb");
-//     if (swap == NULL) { return; }
-
-//     int i = 0;
-//     int byte;
-//     while ((byte = getc(swap)) != EOF) {
-//         if (i % PAGE_SIZE * 2 == 0) {
-//             printf("\n");
-//         }
-//         i++;
-//         printf("%02x,", byte);
-//     }
-//     fclose(swap);
-//     printf("EOF\n");
-// }
-
-
-/**
  * Implementation of Queue
  * This code is taking from the internet
  * source: 
