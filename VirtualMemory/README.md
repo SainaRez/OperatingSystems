@@ -1,7 +1,7 @@
-#Operating Systems
-#Project 2: Memory Manager
-#Author: Saina Rezvani, Josh Desmond
-#Date: 02/14/2020
+### Operating Systems
+### Project 2: Memory Manager
+### Author: Saina Rezvani, Josh Desmond
+##### Date: 02/14/2020
 
 This project includes the main.c files.
 
