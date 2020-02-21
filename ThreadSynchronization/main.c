@@ -14,7 +14,6 @@
 #define ARGUMENT_NUMBER 7
 
 
-
 void process_input(int argc, int arguments[]) {
     if (argc != ARGUMENT_NUMBER) {
         printf("Incorrect number of arguments\n");
@@ -32,15 +31,14 @@ void process_input(int argc, int arguments[]) {
         printf("Number of threads (ninjas) is out of range\n");
         return;
     }
-    
+
     return;
 }
 
 
 int main(int argc, char *argv[]) {
-    
     int arguments[ARGUMENT_NUMBER];
-   
+
     for (int i = 1; i < argc; i++) {
         arguments[i] = atoi(argv[i]);
     }
