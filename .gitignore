@@ -1,0 +1,9 @@
+ThreeCommander/resources.php
+ThreeCommander/boring
+ThreeCommander/custom
+ThreeCommander/multi
+*.o
+*.O
+*.exe
+*debug/
+.idea/
