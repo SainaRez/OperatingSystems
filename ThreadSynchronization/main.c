@@ -52,5 +52,5 @@ int main(int argc, char *argv[]) {
     }
 
     process_input(arguments);
-    printf("-- Starting Simulation --");
+    printf("-- Starting Simulation --\n");
 }
