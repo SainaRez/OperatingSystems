@@ -14,37 +14,43 @@
 #define ARGUMENT_NUMBER 7
 
 
-void process_input(int argc, int arguments[]) {
-    if (argc != ARGUMENT_NUMBER) {
-        printf("Incorrect number of arguments\n");
-        return;
-    }
-    if (arguments[0] < 2 || arguments[0] > 4) {
-        printf("Incorrect number of teams\n");
-        return;
-    }
-    if (arguments[1] < 10 || arguments[1] > 50) {
-        printf("Number of threads (pirates) is out of range\n");
-        return;
-    }
-    if (arguments[2] < 10 || arguments[2] > 50) {
-        printf("Number of threads (ninjas) is out of range\n");
-        return;
-    }
+void process_input(const int arguments[]) {
+    const int num_teams = arguments[0];
+    const int num_pirates = arguments[1];
+    const int num_ninjas = arguments[2];
+    const int avg_pirate_costume_time = arguments[3];
+    const int avg_ninja_costume_time = arguments[4];
+    const int avg_pirate_arrival_time = arguments[5];
+    const int avg_ninja_arrival_time = arguments[6];
 
-    return;
+    if (num_teams < 2 || num_teams > 4) {
+        fprintf(stderr, "Illegal argument %i given for number of teams\n", num_teams);
+        exit(EXIT_FAILURE);
+    }
+    if (num_pirates < 10 || num_pirates > 50) {
+        fprintf(stderr, "Number of threads (pirates) %i is out of range\n", num_pirates);
+        exit(EXIT_FAILURE);
+    }
+    if (num_ninjas < 10 || num_ninjas > 50) {
+        fprintf(stderr,"Number of threads (ninjas) %i is out of range\n", num_ninjas);
+        exit(EXIT_FAILURE);
+    }
 }
 
 
 int main(int argc, char *argv[]) {
+    if (argc != ARGUMENT_NUMBER + 1) {
+        fprintf(stderr, "Incorrect number of arguments %i given\n", argc);
+        exit(EXIT_FAILURE);
+    }
+
     int arguments[ARGUMENT_NUMBER];
 
-    for (int i = 1; i < argc; i++) {
-        arguments[i] = atoi(argv[i]);
+    for (int i = 0; i < ARGUMENT_NUMBER; i++) {
+        // TODO validate that input is actually a number
+        arguments[i] = atoi(argv[i + 1]);
     }
-    arguments[argc] = '\0';
 
     process_input(arguments);
-
-    return 0;
+    printf("-- Starting Simulation --");
 }
