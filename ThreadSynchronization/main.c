@@ -158,7 +158,7 @@ void add_pirate_to_queue(int num_pirates) {
     return;
 }
 
-void add_ninja_to_queue(int num_ninjas, int avg_ninja_costune_time, int avg_ninja_arrival_time) {
+void add_ninja_to_queue(int num_ninjas) {
 
     for (int i = 51; i < (num_ninjas + 51); i++) {
         
@@ -169,9 +169,6 @@ void add_ninja_to_queue(int num_ninjas, int avg_ninja_costune_time, int avg_ninj
     }
     return;
 }
-
-
-
 
 
 void process_input(int argc, int arguments[]) {
