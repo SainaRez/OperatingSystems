@@ -4,6 +4,8 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
+#include <unistd.h>
+#include <pthread.h>
 
 
 #define MIN_THREAD_NUM 50
@@ -13,15 +15,19 @@
 #define MAX_TEAM 4
 
 #define ARGUMENT_NUMBER 7
+ 
 
 typedef struct Ninja {
-
+    int id;
+    pthread_t thread;
     bool coming_back;
     int waiting_time_before_visit;
 
 } Ninja;
 
 typedef struct Pirate {
+    int id;
+    pthread_t thread;
     bool coming_back;
     int waiting_time_before_visit;
 
@@ -35,7 +41,7 @@ typedef struct Pirate {
 
 // A linked list (LL) node to store a queue entry 
 typedef struct QNode { 
-    int key; 
+    pthread_t current_thread; 
     struct QNode* next; 
 } QNode;
   
@@ -46,11 +52,11 @@ typedef struct Queue {
 } Queue; 
   
 // A utility function to create a new linked list node. 
-QNode* newNode(int k) 
+QNode* newNode(pthread_t t) 
 { 
     //struct QNode* temp = (struct QNode*)malloc(sizeof(struct QNode)); 
     QNode* temp;
-    temp->key = k; 
+    temp->current_thread = t; 
     temp->next = NULL; 
     return temp; 
 };
@@ -65,11 +71,11 @@ Queue* createQueue()
 }
   
 // The function to add a key k to q 
-void enQueue(Queue* q, int k) 
+void enQueue(Queue* q, pthread_t t) 
 { 
     // Create a new LL node 
     //struct QNode* temp = newNode(k); 
-      QNode* temp = newNode(k); 
+      QNode* temp = newNode(t); 
 
 
     // If queue is empty, then new node is front and rear both 
@@ -92,7 +98,7 @@ int deQueue(Queue* q)
   
     // Store previous front and move front one node ahead 
     QNode* temp = q->front; 
-    int node_value = temp->key;
+    int node_thread = temp->current_thread;
   
     q->front = q->front->next; 
   
@@ -100,7 +106,7 @@ int deQueue(Queue* q)
     if (q->front == NULL) 
         q->rear = NULL; 
   
-    return temp->key;
+    return node_thread;
     //free(temp); 
 } 
 
@@ -111,38 +117,71 @@ Queue* ninja_queue;
 
 
 
-void add_variance_to_inputs(int argc, int arguments[]) {
+// int add_variance_to_inputs(int arguments[]) {
     
-    srand(time(0));
-    int seed = rand();
-    srand48(seed);
-    double variance;
-    variance = drand48();
-    printf("First variance: %f\n",  variance);
-    arguments[3] += variance;
-    variance = drand48();
-    printf("Second variance: %f\n",  variance);
-    arguments[4] += variance;
+//     srand(time(0));
+//     int seed = rand();
+//     srand48(seed);
+//     double variance;
+//     variance = drand48();
+//     printf("First variance: %f\n",  variance);
+//     arguments[3] += variance;
+//     variance = drand48();
+//     printf("Second variance: %f\n",  variance);
+//     arguments[4] += variance;
 
-    //This needs to be somewhere else but I'll move it when the function is written
+//     //This needs to be somewhere else but I'll move it when the function is written
     
-    double random_number = rand() % 4;
-    if (random_number == 2) {
-        //Person is coming back
-    } 
-    
-    
+//     double random_number = rand() % 4;
+//     if (random_number == 2) {
+//         //Person is coming back
+//     }  
+//     return arguments;
+// }
+
+void *fill_in_function() {
+    sleep(1);
+    return NULL;
+}
+ 
+
+
+void add_pirate_to_queue(int num_pirates) {
+
+    for (int i = 0; i < (num_pirates);  i++) {
+
+        Pirate *new_pirate;
+        new_pirate->id = i;
+        pthread_create(&new_pirate->thread, NULL, fill_in_function, NULL);
+        enQueue(pirate_queue, new_pirate->id);
+    }
     return;
 }
 
-void process_input(const int arguments[]) {
-    const int num_teams = arguments[0];
-    const int num_pirates = arguments[1];
-    const int num_ninjas = arguments[2];
-    const int avg_pirate_costume_time = arguments[3];
-    const int avg_ninja_costume_time = arguments[4];
-    const int avg_pirate_arrival_time = arguments[5];
-    const int avg_ninja_arrival_time = arguments[6];
+void add_ninja_to_queue(int num_ninjas, int avg_ninja_costune_time, int avg_ninja_arrival_time) {
+
+    for (int i = 51; i < (num_ninjas + 51); i++) {
+        
+        Ninja *new_ninja;
+        new_ninja->id = i;
+        pthread_create(&new_ninja->thread, NULL, fill_in_function, NULL);
+        enQueue(ninja_queue, new_ninja->id);
+    }
+    return;
+}
+
+
+
+
+
+void process_input(int argc, int arguments[]) {
+    int num_teams = arguments[0];
+    int num_pirates = arguments[1];
+    int num_ninjas = arguments[2];
+    int avg_pirate_costume_time = arguments[3];
+    int avg_ninja_costume_time = arguments[4];
+    int avg_pirate_arrival_time = arguments[5];
+    int avg_ninja_arrival_time = arguments[6];
 
     if (num_teams < 2 || num_teams > 4) {
         fprintf(stderr, "Illegal argument %i given for number of teams\n", num_teams);
@@ -156,6 +195,8 @@ void process_input(const int arguments[]) {
         fprintf(stderr,"Number of threads (ninjas) %i is out of range\n", num_ninjas);
         exit(EXIT_FAILURE);
     }
+    int updated_args[argc];
+    //updated_args = add_variance_to_inputs(arguments);
 }
 
 
@@ -172,7 +213,7 @@ int main(int argc, char *argv[]) {
         arguments[i] = atoi(argv[i + 1]);
     }
 
-    process_input(arguments);
+    process_input(argc, arguments);
     printf("-- Starting Simulation --\n");
 
     return 0;
