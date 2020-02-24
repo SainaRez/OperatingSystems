@@ -111,29 +111,29 @@ Queue* ninja_queue;
 
 
 
-// void add_variance_to_inputs(int argc, int arguments[]) {
+void add_variance_to_inputs(int argc, int arguments[]) {
     
-//     srand(time(0));
-//     int seed = rand();
-//     srand48(seed);
-//     double variance;
-//     variance = drand48();
-//     printf("First variance: %f\n",  variance);
-//     (double)arguments[3] += variance;
-//     variance = drand48();
-//     printf("Second variance: %f\n",  variance);
-//     (double)arguments[4] += variance;
+    srand(time(0));
+    int seed = rand();
+    srand48(seed);
+    double variance;
+    variance = drand48();
+    printf("First variance: %f\n",  variance);
+    arguments[3] += variance;
+    variance = drand48();
+    printf("Second variance: %f\n",  variance);
+    arguments[4] += variance;
 
-//     //This needs to be somewhere else but I'll move it when the function is written
+    //This needs to be somewhere else but I'll move it when the function is written
     
-//     double random_number = rand() % 4;
-//     if (random_number == 2) {
-//         //Person is coming back
-//     } 
+    double random_number = rand() % 4;
+    if (random_number == 2) {
+        //Person is coming back
+    } 
     
     
-//     return;
-// }
+    return;
+}
 
 void process_input(const int arguments[]) {
     const int num_teams = arguments[0];
