@@ -16,22 +16,17 @@
 
 #define ARGUMENT_NUMBER 7
  
-
-typedef struct Ninja {
+/**
+ * 
+ */
+typedef struct Person {
     int id;
     pthread_t thread;
     bool coming_back;
     int waiting_time_before_visit;
 
-} Ninja;
+} Person;
 
-typedef struct Pirate {
-    int id;
-    pthread_t thread;
-    bool coming_back;
-    int waiting_time_before_visit;
-
-} Pirate;
 
 /**
  * Implementation of Queue
@@ -41,7 +36,7 @@ typedef struct Pirate {
 
 // A linked list (LL) node to store a queue entry 
 typedef struct QNode { 
-    pthread_t current_thread; 
+    Person current_person; 
     struct QNode* next; 
 } QNode;
   
@@ -52,11 +47,11 @@ typedef struct Queue {
 } Queue; 
   
 // A utility function to create a new linked list node. 
-QNode* newNode(pthread_t t) 
+QNode* newNode(Person p) 
 { 
     //struct QNode* temp = (struct QNode*)malloc(sizeof(struct QNode)); 
-    QNode* temp;
-    temp->current_thread = t; 
+    QNode* temp = (struct QNode*)malloc(sizeof(struct QNode));
+    temp->current_person = p; 
     temp->next = NULL; 
     return temp; 
 };
@@ -71,11 +66,11 @@ Queue* createQueue()
 }
   
 // The function to add a key k to q 
-void enQueue(Queue* q, pthread_t t) 
+void enQueue(Queue* q, Person p) 
 { 
     // Create a new LL node 
     //struct QNode* temp = newNode(k); 
-      QNode* temp = newNode(t); 
+      QNode* temp = newNode(p); 
 
 
     // If queue is empty, then new node is front and rear both 
@@ -90,15 +85,15 @@ void enQueue(Queue* q, pthread_t t)
 } 
   
 // Function to remove a key from given queue q 
-int deQueue(Queue* q) 
+Person* deQueue(Queue* q) 
 { 
     // If queue is empty, return NULL. 
     if (q->front == NULL) 
-        return -1; 
+        return NULL; 
   
     // Store previous front and move front one node ahead 
     QNode* temp = q->front; 
-    int node_thread = temp->current_thread;
+    Person node_struct = temp->current_person;
   
     q->front = q->front->next; 
   
@@ -106,7 +101,7 @@ int deQueue(Queue* q)
     if (q->front == NULL) 
         q->rear = NULL; 
   
-    return node_thread;
+    return &node_struct;
     //free(temp); 
 } 
 
@@ -147,10 +142,10 @@ bool is_coming_back() {
 void add_pirate_to_queue(int num_pirates) {
 
     for (int i = 0; i < (num_pirates);  i++) {
-        Pirate *new_pirate;
-        new_pirate->id = i;
-        new_pirate->coming_back = is_coming_back();  
-        pthread_create(&new_pirate->thread, NULL, fill_in_function, NULL);
+        Person new_pirate;
+        new_pirate.id = i;
+        new_pirate.coming_back = is_coming_back();  
+        pthread_create(&new_pirate.thread, NULL, fill_in_function, NULL);
         enQueue(pirate_queue, new_pirate);
     }
     return;
@@ -159,10 +154,10 @@ void add_pirate_to_queue(int num_pirates) {
 void add_ninja_to_queue(int num_ninjas) {
 
     for (int i = 51; i < (num_ninjas + 51); i++) {
-        Ninja *new_ninja;
-        new_ninja->id = i;
-        new_ninja->coming_back = is_coming_back();
-        pthread_create(&new_ninja->thread, NULL, fill_in_function, NULL);
+        Person new_ninja;
+        new_ninja.id = i;
+        new_ninja.coming_back = is_coming_back();
+        pthread_create(&new_ninja.thread, NULL, fill_in_function, NULL);
         enQueue(ninja_queue, new_ninja);
     }
     return;
