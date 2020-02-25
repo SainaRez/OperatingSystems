@@ -132,10 +132,6 @@ Queue* ninja_queue;
 
 //     //This needs to be somewhere else but I'll move it when the function is written
     
-//     double random_number = rand() % 4;
-//     if (random_number == 2) {
-//         //Person is coming back
-//     }  
 //     return arguments;
 // }
 
@@ -143,17 +139,25 @@ void *fill_in_function() {
     sleep(1);
     return NULL;
 }
- 
 
+bool is_coming_back() {
+    srand(time(0));
+    double random_number = rand() % 4;
+    if (random_number == 0) {
+        return true;
+    }
+    return false;
+}
+ 
 
 void add_pirate_to_queue(int num_pirates) {
 
     for (int i = 0; i < (num_pirates);  i++) {
-
         Pirate *new_pirate;
         new_pirate->id = i;
+        new_pirate->coming_back = is_coming_back();  
         pthread_create(&new_pirate->thread, NULL, fill_in_function, NULL);
-        enQueue(pirate_queue, new_pirate->id);
+        enQueue(pirate_queue, new_pirate);
     }
     return;
 }
@@ -161,11 +165,11 @@ void add_pirate_to_queue(int num_pirates) {
 void add_ninja_to_queue(int num_ninjas) {
 
     for (int i = 51; i < (num_ninjas + 51); i++) {
-        
         Ninja *new_ninja;
         new_ninja->id = i;
+        new_ninja->coming_back = is_coming_back();
         pthread_create(&new_ninja->thread, NULL, fill_in_function, NULL);
-        enQueue(ninja_queue, new_ninja->id);
+        enQueue(ninja_queue, new_ninja);
     }
     return;
 }
