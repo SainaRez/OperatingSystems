@@ -117,23 +117,17 @@ Queue* ninja_queue;
 
 
 
-// int add_variance_to_inputs(int arguments[]) {
+int add_variance(int preparation_time) {
     
-//     srand(time(0));
-//     int seed = rand();
-//     srand48(seed);
-//     double variance;
-//     variance = drand48();
-//     printf("First variance: %f\n",  variance);
-//     arguments[3] += variance;
-//     variance = drand48();
-//     printf("Second variance: %f\n",  variance);
-//     arguments[4] += variance;
-
-//     //This needs to be somewhere else but I'll move it when the function is written
+    srand(time(0));
+    int seed = rand();
+    srand48(seed);
+    double variance;
+    variance = drand48();
     
-//     return arguments;
-// }
+    double updated_time = preparation_time + variance;
+    return updated_time;
+}
 
 void *fill_in_function() {
     sleep(1);
@@ -196,8 +190,9 @@ void process_input(int argc, int arguments[]) {
         fprintf(stderr,"Number of threads (ninjas) %i is out of range\n", num_ninjas);
         exit(EXIT_FAILURE);
     }
-    int updated_args[argc];
-    //updated_args = add_variance_to_inputs(arguments);
+    avg_pirate_costume_time = add_variance(avg_pirate_costume_time);
+    avg_ninja_costume_time = add_variance(avg_ninja_costume_time);
+    return;
 }
 
 
