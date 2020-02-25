@@ -6,6 +6,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <math.h>
 
 
 #define MIN_THREAD_NUM 50
@@ -117,9 +118,9 @@ int add_variance(int preparation_time) {
     srand(time(0));
     int seed = rand();
     srand48(seed);
-    double variance;
-    variance = drand48();
-    
+    double a = drand48();
+    double b = drand48();
+    double variance = sqrt(-2 * log(a)) * cos(2 * M_PI * b);
     double updated_time = preparation_time + variance;
     return updated_time;
 }
