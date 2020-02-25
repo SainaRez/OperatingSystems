@@ -9,3 +9,6 @@ ThreeCommander/multi
 .idea/
 *.bin
 main
+/ThreadSynchronization/CMakeCache.txt
+/ThreadSynchronization/cmake_install.cmake
+CMakeFiles/
