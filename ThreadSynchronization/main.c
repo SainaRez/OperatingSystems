@@ -6,6 +6,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <math.h>
 
 
 #define MIN_THREAD_NUM 50
@@ -117,15 +118,15 @@ int add_variance(int preparation_time) {
     srand(time(0));
     int seed = rand();
     srand48(seed);
-    double variance;
-    variance = drand48();
-    
+    double a = drand48();
+    double b = drand48();
+    double variance = sqrt(-2 * log(a)) * cos(2 * M_PI * b);
     double updated_time = preparation_time + variance;
     return updated_time;
 }
 
-void *fill_in_function() {
-    sleep(1);
+void *put_on_custom(int dressing_time) {
+    sleep(dressing_time);
     return NULL;
 }
 
@@ -137,28 +138,30 @@ bool is_coming_back() {
     }
     return false;
 }
+
+void create_new_person(int id, int avg_custome_time, Person new_person, Queue* q) {
+    new_person.id = id;
+    new_person.coming_back = is_coming_back();
+    pthread_create(&new_person.thread, NULL, put_on_custom(avg_custome_time), NULL);
+    enQueue(q, new_person);
+    return;
+}
  
 
-void add_pirate_to_queue(int num_pirates) {
+void add_pirate_to_queue(int num_pirates, int avg_pirate_custome_time) {
 
     for (int i = 0; i < (num_pirates);  i++) {
         Person new_pirate;
-        new_pirate.id = i;
-        new_pirate.coming_back = is_coming_back();  
-        pthread_create(&new_pirate.thread, NULL, fill_in_function, NULL);
-        enQueue(pirate_queue, new_pirate);
+        create_new_person(i, avg_pirate_custome_time, new_pirate, pirate_queue);
     }
     return;
 }
 
-void add_ninja_to_queue(int num_ninjas) {
+void add_ninja_to_queue(int num_ninjas, int avg_ninja_custome_time) {
 
     for (int i = 51; i < (num_ninjas + 51); i++) {
         Person new_ninja;
-        new_ninja.id = i;
-        new_ninja.coming_back = is_coming_back();
-        pthread_create(&new_ninja.thread, NULL, fill_in_function, NULL);
-        enQueue(ninja_queue, new_ninja);
+        create_new_person(i, avg_ninja_custome_time, new_ninja, ninja_queue);
     }
     return;
 }
