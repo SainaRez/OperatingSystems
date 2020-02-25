@@ -21,12 +21,18 @@
  * 
  */
 typedef struct Person {
+    char flag;
     int id;
     pthread_t thread;
     bool coming_back;
     int waiting_time_before_visit;
+    double arrival_time;
+    int fitting_time;
 
 } Person;
+
+Person pirate_list[51];
+Person ninja_list[51];
 
 
 /**
@@ -111,9 +117,32 @@ Queue* ninja_queue;
 
 // End of Queue Section
 
+void sort_list(Person person_list[]) {
+    int i, j, n;
+    Person a;
+    // printf("Enter the value of N \n");
+    // scanf("%d", &n);
 
+    // printf("Enter the numbers \n");
+    // for (i = 0; i < n; ++i)
+    //     scanf("%d", &number[i]);
 
-int add_variance(int preparation_time) {
+    for (i = 0; i < n; ++i) {
+        for (j = i + 1; j < n; ++j) {
+            if (person_list[i].arrival_time > person_list[j].arrival_time) {
+                a = person_list[i];
+                person_list[i] = person_list[j];
+                person_list[j] = a;
+            }
+        }
+    }
+
+    printf("The numbers arranged in ascending order are given below \n");
+    for (i = 0; i < n; ++i)
+        printf("%fl\n", person_list[i].arrival_time);
+}
+
+int add_variance(int avg_time) {
     
     srand(time(0));
     int seed = rand();
@@ -121,11 +150,14 @@ int add_variance(int preparation_time) {
     double a = drand48();
     double b = drand48();
     double variance = sqrt(-2 * log(a)) * cos(2 * M_PI * b);
-    double updated_time = preparation_time + variance;
+    if (variance < 0 && (fabs(variance) >= avg_time)) {
+        variance = fabs(variance);
+    }
+    double updated_time = avg_time + variance;
     return updated_time;
 }
 
-void *put_on_custom(int dressing_time) {
+void *put_on_costume(int dressing_time) {
     sleep(dressing_time);
     return NULL;
 }
@@ -139,29 +171,38 @@ bool is_coming_back() {
     return false;
 }
 
-void create_new_person(int id, int avg_custome_time, Person new_person, Queue* q) {
+void create_new_person(int id, int avg_costume_time, int avg_arrival_time, 
+                    Person new_person) {
     new_person.id = id;
     new_person.coming_back = is_coming_back();
-    pthread_create(&new_person.thread, NULL, put_on_custom(avg_custome_time), NULL);
-    enQueue(q, new_person);
+    new_person.fitting_time = add_variance(avg_costume_time);
+    new_person.arrival_time = add_variance(avg_arrival_time);
+    pthread_create(&new_person.thread, NULL, put_on_costume(avg_costume_time), NULL);
+    //enQueue(q, new_person);
     return;
 }
  
 
-void add_pirate_to_queue(int num_pirates, int avg_pirate_custome_time) {
+void initialize_pirate_threads(int num_pirates, int avg_pirate_costume_time, 
+                               int avg_pirate_arrival_time, int num_teams) {
 
     for (int i = 0; i < (num_pirates);  i++) {
         Person new_pirate;
-        create_new_person(i, avg_pirate_custome_time, new_pirate, pirate_queue);
+        new_pirate.flag = 'p';
+        create_new_person(i, avg_pirate_costume_time, avg_pirate_arrival_time, new_pirate);
+        pirate_list[i] = new_pirate;
     }
     return;
 }
 
-void add_ninja_to_queue(int num_ninjas, int avg_ninja_custome_time) {
+void initialize_ninja_threads(int num_ninjas, int avg_ninja_costume_time, 
+                            int avg_ninja_arrival_time, int num_teams) {
 
     for (int i = 51; i < (num_ninjas + 51); i++) {
         Person new_ninja;
-        create_new_person(i, avg_ninja_custome_time, new_ninja, ninja_queue);
+        new_ninja.flag = 'n';
+        create_new_person(i, avg_ninja_costume_time, avg_ninja_arrival_time, new_ninja);
+        ninja_list[i - 51] = new_ninja;
     }
     return;
 }
@@ -188,8 +229,10 @@ void process_input(int argc, int arguments[]) {
         fprintf(stderr,"Number of threads (ninjas) %i is out of range\n", num_ninjas);
         exit(EXIT_FAILURE);
     }
-    avg_pirate_costume_time = add_variance(avg_pirate_costume_time);
-    avg_ninja_costume_time = add_variance(avg_ninja_costume_time);
+    initialize_pirate_threads(num_pirates, avg_pirate_costume_time, avg_pirate_arrival_time, num_teams);
+    initialize_ninja_threads(num_ninjas, avg_ninja_costume_time, avg_ninja_arrival_time, num_teams);
+    //avg_pirate_costume_time = add_variance(avg_pirate_costume_time);
+    //avg_ninja_costume_time = add_variance(avg_ninja_costume_time);
     return;
 }
 
