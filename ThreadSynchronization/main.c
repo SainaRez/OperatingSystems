@@ -18,8 +18,14 @@
 #define ARGUMENT_NUMBER 7
  
 /**
- * 
+ * Person  struct which is used to initize each pirate and ninja
+ * @param flag: determines if struct is a pirate or ninja, id: each Person
+ * has a unique id, thread: the thread for that paerson, coming back: if the
+ * person is coming back or not, waiting_time_before_visit: how long was
+ * person waiting in queue, arrival_time: the arrival time of the person at
+ * the queue, fitting_time: The time it takes the person to be dressed
  */
+
 typedef struct Person {
     char flag;
     int id;
@@ -31,7 +37,9 @@ typedef struct Person {
 
 } Person;
 
+// Array of pirates (Person structs)
 Person pirate_list[51];
+// Array of ninjas (Person structs)
 Person ninja_list[51];
 
 
