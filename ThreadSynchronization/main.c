@@ -117,15 +117,14 @@ Queue* ninja_queue;
 
 // End of Queue Section
 
+/**
+ * Fuunction to sort an array of person structs in ascending order 
+ * of their arrival time. 
+ * @params the person list which is either a pirate array or a ninja array
+ */
 void sort_list(Person person_list[]) {
     int i, j, n;
     Person a;
-    // printf("Enter the value of N \n");
-    // scanf("%d", &n);
-
-    // printf("Enter the numbers \n");
-    // for (i = 0; i < n; ++i)
-    //     scanf("%d", &number[i]);
 
     for (i = 0; i < n; ++i) {
         for (j = i + 1; j < n; ++j) {
@@ -142,6 +141,12 @@ void sort_list(Person person_list[]) {
         printf("%fl\n", person_list[i].arrival_time);
 }
 
+/**
+ * This function takes an average time/value and adds a variance
+ * that is a generated random number with an approximate normal distribution
+ * @param the average time or value
+ * @return the average with the added variance
+ */
 int add_variance(int avg_time) {
     
     srand(time(0));
@@ -157,11 +162,20 @@ int add_variance(int avg_time) {
     return updated_time;
 }
 
+/**
+ * 
+ */
+
 void *put_on_costume(int dressing_time) {
     sleep(dressing_time);
     return NULL;
 }
 
+/**
+ * Functin to determine if a thread/pirate/ninja is coming back or not.
+ * The probability of person coming back is 25%
+ * @return bool value. If false person is not coming back. If true person is coming back
+ */
 bool is_coming_back() {
     srand(time(0));
     double random_number = rand() % 4;
@@ -171,6 +185,14 @@ bool is_coming_back() {
     return false;
 }
 
+
+/**
+ * This funciton takes in a Person struct and initializes the elements of the struct
+ * to set the id, if the person is coming back or not, adds variance to arrival time
+ * fitting time and initializes a thread for that person
+ * @param the person id, average costume time, average arrival time and 
+ * the Person struct instance
+ */
 void create_new_person(int id, int avg_costume_time, int avg_arrival_time, 
                     Person new_person) {
     new_person.id = id;
@@ -182,7 +204,12 @@ void create_new_person(int id, int avg_costume_time, int avg_arrival_time,
     return;
 }
  
-
+/**
+ * This function makes a  Person struct for each of the pirates, sets 
+ * their flag to be identified as a pirate and adds them to a pirate list
+ * @param number of pirates given, average pirate costume time, average pirate arrival time,
+ * and the number of teams that are in the fitting room (all given through command line)
+ */
 void initialize_pirate_threads(int num_pirates, int avg_pirate_costume_time, 
                                int avg_pirate_arrival_time, int num_teams) {
 
@@ -195,6 +222,12 @@ void initialize_pirate_threads(int num_pirates, int avg_pirate_costume_time,
     return;
 }
 
+/**
+ * This function makes a  Person struct for each of the ninjas, sets 
+ * their flag to be identified as a ninja and adds them to a ninja list
+ * @param number of ninjas given, average ninja costume time, average ninja arrival time,
+ * and the number of teams that are in the fitting room (all given through command line)
+ */
 void initialize_ninja_threads(int num_ninjas, int avg_ninja_costume_time, 
                             int avg_ninja_arrival_time, int num_teams) {
 
@@ -207,7 +240,11 @@ void initialize_ninja_threads(int num_ninjas, int avg_ninja_costume_time,
     return;
 }
 
-
+/**
+ * This function takes in the command line arguments and sets them to descriptive variables,
+ * performs error checking for the given arguments and initializes the pirates and the ninjas
+ * @param argc the number of command line arguments, argv the arguments themselves
+ */
 void process_input(int argc, int arguments[]) {
     int num_teams = arguments[0];
     int num_pirates = arguments[1];
@@ -231,8 +268,7 @@ void process_input(int argc, int arguments[]) {
     }
     initialize_pirate_threads(num_pirates, avg_pirate_costume_time, avg_pirate_arrival_time, num_teams);
     initialize_ninja_threads(num_ninjas, avg_ninja_costume_time, avg_ninja_arrival_time, num_teams);
-    //avg_pirate_costume_time = add_variance(avg_pirate_costume_time);
-    //avg_ninja_costume_time = add_variance(avg_ninja_costume_time);
+    
     return;
 }
 
