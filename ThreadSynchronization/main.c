@@ -223,7 +223,11 @@ char compare_waiting_time() {
     }
 }
 
-
+/**
+ * Checks if all the teams are free. If yes it gets the longest waiting persons from 
+ * the respective queue and takes them to the fitting room based on the number of teams
+ * @param num_teams wich is the number of teams given (2 to 4)
+ */
 void enter_fitting_room(int num_teams) {
 
     Person person_list[num_teams];
@@ -237,6 +241,8 @@ void enter_fitting_room(int num_teams) {
         
         fitting_room_flag = compare_waiting_time();
         
+        // We need to compare the fitting times for every person in queue and 
+        // replace the shortest time with a new one (or not)
         if (fitting_room_flag == 'p') {
             for (i = 0; i < num_teams; i++) {
                 Person *pirate = deQueue(pirate_queue);
@@ -258,6 +264,7 @@ void enter_fitting_room(int num_teams) {
             // Not sure whta to do in this case
         }      
     }
+    return;
 }
 
 /**
@@ -405,7 +412,7 @@ void process_input(int argc, int arguments[]) {
     }
     initialize_pirate_threads(num_pirates, avg_pirate_costume_time, avg_pirate_arrival_time, num_teams);
     initialize_ninja_threads(num_ninjas, avg_ninja_costume_time, avg_ninja_arrival_time, num_teams);
-    FITTING_ROOM(num_teams);
+    FITTING_ROOM(num_teams);    // UNSURE if it should be called here or in create_person??
     return;
 }
 
