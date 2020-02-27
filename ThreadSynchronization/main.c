@@ -16,6 +16,9 @@
 #define MAX_TEAM 4
 
 #define ARGUMENT_NUMBER 7
+
+// Redefining fitting room to have the second argument as default set to zero
+#define FITTING_ROOM(a, ...) fitting_room( a, (0, ##__VA_ARGS__))
  
 /**
  * Person  struct which is used to initize each pirate and ninja
@@ -25,23 +28,29 @@
  * person waiting in queue, arrival_time: the arrival time of the person at
  * the queue, fitting_time: The time it takes the person to be dressed
  */
-
 typedef struct Person {
     char flag;
-    int id;
     pthread_t thread;
     bool coming_back;
     int waiting_time_before_visit;
     double arrival_time;
     int fitting_time;
+    bool is_in_fitting_room;
+    int assigned_team;
 
 } Person;
 
-// Array of pirates (Person structs)
-Person pirate_list[51];
-// Array of ninjas (Person structs)
-Person ninja_list[51];
+// Array of teams
+int teams[4];
 
+/**
+ * Initializing teams to be all available (zero)
+ */
+void initialize_teams() {
+    for (int i = 0; i < MAX_TEAM; i++) {    // Initializing the teams to zero=false=free
+        teams[i] = 0;
+    }
+}
 
 /**
  * Implementation of Queue
@@ -171,16 +180,19 @@ int add_variance(int avg_time) {
 }
 
 /**
- * 
+ * Tracks the elapsed time for given person
+ * @param person is pirate or ninja
  */
-
-void *put_on_costume(int dressing_time) {
-    sleep(dressing_time);
-    return NULL;
+void track_waiting_time(Person person) {
+    time_t start_time = time(0);
+    while (1) {
+        person.waiting_time_before_visit = time(0) - start_time;
+    }
+    return;
 }
 
 /**
- * Functin to determine if a thread/pirate/ninja is coming back or not.
+ * Determines if a thread/pirate/ninja is coming back or not.
  * The probability of person coming back is 25%
  * @return bool value. If false person is not coming back. If true person is coming back
  */
@@ -193,9 +205,126 @@ bool is_coming_back() {
     return false;
 }
 
+/**
+ * Compares the waiting time of the node at the front of the queue and returns a flag char
+ * @return char 'n' refers to ninja and 'p' refers to pirate. -1 is when both queues are empty
+ */
+char compare_waiting_time() {
+    if (pirate_queue->front == NULL && ninja_queue->front == NULL) {
+        printf("Both queues are empty\n");
+        return -1;
+    }
+    else if (pirate_queue->front->current_person.waiting_time_before_visit >= 
+             ninja_queue->front->current_person.waiting_time_before_visit) {
+        return 'p';
+    }
+    else {
+        return 'n';
+    }
+}
+
+
+void enter_fitting_room(int num_teams) {
+
+    Person person_list[num_teams];
+    char fitting_room_flag = NULL;
+    int is_fitting_room_used = 0; // In use: 1; Empty: 0
+    int i = 0;
+    while (i < num_teams) {
+        is_fitting_room_used = teams[i] || is_fitting_room_used;
+    }
+    if (is_fitting_room_used == 0) {
+        
+        fitting_room_flag = compare_waiting_time();
+        
+        if (fitting_room_flag == 'p') {
+            for (i = 0; i < num_teams; i++) {
+                Person pirate = deQueue(pirate_queue);
+                pirate.is_in_fitting_room = true;
+                pirate.assigned_team = i;
+                teams[i] = 1;
+            }
+        }
+        else if (fitting_room_flag == 'n') {
+            for (i = 0; i < num_teams; i++) {
+                Person ninja = deQueue(ninja_queue);
+                ninja.is_in_fitting_room = true;
+                ninja.assigned_team = i;
+                teams[i] = 1;
+            }
+        } 
+        else {
+            printf("No flag for fitting room\n");
+            // Not sure whta to do in this case
+        }      
+    }
+}
 
 /**
- * This funciton takes in a Person struct and initializes the elements of the struct
+ * It constatnly moves person from queue to fitting room as long as the queues are not empty.
+ * It runs the process two times to account for returning persons
+ */
+void fitting_room(int num_teams, int counter) {
+    // Does this count for the ones that come back?
+    counter += 1;
+    sleep(2); // Waiting to make sure persons have entered the queue
+    while (!((pirate_queue->front = NULL) && (ninja_queue->front = NULL))) {
+        enter_fitting_room(num_teams);
+    }
+    if (counter == 2) {
+        return;
+    }
+    fitting_room(num_teams, counter);
+    return;
+}
+
+
+/**
+ * Constantly checks for the fiiting room status. As soon as person is in fitting room
+ * it waits for the period of fitting and either returns back to queue or gets destroyed
+ * @param personis a ninja or pirate
+ */
+void check_thread_status(Person person) {
+    while (1) {
+        if (person.is_in_fitting_room == true) {
+            sleep(person.fitting_time);
+            person.is_in_fitting_room = false;
+            teams[person.assigned_team] = 0;
+            if (is_coming_back() == false) {
+                //thread is done and out
+            }
+            else {
+                //thread goes back outside ???
+            }
+        }
+    }
+    return;
+}
+
+/**
+ * Adds person to waiting room queue based on arrival time
+ * person is pirate or ninja
+ * @return pointer to void
+ */
+void *enter_queue(Person person) {
+    
+    sleep(person.arrival_time);
+    if (person.flag == 'p') {
+        enQueue(pirate_queue, person);
+        track_waiting_time(person);
+    }
+    else if (person.flag = 'n') {
+        enQueue(ninja_queue, person);
+    }
+    else {
+        printf("Person is not fully initialized\n");
+    }
+    check_thread_status(person);
+    return NULL;
+}
+
+/**
+ * Takes in a Person struct and initializes the elements of the struct
  * to set the id, if the person is coming back or not, adds variance to arrival time
  * fitting time and initializes a thread for that person
  * @param the person id, average costume time, average arrival time and 
@@ -203,17 +332,16 @@ bool is_coming_back() {
  */
 void create_new_person(int id, int avg_costume_time, int avg_arrival_time, 
                     Person new_person) {
-    new_person.id = id;
-    new_person.coming_back = is_coming_back();
+    //new_person.coming_back = is_coming_back();
     new_person.fitting_time = add_variance(avg_costume_time);
     new_person.arrival_time = add_variance(avg_arrival_time);
-    pthread_create(&new_person.thread, NULL, put_on_costume(avg_costume_time), NULL);
-    //enQueue(q, new_person);
+    new_person.is_in_fitting_room = false;
+    pthread_create(&new_person.thread, NULL, enter_queue(new_person), NULL);
     return;
 }
  
 /**
- * This function makes a  Person struct for each of the pirates, sets 
+ * Makes a  Person struct for each of the pirates, sets 
  * their flag to be identified as a pirate and adds them to a pirate list
  * @param number of pirates given, average pirate costume time, average pirate arrival time,
  * and the number of teams that are in the fitting room (all given through command line)
@@ -225,13 +353,14 @@ void initialize_pirate_threads(int num_pirates, int avg_pirate_costume_time,
         Person new_pirate;
         new_pirate.flag = 'p';
         create_new_person(i, avg_pirate_costume_time, avg_pirate_arrival_time, new_pirate);
-        pirate_list[i] = new_pirate;
+        Queue* pirate_queue = createQueue();
+
     }
     return;
 }
 
 /**
- * This function makes a  Person struct for each of the ninjas, sets 
+ * Creates a  Person struct for each of the ninjas, sets 
  * their flag to be identified as a ninja and adds them to a ninja list
  * @param number of ninjas given, average ninja costume time, average ninja arrival time,
  * and the number of teams that are in the fitting room (all given through command line)
@@ -243,7 +372,7 @@ void initialize_ninja_threads(int num_ninjas, int avg_ninja_costume_time,
         Person new_ninja;
         new_ninja.flag = 'n';
         create_new_person(i, avg_ninja_costume_time, avg_ninja_arrival_time, new_ninja);
-        ninja_list[i - 51] = new_ninja;
+        Queue* ninja_queue = createQueue();
     }
     return;
 }
@@ -276,12 +405,14 @@ void process_input(int argc, int arguments[]) {
     }
     initialize_pirate_threads(num_pirates, avg_pirate_costume_time, avg_pirate_arrival_time, num_teams);
     initialize_ninja_threads(num_ninjas, avg_ninja_costume_time, avg_ninja_arrival_time, num_teams);
-    
+    FITTING_ROOM(num_teams);
     return;
 }
 
 
 int main(int argc, char *argv[]) {
+
+
     if (argc != ARGUMENT_NUMBER + 1) {
         fprintf(stderr, "Incorrect number of arguments %i given\n", argc);
         exit(EXIT_FAILURE);
