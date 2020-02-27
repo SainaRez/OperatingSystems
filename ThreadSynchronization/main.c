@@ -239,17 +239,17 @@ void enter_fitting_room(int num_teams) {
         
         if (fitting_room_flag == 'p') {
             for (i = 0; i < num_teams; i++) {
-                Person pirate = deQueue(pirate_queue);
-                pirate.is_in_fitting_room = true;
-                pirate.assigned_team = i;
+                Person *pirate = deQueue(pirate_queue);
+                pirate->is_in_fitting_room = true;
+                pirate->assigned_team = i;
                 teams[i] = 1;
             }
         }
         else if (fitting_room_flag == 'n') {
             for (i = 0; i < num_teams; i++) {
-                Person ninja = deQueue(ninja_queue);
-                ninja.is_in_fitting_room = true;
-                ninja.assigned_team = i;
+                Person *ninja = deQueue(ninja_queue);
+                ninja->is_in_fitting_room = true;
+                ninja->assigned_team = i;
                 teams[i] = 1;
             }
         } 
