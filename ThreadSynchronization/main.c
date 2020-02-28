@@ -32,7 +32,7 @@ typedef struct Person {
     char flag;
     pthread_t thread;
     bool coming_back;
-    int waiting_time_before_visit;
+    int waiting_time_before_visit; // TODO why are some of these doubles and some ints?
     double arrival_time;
     int fitting_time;
     bool is_in_fitting_room;
@@ -40,7 +40,7 @@ typedef struct Person {
 
 } Person;
 
-// Array of teams
+// Array of teams TODO what does the integer value of teams represent?
 int teams[4];
 
 /**
@@ -54,25 +54,19 @@ void initialize_teams() {
 
 /**
  * Implementation of Queue
- * This code is taking from the internet
- * source: 
  */
-
-// A linked list (LL) node to store a queue entry 
-typedef struct QNode { 
+typedef struct QNode {
     Person current_person; 
     struct QNode* next; 
 } QNode;
   
-// The queue, front stores the front node of LL and rear stores the 
-// last node of LL 
-typedef struct Queue { 
-    struct QNode *front, *rear; 
+typedef struct Queue {
+    struct QNode *front;
+    struct QNode *read;
 } Queue; 
   
-// A utility function to create a new linked list node. 
-QNode* newNode(Person p) 
-{ 
+// A utility function to create a new QNode.
+QNode* newNode(Person p) {
     //struct QNode* temp = (struct QNode*)malloc(sizeof(struct QNode)); 
     QNode* temp = (struct QNode*)malloc(sizeof(struct QNode));
     temp->current_person = p; 
@@ -84,8 +78,7 @@ QNode* newNode(Person p)
 Queue* createQueue() 
 { 
     Queue* q = (Queue*)malloc(sizeof(Queue)); 
-    //Queue* q;
-    q->front = q->rear = NULL; 
+    q->front = q->rear = NULL;
     return q; 
 }
   
@@ -95,7 +88,6 @@ void enQueue(Queue* q, Person p)
     // Create a new LL node 
     //struct QNode* temp = newNode(k); 
       QNode* temp = newNode(p); 
-
 
     // If queue is empty, then new node is front and rear both 
     if (q->rear == NULL) { 
@@ -134,29 +126,6 @@ Queue* ninja_queue;
 
 // End of Queue Section
 
-/**
- * Fuunction to sort an array of person structs in ascending order 
- * of their arrival time. 
- * @params the person list which is either a pirate array or a ninja array
- */
-void sort_list(Person person_list[]) {
-    int i, j, n;
-    Person a;
-
-    for (i = 0; i < n; ++i) {
-        for (j = i + 1; j < n; ++j) {
-            if (person_list[i].arrival_time > person_list[j].arrival_time) {
-                a = person_list[i];
-                person_list[i] = person_list[j];
-                person_list[j] = a;
-            }
-        }
-    }
-
-    printf("The numbers arranged in ascending order are given below \n");
-    for (i = 0; i < n; ++i)
-        printf("%fl\n", person_list[i].arrival_time);
-}
 
 /**
  * This function takes an average time/value and adds a variance
@@ -165,7 +134,7 @@ void sort_list(Person person_list[]) {
  * @return the average with the added variance
  */
 int add_variance(int avg_time) {
-    
+    // TODO
     srand(time(0));
     int seed = rand();
     srand48(seed);
@@ -188,13 +157,12 @@ void track_waiting_time(Person person) {
     while (1) {
         person.waiting_time_before_visit = time(0) - start_time;
     }
-    return;
 }
 
 /**
- * Determines if a thread/pirate/ninja is coming back or not.
+ * Decides if a thread/pirate/ninja is coming back or not.
  * The probability of person coming back is 25%
- * @return bool value. If false person is not coming back. If true person is coming back
+ * @return bool False person is not coming back. True if person is coming back
  */
 bool is_coming_back() {
     srand(time(0));
@@ -208,6 +176,7 @@ bool is_coming_back() {
 /**
  * Compares the waiting time of the node at the front of the queue and returns a flag char
  * @return char 'n' refers to ninja and 'p' refers to pirate. -1 is when both queues are empty
+ * // TODO
  */
 char compare_waiting_time() {
     if (pirate_queue->front == NULL && ninja_queue->front == NULL) {
@@ -226,7 +195,7 @@ char compare_waiting_time() {
 /**
  * Checks if all the teams are free. If yes it gets the longest waiting persons from 
  * the respective queue and takes them to the fitting room based on the number of teams
- * @param num_teams wich is the number of teams given (2 to 4)
+ * @param num_teams which is the number of teams given (2 to 4)
  */
 void enter_fitting_room(int num_teams) {
 
@@ -268,13 +237,14 @@ void enter_fitting_room(int num_teams) {
 }
 
 /**
- * It constatnly moves person from queue to fitting room as long as the queues are not empty.
+ * It constantly moves person from queue to fitting room as long as the queues are not empty.
  * It runs the process two times to account for returning persons
  */
 void fitting_room(int num_teams, int counter) {
     // Does this count for the ones that come back?
     counter += 1;
     sleep(2); // Waiting to make sure persons have entered the queue
+    // TODO: No.
     while (!((pirate_queue->front = NULL) && (ninja_queue->front = NULL))) {
         enter_fitting_room(num_teams);
     }
@@ -287,9 +257,9 @@ void fitting_room(int num_teams, int counter) {
 
 
 /**
- * Constantly checks for the fiiting room status. As soon as person is in fitting room
+ * Constantly checks for the fitting room status. As soon as person is in fitting room
  * it waits for the period of fitting and either returns back to queue or gets destroyed
- * @param personis a ninja or pirate
+ * @param person is a ninja or pirate
  */
 void check_thread_status(Person person) {
     while (1) {
