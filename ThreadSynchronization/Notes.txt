@@ -1,0 +1,33 @@
+Required State:
+==============
+Globals:
+	Num_Teams
+	Num_Pirates/Ninjas
+	Costuming_time/s
+	Arrival_time/s
+
+Set of Pirates
+
+Pirate: 
+	ID
+	List of visits
+
+Visit:
+	Wait time
+	Shop time
+	Cost
+	
+Store:
+	Teams[Num_Teams]
+	Queue size
+	Average queue length = ?? people
+	Expenses = 5 * Num_Teams
+	Pirate Cost = Pirates(Visits(Cost))
+	Gross revenue = sum(costs)
+	Total Revenue = gross - expenses
+	Gold per visit = Pirates(Visits(Cost))/size
+	
+Team:
+	Busy Time
+	Free Time
+===============
