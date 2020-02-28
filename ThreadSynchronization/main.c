@@ -62,7 +62,7 @@ typedef struct QNode {
   
 typedef struct Queue {
     struct QNode *front;
-    struct QNode *read;
+    struct QNode *rear;
 } Queue; 
   
 // A utility function to create a new QNode.
