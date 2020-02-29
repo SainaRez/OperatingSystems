@@ -117,6 +117,10 @@ void *start_person_thread(person *p) {
     return NULL;
 }
 
+/**
+ * Test function wrapper for add_variance
+ * @param any average value
+ */
 void variance_test(avg_time) {
     int i =  0;
     srand(time(NULL));
@@ -125,6 +129,7 @@ void variance_test(avg_time) {
         add_variance(avg_time);
         i++;
     }
+    return;
 }
 
 /**
