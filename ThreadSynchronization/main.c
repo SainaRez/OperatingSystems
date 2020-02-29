@@ -303,6 +303,12 @@ void process_input(int argc, int arguments[]) {
 int main(int argc, char *argv[]) {
     // run_queue_test();
     // run_thread_demo();
+    for (int i = 0; i < 50; ++i) {
+        printf("%i\n", add_variance(20));
+    }
+    for (int i = 0; i < 50; ++i) {
+        printf("%i\n", add_variance(5));
+    }
 
     const int ARGUMENT_NUMBER = 7;
     if (argc != ARGUMENT_NUMBER + 1) {
