@@ -119,6 +119,7 @@ void *start_person_thread(person *p) {
 }
 
 /**
+<<<<<<< HEAD
  * Returns the arrival time of the person who is next to enter the store.
  * (The person with the lower arrival time has been in line longest).
  *
@@ -161,6 +162,21 @@ void dequeue_next_person_to_store(bool is_person_a_pirate) {
 
     // TODO put them in the next available store slot
     pthread_mutex_unlock(&person_to_enter_store->is_in_fitting_room);
+}
+
+    /**
+ * Test function wrapper for add_variance
+ * @param any average value
+ */
+void variance_test(avg_time) {
+    int i =  0;
+    srand(time(NULL));
+    rand();
+    while (i <  50) {
+        add_variance(avg_time);
+        i++;
+    }
+    return;
 }
 
 /**
@@ -252,6 +268,7 @@ void process_input(int argc, int arguments[]) {
         fprintf(stderr, "Number of threads (ninjas) %i is out of range\n", num_ninjas);
         exit(EXIT_FAILURE);
     }
+    variance_test(AVG_NINJA_ARRIVAL_TIME);
 
 
     // Set up global state variables
@@ -303,12 +320,6 @@ void process_input(int argc, int arguments[]) {
 int main(int argc, char *argv[]) {
     // run_queue_test();
     // run_thread_demo();
-    for (int i = 0; i < 50; ++i) {
-        printf("%i\n", add_variance(20));
-    }
-    for (int i = 0; i < 50; ++i) {
-        printf("%i\n", add_variance(5));
-    }
 
     const int ARGUMENT_NUMBER = 7;
     if (argc != ARGUMENT_NUMBER + 1) {
