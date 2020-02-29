@@ -4,25 +4,26 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+
 /**
  * This function takes an average time/value and adds a variance
  * that is a generated random number with an approximate normal distribution
  * @param the average time or value
  * @return the average with the added variance
  */
-int add_variance(const int avg_time) {
-    // TODO
-    srand(time(0));
-    int seed = rand();
-    srand48(seed);
+int add_variance(const int avg_time) { 
+    //srand48(seed);
     double a = drand48();
     double b = drand48();
     double variance = sqrt(-2 * log(a)) * cos(2 * M_PI * b);
-    if (variance < 0 && (fabs(variance) >= avg_time)) {
+
+    if (variance < 0) {
         variance = fabs(variance);
     }
-    double updated_time = avg_time + variance;
-    return updated_time;
+
+    double updated_time = avg_time * variance;
+    int rounded_updated_time = (int)(updated_time + 0.5);
+    return rounded_updated_time;
 }
 
 

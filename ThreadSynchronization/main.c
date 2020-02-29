@@ -111,6 +111,16 @@ void *start_person_thread(person *p) {
     return NULL;
 }
 
+void variance_test(avg_time) {
+    int i =  0;
+    srand(time(NULL));
+    int seed = rand();
+    while (i <  20) {
+        add_variance(avg_time);
+        i++;
+    }
+}
+
 /**
  * This function takes in the command line arguments and sets them to descriptive variables,
  * performs error checking for the given arguments and initializes the pirates and the ninjas
@@ -137,6 +147,7 @@ void process_input(int argc, int arguments[]) {
         fprintf(stderr, "Number of threads (ninjas) %i is out of range\n", num_ninjas);
         exit(EXIT_FAILURE);
     }
+    variance_test(AVG_NINJA_ARRIVAL_TIME);
 
 
     // Set up global state variables
