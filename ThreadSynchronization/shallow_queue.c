@@ -1,7 +1,6 @@
 #include "shallow_queue.h"
 
 
-
 // A utility function to create a new QNode.
 QNode *newNode(person *p) {
     QNode *temp = (struct QNode *) malloc(sizeof(struct QNode));
@@ -12,6 +11,7 @@ QNode *newNode(person *p) {
 
 // A utility function to create an empty queue
 shallow_queue *createQueue() {
+    // TODO/SUGGESTION include a bool in the struct that enforces pirate/ninja exclusivity
     shallow_queue *q = (shallow_queue *) malloc(sizeof(shallow_queue));
     q->front = q->rear = NULL;
     return q;
@@ -51,4 +51,20 @@ person *deQueue(shallow_queue *q) {
         q->rear = NULL;
 
     return node_struct;
+}
+
+/**
+ * Runs a given function on all data on all elements in the queue
+ * @param q shallow_queue to process
+ * @param func A function which will run on each person in the queue
+ */
+void process_shallow_queue(shallow_queue *q, void *func(person *)) {
+    assert(q != NULL);
+
+    struct QNode *current = q->front;
+    while (current != NULL) {
+        QNode *next = current->next;
+        func(current->current_person);
+        current = next;
+    }
 }

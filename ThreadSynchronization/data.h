@@ -16,6 +16,7 @@ typedef struct person {
     pthread_mutex_t is_in_fitting_room;
     /** Value is only relevant when Person is in a fitting room */
     int assigned_team;
+    int arrival_time;
 } person;
 
 extern queue *global_pirate_list;

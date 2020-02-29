@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include "thread_demo.h"
 #include "queue.h"
 #include "probability.h"
@@ -29,15 +30,20 @@ int NUM_TEAMS;
 
 
 /** The following mutex should be locked any time program state is being used */
-extern pthread_mutex_t state_mutex;
+pthread_mutex_t state_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // The following global variables encapsulate "state" as referenced above
-shallow_queue *pirate_queue;
-shallow_queue *ninja_queue;
+shallow_queue *pirate_queue = NULL;
+shallow_queue *ninja_queue = NULL;
 /** False if the fitting room is empty or has ninjas */
 bool does_fitting_room_have_pirates;
 /** False if the fitting room is empty or has pirates */
 bool does_fitting_room_have_ninjas;
+/** dressing_room_is_empty[n] is true if room n is empty*/
+bool dressing_room_is_empty[MAX_TEAM];
+
+sem_t *people_in_line_semaphore = NULL;
+sem_t *teams_free_semaphore = NULL;
 
 
 /**
@@ -92,7 +98,7 @@ void initialize_people(int num_pirates, int num_ninjas) {
     }
 }
 
-pthread_t global_thread_id_array[100];
+pthread_t global_thread_id_array[100]; // TODO Should this be cleaned up?
 
 /**
  * Runs a person_thread for a given person struct.
@@ -115,10 +121,35 @@ void variance_test(avg_time) {
     int i =  0;
     srand(time(NULL));
     int seed = rand();
-    while (i <  20) {
+    while (i <  50) {
         add_variance(avg_time);
         i++;
     }
+}
+
+/**
+ * This executes the main thread loop of managing the store.
+ *
+ * This should be called once all setup is complete and all Person threads are running
+ */
+void run_store() {
+    while (true) { // TODO keep track of how many Persons are still active
+        printf(" ---- Waiting for line\n");
+        sem_wait(people_in_line_semaphore);
+        // At least one person is in line, now wait for a free room/team
+        sem_wait(teams_free_semaphore);
+        // A person is in line, and there is a free room.
+        pthread_mutex_lock(&state_mutex);
+        // TODO strategy, how to avoid letting pirates hog the room?
+        
+
+        struct person *p = deQueue(pirate_queue);
+        printf("Dequeued pirate %i\n", p->id);
+        pthread_mutex_unlock(&p->is_in_fitting_room);
+
+        pthread_mutex_unlock(&state_mutex);
+    }
+
 }
 
 /**
@@ -152,27 +183,32 @@ void process_input(int argc, int arguments[]) {
 
     // Set up global state variables
     initialize_people(num_pirates, num_ninjas);
-    // Queue *pirate_queue = createQueue();
-    // Queue *ninja_queue = createQueue();
+    pirate_queue = createQueue();
+    ninja_queue = createQueue();
+
+    people_in_line_semaphore = malloc(sizeof(sem_t));
+    sem_init(people_in_line_semaphore, 1, 0); // Semaphore is initially locked, as no one is in line
+    teams_free_semaphore = malloc(sizeof(sem_t));
+    sem_init(teams_free_semaphore, 1, NUM_TEAMS); // Semaphore is initially not locked, as all teams are free
 
     printf("-- Starting Simulation --\n");
     // Start a thread for each person
     process_queue(global_pirate_list, start_person_thread);
     process_queue(global_ninja_list, start_person_thread);
 
-    /*
-     * TODO, main thread stuff
-    */
+    run_store();
 
     // Join back all threads
     for (int i = 0; i < num_ninjas + num_pirates; ++i) {
         pthread_join(global_thread_id_array[i], NULL);
     }
 
+    // process_shallow_queue(ninja_queue, print_person); // Useful way to check state of lines
+
     print_pirates();
     // TODO print pirate summary : All of the Pirates cost 51 gold pieces
     print_ninjas();
-    // All of the Ninjas cost 41 gold pieces
+    // TODO All of the Ninjas cost 41 gold pieces
 
     // TODO print summaries:
     /*
@@ -194,7 +230,6 @@ void process_input(int argc, int arguments[]) {
 int main(int argc, char *argv[]) {
     // run_queue_test();
     // run_thread_demo();
-
 
     const int ARGUMENT_NUMBER = 7;
     if (argc != ARGUMENT_NUMBER + 1) {

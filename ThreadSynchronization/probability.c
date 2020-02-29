@@ -12,6 +12,7 @@
  * @return the average with the added variance
  */
 int add_variance(const int avg_time) { 
+    //printf("Average Time: %i\n", avg_time);
     //srand48(seed);
     double a = drand48();
     double b = drand48();
@@ -23,6 +24,7 @@ int add_variance(const int avg_time) {
 
     double updated_time = avg_time * variance;
     int rounded_updated_time = (int)(updated_time + 0.5);
+    //printf("Updated Average Time: %i\n", rounded_updated_time);
     return rounded_updated_time;
 }
 
