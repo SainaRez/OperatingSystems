@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include "thread_demo.h"
 #include "queue.h"
 #include "probability.h"
@@ -38,6 +39,8 @@ shallow_queue *ninja_queue = NULL;
 bool does_fitting_room_have_pirates;
 /** False if the fitting room is empty or has pirates */
 bool does_fitting_room_have_ninjas;
+
+sem_t *people_in_line_semaphore = NULL;
 
 
 /**
@@ -144,11 +147,13 @@ void process_input(int argc, int arguments[]) {
     pirate_queue = createQueue();
     ninja_queue = createQueue();
 
+    people_in_line_semaphore = malloc(sizeof(sem_t));
+    sem_init(people_in_line_semaphore, 1, 0);
+
     printf("-- Starting Simulation --\n");
     // Start a thread for each person
     process_queue(global_pirate_list, start_person_thread);
     process_queue(global_ninja_list, start_person_thread);
-
     /*
      * TODO, main thread stuff
     */
