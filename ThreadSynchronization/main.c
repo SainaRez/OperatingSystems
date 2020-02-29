@@ -124,7 +124,7 @@ void *start_person_thread(person *p) {
 void variance_test(avg_time) {
     int i =  0;
     srand(time(NULL));
-    int seed = rand();
+    rand();
     while (i <  50) {
         add_variance(avg_time);
         i++;
