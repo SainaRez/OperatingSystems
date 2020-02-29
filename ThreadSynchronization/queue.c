@@ -11,12 +11,16 @@
  * @return
  */
 queue *create_queue(size_t alloc_size) {
+    printf("queuesize: %i\n", sizeof(queue)); // TODO temp
+    printf("data_size: %i\n", sizeof(data)); // TODO temp
+    printf("size_t: %i\n", sizeof(size_t)); // TODO temp
     queue *q = (queue *) malloc(sizeof(queue));
     if (q == NULL) {
         fprintf(stderr, "Error: malloc failed to allocate queue memory");
         return NULL;
     }
     q->allocation_size = alloc_size;
+    printf("alloc_size: %i\n", alloc_size);// TODO temp
     q->length = 0;
     q->head = q->tail = NULL;
     return q;
@@ -36,7 +40,7 @@ void enqueue(queue *q, void *_data) {
     struct data *to_insert = (struct data *) malloc(sizeof(data)); // TODO could this right side just be a void *
     assert(to_insert != NULL); // Failure to allocate memory
 
-    to_insert->data = malloc(sizeof(q->allocation_size));
+    to_insert->data = malloc(q->allocation_size);
     if (to_insert->data == NULL) {
         fprintf(stderr, "Error allocating memory");
         exit(-1);

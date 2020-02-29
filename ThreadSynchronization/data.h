@@ -17,7 +17,7 @@ typedef struct person {
     int assigned_team;
 } person;
 
-void create_new_person(bool is_pirate, int id, person* person_pointer);
+void create_new_person(bool is_pirate, int id);
 
 void print_person(struct person *p);
 
@@ -25,5 +25,5 @@ int get_cost_of_visit(struct visit *v);
 
 void print_visit(struct visit *v);
 
-
+void print_pirates();
 

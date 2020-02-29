@@ -76,17 +76,13 @@ void *enter_queue(person p) {
 
 void initialize_people(int num_pirates, int num_ninjas) {
     for (int i = 0; i < num_pirates; ++i) {
-        // TODO move mallocing to data and create a global queue of all people
-        person *p = (person *) malloc(sizeof(person));
-        create_new_person(true, i + 1, p); // i + 1 as id's start at 1
-        print_person(p);
+        create_new_person(true, i + 1); // i + 1 as id's start at 1
     }
     for (int i = 0; i < num_ninjas; ++i) {
-        person *p = (person *) malloc(sizeof(person));
-        create_new_person(false, i + 1, p);
-        print_person(p);
-        // create_new_person(false, i);
+        create_new_person(false, i + 1);
     }
+
+    print_pirates();
 }
 
 /**
@@ -144,7 +140,7 @@ void process_input(int argc, int arguments[]) {
 
 
 int main(int argc, char *argv[]) {
-    run_queue_test();
+    // run_queue_test();
     // run_thread_demo();
 
     const int ARGUMENT_NUMBER = 7;

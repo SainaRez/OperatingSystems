@@ -71,11 +71,14 @@ struct temp {
     int a;
     int b;
     int c;
+    int d;
+    int e;
+    int f;
 };
 
 void *print_temp(void *data) {
     struct temp *t = (struct temp *) data;
-    printf("%i, %i, %i\n", t->a, t->b, t->c);
+    printf("%i, %i, %i, %i\n", t->a, t->b, t->c, t->f);
 }
 
 /**
@@ -88,6 +91,9 @@ void run_queue_test() {
     t.a = 10;
     t.b = 10;
     t.c = 10;
+    t.d = 10;
+    t.e = 10;
+    t.f = 11;
     enqueue(q, &t);
 
     struct temp test;
@@ -97,8 +103,9 @@ void run_queue_test() {
     for (int i = 0; i < 10; i++) {
         struct temp a;
         a.c = i + 10;
-        a.b = 0;
-        a.a = 0;
+        a.b = 1;
+        a.a = 2;
+        a.f = 99;
         enqueue(q, &a);
     }
 
