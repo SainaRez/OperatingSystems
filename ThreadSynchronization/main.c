@@ -184,7 +184,6 @@ int main(int argc, char *argv[]) {
     // run_queue_test();
     // run_thread_demo();
 
-
     const int ARGUMENT_NUMBER = 7;
     if (argc != ARGUMENT_NUMBER + 1) {
         fprintf(stderr, "Incorrect number of arguments %i given\n", argc);

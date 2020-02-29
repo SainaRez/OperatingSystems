@@ -10,15 +10,18 @@
 void *person_thread(void *person_arg) {
     person *p = (struct person *) person_arg;
 
+
     printf("Here: \n");
     sleep(5); // TODO sleep random time based on AVG_...
 
     printf("Here, done sleeping\n"); // TODO temp
-   /*
+
     pthread_mutex_lock(&state_mutex);
     printf("MUTATING STATE!\n");
+    
+    enqueue(global_ninja_list, p);
     // TODO enter shallow queue
     pthread_mutex_unlock(&state_mutex);
-*/
+
     pthread_exit(NULL);
 }
