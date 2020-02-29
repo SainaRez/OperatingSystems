@@ -1,5 +1,7 @@
 #include "people_threads.h"
 #include "data.h"
+#include "main.h"
+#include "shallow_queue.h"
 #include <unistd.h>
 
 
@@ -12,18 +14,19 @@ void *person_thread(void *person_arg) {
 
 
     printf("Here: \n");
-    sleep(5); // TODO sleep random time based on AVG_...
+    sleep(2); // TODO sleep random time based on AVG_...
 
     printf("Here, done sleeping\n"); // TODO temp
 
-    /*
     pthread_mutex_lock(&state_mutex);
-    printf("MUTATING STATE!\n");
-    
-    enqueue(global_ninja_list, p);
-    // TODO enter shallow queue
+
+    shallow_queue *waiting_line = p->is_pirate ? pirate_queue : ninja_queue;
+    enQueue(waiting_line, p);
+
     pthread_mutex_unlock(&state_mutex);
-    */
+
+    // TODO increment semaphore for line
+    // TODO wait on p.is_in_fitting_room
 
     pthread_exit(NULL);
 }

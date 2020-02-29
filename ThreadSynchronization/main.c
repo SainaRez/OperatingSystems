@@ -29,11 +29,11 @@ int NUM_TEAMS;
 
 
 /** The following mutex should be locked any time program state is being used */
-extern pthread_mutex_t state_mutex;
+pthread_mutex_t state_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // The following global variables encapsulate "state" as referenced above
-shallow_queue *pirate_queue;
-shallow_queue *ninja_queue;
+shallow_queue *pirate_queue = NULL;
+shallow_queue *ninja_queue = NULL;
 /** False if the fitting room is empty or has ninjas */
 bool does_fitting_room_have_pirates;
 /** False if the fitting room is empty or has pirates */
@@ -141,8 +141,8 @@ void process_input(int argc, int arguments[]) {
 
     // Set up global state variables
     initialize_people(num_pirates, num_ninjas);
-    // Queue *pirate_queue = createQueue();
-    // Queue *ninja_queue = createQueue();
+    pirate_queue = createQueue();
+    ninja_queue = createQueue();
 
     printf("-- Starting Simulation --\n");
     // Start a thread for each person
@@ -153,15 +153,18 @@ void process_input(int argc, int arguments[]) {
      * TODO, main thread stuff
     */
 
+
     // Join back all threads
     for (int i = 0; i < num_ninjas + num_pirates; ++i) {
         pthread_join(global_thread_id_array[i], NULL);
     }
 
+    // process_shallow_queue(ninja_queue, print_person); // Useful way to check state of lines
+
     print_pirates();
     // TODO print pirate summary : All of the Pirates cost 51 gold pieces
     print_ninjas();
-    // All of the Ninjas cost 41 gold pieces
+    // TODO All of the Ninjas cost 41 gold pieces
 
     // TODO print summaries:
     /*
