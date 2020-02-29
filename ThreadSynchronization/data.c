@@ -1,7 +1,7 @@
 #include "data.h"
 #include <stdio.h>
+#include <pthread.h>
 #include "queue.h"
-#include <string.h>
 
 bool are_global_lists_initialized = false;
 /** Global list of all pirates and their structs */
@@ -32,7 +32,9 @@ void create_new_person(bool is_pirate, int id) {
     p.is_pirate= is_pirate;
     p.id = id;
     p.is_pirate ? enqueue(global_pirate_list, &p) : enqueue(global_ninja_list, &p);
-    // TODO the rest of the stuff
+
+    pthread_mutex_init(&p.is_in_fitting_room, NULL);
+    pthread_mutex_lock(&p.is_in_fitting_room);
 }
 
 #define TITLE p->is_pirate ? "Pirate" : "Ninja"
