@@ -47,33 +47,6 @@ sem_t *people_in_line_semaphore = NULL;
 sem_t *teams_free_semaphore = NULL;
 
 
-/**
- * Checks if both queues are empty.
- * @return True if both queues to the shop are empty.
- */
-bool are_both_queues_empty() {
-    // TODO
-    // return (pirate_queue->front == NULL && ninja_queue->front == NULL);
-    return false;
-}
-
-/**
- * Compares the waiting_time_before_visit of the Pirate and Ninja who have been in line the longest,
- * (i.e., which Person at the front of their line has been waiting in line to get in the store the longest).
- *
- * Exits/Fails if both lines are empty when function is called
- *
- * @return True if the pirates are next in line.
- */
-bool do_pirates_have_next_in_line() {
-    assert(are_both_queues_empty() == false);
-    // TODO
-    //return (pirate_queue->front->current_person.waiting_time_before_visit >=
-    //       ninja_queue->front->current_person.waiting_time_before_visit);
-    return false;
-}
-
-
 void fitting_room() {
 
 }
