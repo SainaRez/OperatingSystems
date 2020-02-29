@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <math.h>
+#include "thread_demo.h"
 
 
 #define MIN_THREAD_NUM 50
@@ -37,7 +38,6 @@ typedef struct Person {
     int fitting_time;
     bool is_in_fitting_room;
     int assigned_team;
-
 } Person;
 
 // Array of teams TODO what does the integer value of teams represent?
@@ -388,7 +388,8 @@ void process_input(int argc, int arguments[]) {
 
 
 int main(int argc, char *argv[]) {
-
+    run_queue_test();
+    run_thread_demo();
 
     if (argc != ARGUMENT_NUMBER + 1) {
         fprintf(stderr, "Incorrect number of arguments %i given\n", argc);
