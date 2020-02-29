@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <limits.h>
 #include "thread_demo.h"
 #include "queue.h"
 #include "probability.h"
@@ -118,6 +119,51 @@ void *start_person_thread(person *p) {
 }
 
 /**
+ * Returns the arrival time of the person who is next to enter the store.
+ * (The person with the lower arrival time has been in line longest).
+ *
+ * @param is_pirate_wait_time
+ * @return INT_MAX if no one is in line
+ */
+int get_next_persons_arrival_time(bool is_pirate_wait_time) {
+    if (is_pirate_wait_time) {
+        if (pirate_queue->front == NULL) return INT_MAX;
+        return pirate_queue->front->current_person->arrival_time;
+    } else {
+        if (ninja_queue->front == NULL) return INT_MAX;
+        return ninja_queue->front->current_person->arrival_time;
+    }
+}
+
+/**
+ * Returns the next available team number
+ * @return Team number that you should put the next person into
+ */
+inline int next_available_team() {
+    // TODO
+    return 1;
+}
+
+/**
+ * Called from run_store
+ * @param is_person_a_pirate
+ */
+void dequeue_next_person_to_store(bool is_person_a_pirate) {
+    struct person *person_to_enter_store;
+
+    if (is_person_a_pirate) {
+        person_to_enter_store = deQueue(pirate_queue);
+        printf("Dequeued pirate %i\n", person_to_enter_store->id);
+    } else {
+        person_to_enter_store = deQueue(ninja_queue);
+        printf("Dequeued ninja %i\n", person_to_enter_store->id);
+    }
+
+    // TODO put them in the next available store slot
+    pthread_mutex_unlock(&person_to_enter_store->is_in_fitting_room);
+}
+
+/**
  * This executes the main thread loop of managing the store.
  *
  * This should be called once all setup is complete and all Person threads are running
@@ -131,11 +177,49 @@ void run_store() {
         // A person is in line, and there is a free room.
         pthread_mutex_lock(&state_mutex);
         // TODO strategy, how to avoid letting pirates hog the room?
-        
+        int pirate_arrival_time = get_next_persons_arrival_time(true);
+        int ninja_arrival_time = get_next_persons_arrival_time(false);
+        int wait_time_difference = pirate_arrival_time - ninja_arrival_time; // Useful for when there is a large discrepancy
+        bool have_pirates_waited_longer = (wait_time_difference < 0);
 
-        struct person *p = deQueue(pirate_queue);
-        printf("Dequeued pirate %i\n", p->id);
-        pthread_mutex_unlock(&p->is_in_fitting_room);
+        if (does_fitting_room_have_pirates) {
+            if (have_pirates_waited_longer) {
+                // Trivial decision
+                dequeue_next_person_to_store(true);
+            } else {
+                if (pirate_arrival_time == INT_MAX) {
+                    // Pirate line is empty
+                    // TODO Just wait more somehow ...
+                } else {
+                    // This is where a decision needs to be made based on wait_time_difference
+                    dequeue_next_person_to_store(true); // TODO temp, for now, just let pirates block
+                }
+            }
+        }
+
+        else if (does_fitting_room_have_ninjas) {
+            if (!have_pirates_waited_longer) {
+                // Trivial decision
+                dequeue_next_person_to_store(false);
+            } else{
+                if (ninja_arrival_time == INT_MAX) {
+                    // No ninjas in line
+                    // TODO Just wait more somehow ...
+                } else {
+                    // This is where a decision needs to be made based on wait_time_difference
+                    dequeue_next_person_to_store(false); // TODO temp for now just let ninjas block
+                }
+            }
+        }
+
+        else {
+            if (have_pirates_waited_longer) {
+                dequeue_next_person_to_store(true);
+            } else {
+                dequeue_next_person_to_store(false);
+            }
+        }
+
 
         pthread_mutex_unlock(&state_mutex);
     }

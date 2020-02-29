@@ -14,11 +14,12 @@ void *person_thread(void *person_arg) {
 
 
     printf("Here: \n");
-    sleep(2); // TODO sleep random time based on AVG_...
+    int arrival_time = 2; // TODO sleep random time based on AVG_...
+    sleep(arrival_time);
 
-    printf("Here, done sleeping\n"); // TODO temp
 
     pthread_mutex_lock(&state_mutex); // == Entering Critical
+    p->arrival_time = arrival_time;
 
     shallow_queue *waiting_line = p->is_pirate ? pirate_queue : ninja_queue;
     enQueue(waiting_line, p);
