@@ -115,7 +115,12 @@ int get_next_persons_arrival_time(bool is_pirate_wait_time) {
  */
 inline int next_available_team() {
     // TODO
-    return 1;
+    for (int i = 0; i < NUM_TEAMS; i++) {
+        if (dressing_room_is_empty[i] == true) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 /**
