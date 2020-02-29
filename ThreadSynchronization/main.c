@@ -2,13 +2,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <time.h>
-// #include <unistd.h>
 #include <pthread.h>
 #include "thread_demo.h"
 #include "queue.h"
 #include "probability.h"
 #include "data.h"
+#include "shallow_queue.c"
+#include "people_threads.h"
 
 #define MIN_THREAD_NUM 50
 #define MAX_THREAD_NUM 10
@@ -29,11 +29,11 @@ int NUM_TEAMS;
 
 
 /** The following mutex should be locked any time program state is being used */
-pthread_mutex_t state_mutex;
+extern pthread_mutex_t state_mutex;
 
 // The following global variables encapsulate "state" as referenced above
-queue *pirate_queue;
-queue *ninja_queue;
+shallow_queue *pirate_queue;
+shallow_queue *ninja_queue;
 /** False if the fitting room is empty or has ninjas */
 bool does_fitting_room_have_pirates;
 /** False if the fitting room is empty or has pirates */
@@ -47,6 +47,7 @@ bool does_fitting_room_have_ninjas;
 bool are_both_queues_empty() {
     // TODO
     // return (pirate_queue->front == NULL && ninja_queue->front == NULL);
+    return false;
 }
 
 /**
@@ -72,34 +73,42 @@ void fitting_room() {
 
 
 void *enter_queue(person p) {
-}
-
-void initialize_people(int num_pirates, int num_ninjas) {
-    for (int i = 0; i < num_pirates; ++i) {
-        create_new_person(true, i + 1); // i + 1 as id's start at 1
-    }
-    for (int i = 0; i < num_ninjas; ++i) {
-        create_new_person(false, i + 1);
-    }
-
-    print_pirates();
+    return NULL; // TODO
 }
 
 /**
- * Creates a Person struct for each of the ninjas, sets their flag to be
- * identified as a ninja and adds them to a ninja list
+ * Creates structs for all pirates and ninjas stored on the heap.
  *
+ * Access to the initialized people can be done via global_pirate_list and global_ninja_list
+ * @param num_pirates
  * @param num_ninjas
  */
-void initialize_threads(int num_ninjas, int num_pirates, int num_teams) {
-    // TODO maybe do this in data from global queue thingy?
-    for (int i = 0; i < num_ninjas; ++i) {
-
-    }
-
+void initialize_people(int num_pirates, int num_ninjas) {
     for (int i = 0; i < num_pirates; ++i) {
-        // TODO create pirates
+        create_new_person(true, i);
     }
+    for (int i = 0; i < num_ninjas; ++i) {
+        create_new_person(false, i);
+    }
+}
+
+pthread_t global_thread_id_array[100];
+
+/**
+ * Runs a person_thread for a given person struct.
+ *
+ * Persons are initialized via initialize_people(), and this method is designed for use with process_queue();
+ *
+ * @see initialize_people()
+ * @see process_queue()
+ * @see person_thread()
+ * @arg p Pointer to person struct in memory
+ */
+void *start_person_thread(person *p) {
+    // The static variable below acts as a global variable that increments each function call
+    static int global_thread_count = 0;
+    pthread_create(&global_thread_id_array[++global_thread_count], NULL, person_thread, p);
+    return NULL;
 }
 
 /**
@@ -108,16 +117,16 @@ void initialize_threads(int num_ninjas, int num_pirates, int num_teams) {
  * @param argc the number of command line arguments, argv the arguments themselves
  */
 void process_input(int argc, int arguments[]) {
-    int num_teams = arguments[0];
-    int num_pirates = arguments[1];
-    int num_ninjas = arguments[2];
+    NUM_TEAMS = arguments[0];
+    const int num_pirates = arguments[1];
+    const int num_ninjas = arguments[2];
     AVG_PIRATE_COSTUME_TIME = arguments[3];
     AVG_NINJA_COSTUME_TIME = arguments[4];
     AVG_PIRATE_ARRIVAL_TIME = arguments[5];
     AVG_NINJA_ARRIVAL_TIME = arguments[6];
 
-    if (num_teams < 2 || num_teams > 4) {
-        fprintf(stderr, "Illegal argument %i given for number of teams\n", num_teams);
+    if (NUM_TEAMS < 2 || NUM_TEAMS > 4) {
+        fprintf(stderr, "Illegal argument %i given for number of teams\n", NUM_TEAMS);
         exit(EXIT_FAILURE);
     }
     if (num_pirates < 10 || num_pirates > 50) {
@@ -130,18 +139,51 @@ void process_input(int argc, int arguments[]) {
     }
 
 
+    // Set up global state variables
     initialize_people(num_pirates, num_ninjas);
     // Queue *pirate_queue = createQueue();
     // Queue *ninja_queue = createQueue();
-    printf("-- Starting Simulation --\n");
 
-    // TODO pthread joins
+    printf("-- Starting Simulation --\n");
+    // Start a thread for each person
+    process_queue(global_pirate_list, start_person_thread);
+    process_queue(global_ninja_list, start_person_thread);
+
+    /*
+     * TODO, main thread stuff
+    */
+
+    // Join back all threads
+    for (int i = 0; i < num_ninjas + num_pirates; ++i) {
+        pthread_join(global_thread_id_array[i], NULL);
+    }
+
+    print_pirates();
+    // TODO print pirate summary : All of the Pirates cost 51 gold pieces
+    print_ninjas();
+    // All of the Ninjas cost 41 gold pieces
+
+    // TODO print summaries:
+    /*
+     * Expenses for employing the costume teams is: 10 gold pieces
+     * Team 0 was busy for 44 minutes and free for 37 minutes.
+     * Team 1 was busy for 59 minutes and free for 22 minutes.
+     * Average queue length was 5.148148 people
+     * Gross revenue is 92 gold pieces
+     * Gold per visit: 3.538462
+     * Total revenue: 82
+     */
+
+    // Cleanup
+    destroy_queue(global_pirate_list);
+    destroy_queue(global_ninja_list);
 }
 
 
 int main(int argc, char *argv[]) {
     // run_queue_test();
     // run_thread_demo();
+
 
     const int ARGUMENT_NUMBER = 7;
     if (argc != ARGUMENT_NUMBER + 1) {

@@ -11,16 +11,12 @@
  * @return
  */
 queue *create_queue(size_t alloc_size) {
-    printf("queuesize: %i\n", sizeof(queue)); // TODO temp
-    printf("data_size: %i\n", sizeof(data)); // TODO temp
-    printf("size_t: %i\n", sizeof(size_t)); // TODO temp
     queue *q = (queue *) malloc(sizeof(queue));
     if (q == NULL) {
         fprintf(stderr, "Error: malloc failed to allocate queue memory");
         return NULL;
     }
     q->allocation_size = alloc_size;
-    printf("alloc_size: %i\n", alloc_size);// TODO temp
     q->length = 0;
     q->head = q->tail = NULL;
     return q;

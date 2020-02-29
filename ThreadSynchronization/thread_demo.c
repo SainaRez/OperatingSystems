@@ -79,6 +79,7 @@ struct temp {
 void *print_temp(void *data) {
     struct temp *t = (struct temp *) data;
     printf("%i, %i, %i, %i\n", t->a, t->b, t->c, t->f);
+    return NULL;
 }
 
 /**

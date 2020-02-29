@@ -2,6 +2,7 @@
 
 #include <pthread.h>
 #include <stdbool.h>
+#include "queue.h"
 
 struct visit {
     unsigned int wait_time;
@@ -17,6 +18,9 @@ typedef struct person {
     int assigned_team;
 } person;
 
+extern queue *global_pirate_list;
+extern queue *global_ninja_list;
+
 void create_new_person(bool is_pirate, int id);
 
 void print_person(struct person *p);
@@ -26,4 +30,6 @@ int get_cost_of_visit(struct visit *v);
 void print_visit(struct visit *v);
 
 void print_pirates();
+
+void print_ninjas();
 
