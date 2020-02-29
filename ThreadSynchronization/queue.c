@@ -34,10 +34,8 @@ void enqueue(queue *q, void *_data) {
     assert(q != NULL);
 
     struct data *to_insert = (struct data *) malloc(sizeof(data)); // TODO could this right side just be a void *
-    if (to_insert == NULL) {
-        fprintf(stderr, "Error allocating memory");
-        exit(-1);
-    }
+    assert(to_insert != NULL); // Failure to allocate memory
+
     to_insert->data = malloc(sizeof(q->allocation_size));
     if (to_insert->data == NULL) {
         fprintf(stderr, "Error allocating memory");
@@ -146,7 +144,7 @@ bool is_empty(queue *q) {
  */
 void process_queue(queue *q, void *func(void *)) {
     assert(q != NULL);
-    
+
     struct data *current = q->head;
     while (current != NULL) {
         data *next = current->next;

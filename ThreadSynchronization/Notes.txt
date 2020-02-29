@@ -1,3 +1,48 @@
+==============
+When are waits/notifies required?:
+==============
+people_in_line_semaphore starts at -1, or locked // This must be done manually at its initialization
+teams_free_semaphore starts at num_teams
+currently_in_team_mutex should start locked
+- The main thread should sem_wait() for the people_in_line_semaphore
+- When a person finishes adventuring * and enters a queue:
+	- state must be locked
+	- Person adds themselves to queue
+	- state then unlocked
+	- people_in_line_semaphore should be incremented with sem_post()
+	- Person should then wait for their own currently_in_team_mutex
+- When the main thread finishes waiting for the people_in_line_semaphore
+	- state must be locked
+	- main should decide whether to give this person to a team or not
+			== Pirate arrives and ninja is in dressing room == no // TODO this is hogging
+			== Pirate arrives but dressing room is full of pirates == yes
+	IF NO:
+		- TODO
+		- exit();
+		- state must be unlocked
+	IF YES:
+	- state must still be locked
+	+ teams_free_semaphore is decremented via sem_wait(); // This doubles to wait on free space
+	- a person is popped from queue and enters a team:
+	- Person will be popped from queue
+	- A team will be updated to contain the person
+	- The person will have their currently_in_team_mutex unlocked (and team #)
+	// TODO person's thread starts moving
+	- state will be unlocked
+	// TODO person finishes sleeping
+
+- When a person gets in queue, they will wait for their currently_in_team_mutex,* when that's updated
+	- Person will calculate their wait time, print their arrival current team #
+	- Person will sleep for duration
+	- Person will print their departure and current team #
+	- State must be locked
+	- Person will record their visit info (shop time, wait time)
+	- Person will remove themselves from the store's team
+	- State must be unlocked
+	- teams_free_semaphore should be incremented with sem_post()
+	- // TODO decide to come back or not
+
+==============
 Required State:
 ==============
 Globals:
@@ -11,6 +56,8 @@ Set of Pirates
 Pirate: 
 	ID
 	List of visits
+	mutex currently_in_team_mutex
+	int team_num
 
 Visit:
 	Wait time

@@ -20,7 +20,7 @@ queue *create_queue(size_t alloc_size);
 
 void enqueue(queue *q, void *data);
 
-void * dequeue(queue *q);
+void *dequeue(queue *q);
 
 void peek(queue *q, void *to_return);//Return the first element
 
