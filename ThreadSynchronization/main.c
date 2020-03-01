@@ -92,7 +92,6 @@ void *start_person_thread(person *p) {
 }
 
 /**
-<<<<<<< HEAD
  * Returns the arrival time of the person who is next to enter the store.
  * (The person with the lower arrival time has been in line longest).
  *
