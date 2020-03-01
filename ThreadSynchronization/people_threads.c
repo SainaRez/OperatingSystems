@@ -27,7 +27,7 @@ void *person_thread(void *person_arg) {
 
     shallow_queue *waiting_line = p->is_pirate ? pirate_queue : ninja_queue;
     enQueue(waiting_line, p);
-    printf("%s %i is waiting in line\n", TITLE, p->id);
+    // printf("%s %i is waiting in line\n", TITLE, p->id);
 
     pthread_mutex_unlock(&state_mutex); // == Exiting Critical
     // ======================================================
@@ -51,8 +51,12 @@ void *person_thread(void *person_arg) {
     // ======================================================
 
     sleep(shop_time);
+
+
+    pthread_mutex_lock(&state_mutex); // == Re-entering Critical
     printf("%s %i leaving shop of team %i\n", TITLE, p->id, p->assigned_team);
     free_dressing_room_team(p->assigned_team);
+    pthread_mutex_unlock(&state_mutex); // == De-re-entering Critical
 
     // TODO loop back if 25% chance
 

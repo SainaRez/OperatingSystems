@@ -37,9 +37,9 @@ pthread_mutex_t state_mutex = PTHREAD_MUTEX_INITIALIZER;
 shallow_queue *pirate_queue = NULL;
 shallow_queue *ninja_queue = NULL;
 /** False if the fitting room is empty or has ninjas */
-bool does_fitting_room_have_pirates;
+bool does_fitting_room_have_pirates = false;
 /** False if the fitting room is empty or has pirates */
-bool does_fitting_room_have_ninjas;
+bool does_fitting_room_have_ninjas = false;
 /** dressing_room_is_empty[n] is true if room n is empty*/
 bool dressing_room_is_empty[MAX_TEAM];
 
@@ -52,22 +52,33 @@ sem_t *teams_free_semaphore = NULL;
 
 /**
  * Frees up the given dressing room team and updates associated semaphore for teams.
- * Requires state_mutex to be free on call.
+ * is called in mutex state
  * @param team_num Team that is to be marked as now free
  */
 void free_dressing_room_team(int team_num) {
     assert(dressing_room_is_empty[team_num] == false); // Shouldn't be freeing an already free team
-    pthread_mutex_lock(&state_mutex);
     int i;
     sem_getvalue(teams_free_semaphore, &i);
-    if (i == 1) {
+    if (i == NUM_TEAMS - 1) {
+        printf("All teams should be freed up now\n.");
         // We are completely freeing up the dressing room by freeing this
         does_fitting_room_have_ninjas = false;
         does_fitting_room_have_pirates = false;
     }
     dressing_room_is_empty[team_num] = true;
     sem_post(teams_free_semaphore);
-    pthread_mutex_unlock(&state_mutex);
+}
+
+void clean_teams() {
+    int i;
+    sem_getvalue(teams_free_semaphore, &i);
+    if (i == NUM_TEAMS) {
+        // We are completely free in the dressing room
+        does_fitting_room_have_ninjas = false;
+        does_fitting_room_have_pirates = false;
+    } else {
+        assert(!does_fitting_room_have_ninjas || !does_fitting_room_have_pirates);
+    }
 }
 
 /**
@@ -86,7 +97,7 @@ void initialize_people(int num_pirates, int num_ninjas) {
     }
 }
 
-pthread_t global_thread_id_array[100]; // TODO Should this be cleaned up?
+pthread_t global_thread_id_array[100];
 
 /**
  * Runs a person_thread for a given person struct.
@@ -151,29 +162,33 @@ void dequeue_next_person_to_store(bool is_person_a_pirate) {
     } else {
         person_to_enter_store = deQueue(ninja_queue);
         assert(does_fitting_room_have_pirates == false);
-        does_fitting_room_have_pirates = true;
+        does_fitting_room_have_ninjas = true;
     }
+    assert(person_to_enter_store != NULL);
 
     int team_num = next_available_team();
     person_to_enter_store->assigned_team = team_num;
     dressing_room_is_empty[team_num] = false;
 
+    pthread_mutex_unlock(&state_mutex);
     pthread_mutex_unlock(&person_to_enter_store->is_in_fitting_room);
 }
 
 /**
  * Test function wrapper for add_variance
  * @param any average value
+ * @return mean/average of getting 50 random variables with hypothetical average of average
  */
-void variance_test(int avg_time) {
+int variance_test(int avg_time) {
     int i = 0;
     srand(time(NULL));
     rand();
+    int sum = 0;
     while (i < 50) {
-        add_variance(avg_time);
+        sum += add_variance(avg_time);
         i++;
     }
-    return;
+    return sum / 50;
 }
 
 /**
@@ -182,15 +197,13 @@ void variance_test(int avg_time) {
  * This should be called once all setup is complete and all Person threads are running
  */
 void run_store() {
-    static int run_count; // TODO delete
-    while (total_people_about > 0) { // TODO keep track of how many Persons are still active
-        printf("Run_count: %i. Total People About: %i\n", ++run_count, total_people_about); // TODO delete
+    while (total_people_about > 0) {
         sem_wait(people_in_line_semaphore);
         // At least one person is in line, now wait for a free room/team
         sem_wait(teams_free_semaphore);
         // A person is in line, and there is a free room.
         pthread_mutex_lock(&state_mutex);
-        // TODO strategy, how to avoid letting pirates hog the room?
+        clean_teams();
         int pirate_arrival_time = get_next_persons_arrival_time(true);
         int ninja_arrival_time = get_next_persons_arrival_time(false);
         int wait_time_difference =
@@ -203,12 +216,19 @@ void run_store() {
                 dequeue_next_person_to_store(true);
             } else {
                 if (pirate_arrival_time == INT_MAX) {
-                    // Pirate line is empty
-                    fprintf(stderr, "EDGE CASE!, Just waiting Pirates TODO\n"); // TODO
+                    // Pirate line is empty, as such, undo the sem_wait and go next
                     sem_post(teams_free_semaphore);
+                    clean_teams();
+                    pthread_mutex_unlock(&state_mutex);
                 } else {
+                    if (wait_time_difference > (NUM_TEAMS * AVG_NINJA_COSTUME_TIME)) { // If the wait time is large
+                        printf("Wait time difference %i is large, allowing ninjas to enter next\n", wait_time_difference);
+                        sem_post(teams_free_semaphore);
+                        pthread_mutex_unlock(&state_mutex);
+                    } else {
+                        dequeue_next_person_to_store(true);
+                    }
                     // This is where a decision needs to be made based on wait_time_difference
-                    dequeue_next_person_to_store(true); // TODO temp, for now, just let pirates block
                 }
             }
         } else if (does_fitting_room_have_ninjas) {
@@ -217,12 +237,17 @@ void run_store() {
                 dequeue_next_person_to_store(false);
             } else {
                 if (ninja_arrival_time == INT_MAX) {
-                    // No ninjas in line
-                    fprintf(stderr, "EDGE CASE!, Just waiting. Ninjas TODO\n"); // TODO delete
+                    // No ninjas in line, as such, undo the sem_wait and go next
                     sem_post(teams_free_semaphore);
+                    pthread_mutex_unlock(&state_mutex);
                 } else {
-                    // This is where a decision needs to be made based on wait_time_difference
-                    dequeue_next_person_to_store(false); // TODO temp for now just let ninjas block
+                    if ((0 - wait_time_difference) > (NUM_TEAMS * AVG_PIRATE_COSTUME_TIME)) { // If the wait time is large
+                        printf("Wait time difference %i is large, allowing pirates to enter next\n", wait_time_difference);
+                        sem_post(teams_free_semaphore);
+                        pthread_mutex_unlock(&state_mutex);
+                    } else {
+                        dequeue_next_person_to_store(false);
+                    }
                 }
             }
         } else {
@@ -235,9 +260,7 @@ void run_store() {
         }
 
 
-        pthread_mutex_unlock(&state_mutex);
     }
-
 }
 
 /**
@@ -266,7 +289,6 @@ void process_input(int argc, int arguments[]) {
         fprintf(stderr, "Number of threads (ninjas) %i is out of range\n", num_ninjas);
         exit(EXIT_FAILURE);
     }
-    variance_test(AVG_NINJA_ARRIVAL_TIME);
 
     total_people_about = num_ninjas + num_pirates;
 
@@ -321,9 +343,10 @@ void process_input(int argc, int arguments[]) {
 
 
 int main(int argc, char *argv[]) {
-    // variance_test()
+    // variance_test(25);
     // run_queue_test();
     // run_thread_demo();
+
 
     const int ARGUMENT_NUMBER = 7;
     if (argc != ARGUMENT_NUMBER + 1) {
