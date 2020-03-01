@@ -153,17 +153,9 @@ void dequeue_next_person_to_store(bool is_person_a_pirate) {
         does_fitting_room_have_pirates = true;
     }
 
-
-    // TODO put them in the next available store slot
     int team_num = next_available_team();
     person_to_enter_store->assigned_team = team_num;
     dressing_room_is_empty[team_num] = false;
-
-    int i;
-    sem_getvalue(teams_free_semaphore, &i);
-    printf("Teams_free_semaphore: %i\n", i);
-    // TODO is this okay? (It doesn't appear so)
-    sem_wait(teams_free_semaphore); // decrement the number of free teams
 
     pthread_mutex_unlock(&person_to_enter_store->is_in_fitting_room);
 }
@@ -210,6 +202,7 @@ void run_store() {
             } else {
                 if (pirate_arrival_time == INT_MAX) {
                     // Pirate line is empty
+                    printf(stderr, "EDGE CASE!, Pirates TODO\n"); // TODO
                     exit(EXIT_FAILURE);
                     // TODO Just wait more somehow ...
                 } else {
@@ -224,6 +217,7 @@ void run_store() {
             } else {
                 if (ninja_arrival_time == INT_MAX) {
                     // No ninjas in line
+                    printf(stderr, "EDGE CASE! Ninjas, TODO\n"); // TODO
                     exit(EXIT_FAILURE);
                     // TODO Just wait more somehow ...
                 } else {
@@ -325,6 +319,7 @@ void process_input(int argc, int arguments[]) {
 
 
 int main(int argc, char *argv[]) {
+    // variance_test()
     // run_queue_test();
     // run_thread_demo();
 

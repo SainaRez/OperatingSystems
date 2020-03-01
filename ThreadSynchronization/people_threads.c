@@ -52,7 +52,7 @@ void *person_thread(void *person_arg) {
 
     sleep(shop_time);
     printf("%s %i leaving shop of team %i\n", TITLE, p->id, p->assigned_team);
-    pthread_mutex_unlock(&p->is_in_fitting_room); // TODO hmmmm
+    // pthread_mutex_unlock(&p->is_in_fitting_room); // TODO hmmmm
     free_dressing_room_team(p->assigned_team);
 
     pthread_exit(NULL);
