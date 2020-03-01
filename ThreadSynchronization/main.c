@@ -47,15 +47,6 @@ sem_t *people_in_line_semaphore = NULL;
 sem_t *teams_free_semaphore = NULL;
 
 
-void fitting_room() {
-
-}
-
-
-void *enter_queue(person p) {
-    return NULL; // TODO
-}
-
 /**
  * Creates structs for all pirates and ninjas stored on the heap.
  *

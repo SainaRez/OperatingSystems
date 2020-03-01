@@ -31,10 +31,13 @@ void create_new_person(bool is_pirate, int id) {
     struct person p;
     p.is_pirate= is_pirate;
     p.id = id;
-    p.is_pirate ? enqueue(global_pirate_list, &p) : enqueue(global_ninja_list, &p);
+
+    p.visits_queue = create_queue(sizeof(struct visit));
 
     pthread_mutex_init(&p.is_in_fitting_room, NULL);
     pthread_mutex_lock(&p.is_in_fitting_room);
+
+    p.is_pirate ? enqueue(global_pirate_list, &p) : enqueue(global_ninja_list, &p);
 }
 
 #define TITLE p->is_pirate ? "Pirate" : "Ninja"
