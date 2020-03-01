@@ -5,9 +5,9 @@
 #include "queue.h"
 
 struct visit {
-    unsigned int wait_time;
-    unsigned int shop_time;
-};
+    int wait_time;
+    int shop_time;
+} visit;
 
 typedef struct person {
     int id;
@@ -16,8 +16,11 @@ typedef struct person {
     pthread_mutex_t is_in_fitting_room;
     /** Value is only relevant when Person is in a fitting room */
     int assigned_team;
-    /** Value is only relevant when the Person in currently in line*/
+    /** Value is set every time the Person enters the line */
     int arrival_time;
+    int derrival_time; // time they exit line to enter store
+    /** A list of visits to the store */
+    queue *visits_queue;
 } person;
 
 extern queue *global_pirate_list;
