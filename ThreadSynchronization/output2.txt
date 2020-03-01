@@ -1,0 +1,34 @@
+rm -f main main.o
+gcc -Wall -Wno-incompatible-pointer-types -pthread -o main main.c queue.c thread_demo.c data.c people_threads.c probability.c -lm -fsanitize=address
+-- Starting Simulation --
+Ninja 10 entering shop with team 0
+Ninja 2 entering shop with team 1
+Ninja 2 leaving shop of team 1
+Ninja 4 entering shop with team 1
+Ninja 6 entering shop with team 2
+Ninja 14 entering shop with team 3
+Ninja 4 leaving shop of team 1
+Ninja 1 entering shop with team 1
+Ninja 6 leaving shop of team 2
+Ninja 5 entering shop with team 2
+Ninja 10 leaving shop of team 0
+Ninja 8 entering shop with team 0
+Ninja 1 leaving shop of team 1
+Ninja 17 entering shop with team 1
+Ninja 5 leaving shop of team 2
+Ninja 0 entering shop with team 2
+Ninja 14 leaving shop of team 3
+Ninja 7 entering shop with team 3
+Ninja 17 leaving shop of team 1
+Ninja 9 entering shop with team 1
+Ninja 7 leaving shop of team 3
+Ninja 16 entering shop with team 3
+Ninja 0 leaving shop of team 2
+Ninja 9 leaving shop of team 1
+Ninja 18 entering shop with team 1
+Ninja 12 entering shop with team 2
+Ninja 12 leaving shop of team 2
+Ninja 15 entering shop with team 2
+Ninja 16 leaving shop of team 3
+Ninja 19 entering shop with team 3
+Ninj

@@ -60,7 +60,7 @@ void free_dressing_room_team(int team_num) {
     int i;
     sem_getvalue(teams_free_semaphore, &i);
     if (i == NUM_TEAMS - 1) {
-        printf("All teams should be freed up now\n.");
+        printf("All teams should be freed up now.\n");
         // We are completely freeing up the dressing room by freeing this
         does_fitting_room_have_ninjas = false;
         does_fitting_room_have_pirates = false;
@@ -221,14 +221,7 @@ void run_store() {
                     clean_teams();
                     pthread_mutex_unlock(&state_mutex);
                 } else {
-                    if (wait_time_difference > (NUM_TEAMS * AVG_NINJA_COSTUME_TIME)) { // If the wait time is large
-                        printf("Wait time difference %i is large, allowing ninjas to enter next\n", wait_time_difference);
-                        sem_post(teams_free_semaphore);
-                        pthread_mutex_unlock(&state_mutex);
-                    } else {
-                        dequeue_next_person_to_store(true);
-                    }
-                    // This is where a decision needs to be made based on wait_time_difference
+                    dequeue_next_person_to_store(true);
                 }
             }
         } else if (does_fitting_room_have_ninjas) {
@@ -241,13 +234,7 @@ void run_store() {
                     sem_post(teams_free_semaphore);
                     pthread_mutex_unlock(&state_mutex);
                 } else {
-                    if ((0 - wait_time_difference) > (NUM_TEAMS * AVG_PIRATE_COSTUME_TIME)) { // If the wait time is large
-                        printf("Wait time difference %i is large, allowing pirates to enter next\n", wait_time_difference);
-                        sem_post(teams_free_semaphore);
-                        pthread_mutex_unlock(&state_mutex);
-                    } else {
-                        dequeue_next_person_to_store(false);
-                    }
+                    dequeue_next_person_to_store(false);
                 }
             }
         } else {
@@ -363,7 +350,7 @@ int main(int argc, char *argv[]) {
     process_input(argc, arguments);
 
     int total_persons = arguments[1] + arguments[2];
-    for(int i = 0; i < total_persons; i++) {
+    for (int i = 0; i < total_persons; i++) {
         pthread_join(global_thread_id_array[i], NULL);
     }
     //pthread_exit(NULL);
