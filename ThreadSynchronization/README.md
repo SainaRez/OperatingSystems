@@ -1,6 +1,8 @@
-# Project 3 : Threads and  Syncronization
-AUTHOR: Saina Rezvani, Josh Desmond
-Date: 2/21/2020
+### Thread Synchronization
+#### Author: Saina Rezvani, Josh Desmond
+##### Date: 02/14/2020
+
+This project includes the main.c files.
 
 # Description
 Our checkpoint code does input processing and has some prerequisite
