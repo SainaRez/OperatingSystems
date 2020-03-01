@@ -1,0 +1,36 @@
+rm -f main main.o
+gcc -Wall -Wno-incompatible-pointer-types -pthread -o main main.c queue.c thread_demo.c data.c people_threads.c probability.c -lm -fsanitize=address
+-- Starting Simulation --
+Pirate 4 is waiting in line
+Pirate 10 is waiting in line
+Pirate 4 entering shop with team 0
+Ninja 9 is waiting in line
+Pirate 10 entering shop with team 1
+Pirate 0 is waiting in line
+Pirate 0 entering shop with team 2
+Pirate 3 is waiting in line
+Pirate 3 entering shop with team 3
+Pirate 8 is waiting in line
+Pirate 2 is waiting in line
+Pirate 1 is waiting in line
+Ninja 5 is waiting in line
+Pirate 3 leaving shop of team 3
+Pirate 8 entering shop with team 3
+Ninja 3 is waiting in line
+Ninja 7 is waiting in line
+Ninja 6 is waiting in line
+Pirate 5 is waiting in line
+Pirate 4 leaving shop of team 0
+Pirate 2 entering shop with team 0
+Ninja 0 is waiting in line
+Pirate 6 is waiting in line
+Pirate 11 is waiting in line
+Pirate 10 leaving shop of team 1
+Pirate 1 entering shop with team 1
+Pirate 9 is waiting in line
+Pirate 8 leaving shop of team 3
+Pirate 5 entering shop with team 3
+Pirate 0 leaving shop of team 2
+Pirate 6 entering shop with team 2
+Pirate 2 leaving shop of team 0
+Pirate 11 enterin
