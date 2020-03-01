@@ -46,6 +46,7 @@ bool dressing_room_is_empty[MAX_TEAM];
 sem_t *people_in_line_semaphore = NULL;
 sem_t *teams_free_semaphore = NULL;
 
+
 /**
  * Frees up the given dressing room team and updates associated semaphore for teams.
  * Requires state_mutex to be free on call.
@@ -143,24 +144,19 @@ void dequeue_next_person_to_store(bool is_person_a_pirate) {
     if (is_person_a_pirate) {
         person_to_enter_store = deQueue(pirate_queue);
         printf("Dequeued pirate %i\n", person_to_enter_store->id);
+        assert(does_fitting_room_have_ninjas == false);
+        does_fitting_room_have_pirates = true;
     } else {
         person_to_enter_store = deQueue(ninja_queue);
         printf("Dequeued ninja %i\n", person_to_enter_store->id);
+        assert(does_fitting_room_have_pirates == false);
+        does_fitting_room_have_pirates = true;
     }
 
-
-    // TODO put them in the next available store slot
-<<<<<<< HEAD
-   
-=======
-    const int team_num = next_available_team();
+    int team_num = next_available_team();
     person_to_enter_store->assigned_team = team_num;
     dressing_room_is_empty[team_num] = false;
 
-    sem_wait(teams_free_semaphore); // decrement the number of free teams
-
-
->>>>>>> e4b15a7ef2ebb575ed1fdc446ceb93380274f9c5
     pthread_mutex_unlock(&person_to_enter_store->is_in_fitting_room);
 }
 
@@ -206,6 +202,8 @@ void run_store() {
             } else {
                 if (pirate_arrival_time == INT_MAX) {
                     // Pirate line is empty
+                    printf(stderr, "EDGE CASE!, Pirates TODO\n"); // TODO
+                    exit(EXIT_FAILURE);
                     // TODO Just wait more somehow ...
                 } else {
                     // This is where a decision needs to be made based on wait_time_difference
@@ -219,6 +217,8 @@ void run_store() {
             } else {
                 if (ninja_arrival_time == INT_MAX) {
                     // No ninjas in line
+                    printf(stderr, "EDGE CASE! Ninjas, TODO\n"); // TODO
+                    exit(EXIT_FAILURE);
                     // TODO Just wait more somehow ...
                 } else {
                     // This is where a decision needs to be made based on wait_time_difference
@@ -319,6 +319,7 @@ void process_input(int argc, int arguments[]) {
 
 
 int main(int argc, char *argv[]) {
+    // variance_test()
     // run_queue_test();
     // run_thread_demo();
 

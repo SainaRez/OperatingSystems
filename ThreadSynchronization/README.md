@@ -22,7 +22,7 @@ The outputs of running our test file "test.sh" are recorded in the output file, 
 
 # Running the files:
 
-Running Memory Manager:
+Running Thread Synchronization:
 
 $ make
 $ ./main 4 12 10 7 5 10 4

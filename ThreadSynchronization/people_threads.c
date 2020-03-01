@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <unistd.h>
 
+#define TITLE p->is_pirate ? "Pirate" : "Ninja"
 
 /**
  *
@@ -19,30 +20,39 @@ void *person_thread(void *person_arg) {
     int arrival_time = add_variance(p->is_pirate ? AVG_PIRATE_ARRIVAL_TIME : AVG_NINJA_ARRIVAL_TIME);
     sleep(arrival_time);
 
+    // ======================================================
+    // == Back from adventures, entering queue
     pthread_mutex_lock(&state_mutex); // == Entering Critical
     p->arrival_time = arrival_time;
 
     shallow_queue *waiting_line = p->is_pirate ? pirate_queue : ninja_queue;
     enQueue(waiting_line, p);
-    printf("Person %i is waiting in line\n", p->id);
+    printf("%s %i is waiting in line\n", TITLE, p->id);
 
     pthread_mutex_unlock(&state_mutex); // == Exiting Critical
+    // ======================================================
 
     sem_post(people_in_line_semaphore);
 
     pthread_mutex_lock(&p->is_in_fitting_room); // Wait until thread is in fitting room
+
+    // ======================================================
+    // == Done waiting in line, entering shop / fitting room
     pthread_mutex_lock(&state_mutex); // == Re-entering Critical
-    // TODO Do math on waiting time
     int shop_time = add_variance(p->is_pirate ? AVG_PIRATE_COSTUME_TIME : AVG_NINJA_COSTUME_TIME);
     struct visit v;
     v.shop_time = shop_time;
+    // TODO Do math on waiting time
+    printf("%s %i entering shop with team %i\n", TITLE, p->id, p->assigned_team);
     v.wait_time = arrival_time - 99999; // TODO subtract dequeue time
     assert(p->visits_queue != NULL);
     enqueue(p->visits_queue, &v);
-    pthread_mutex_unlock(&state_mutex); // == Re-entering Critical
-    // TODO print entrance, calculate fitting time, sleep for duration,  etc.
+    pthread_mutex_unlock(&state_mutex); // == De-re-entering Critical
+    // ======================================================
+
     sleep(shop_time);
-    pthread_mutex_unlock(&p->is_in_fitting_room);
+    printf("%s %i leaving shop of team %i\n", TITLE, p->id, p->assigned_team);
+    // pthread_mutex_unlock(&p->is_in_fitting_room); // TODO hmmmm
     free_dressing_room_team(p->assigned_team);
 
     pthread_exit(NULL);
