@@ -340,9 +340,11 @@ int main(int argc, char *argv[]) {
     process_input(argc, arguments);
 
     int total_persons = arguments[1] + arguments[2];
-    while (int i = 0; i < total_persons; i++) {
+    for(int i = 0; i < total_persons; i++) {
         pthread_join(global_thread_id_array[i], NULL);
     }
+    //pthread_exit(NULL);
 
     exit(EXIT_SUCCESS);
+    return 0;
 }
