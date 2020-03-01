@@ -120,6 +120,7 @@ inline int next_available_team() {
             return i;
         }
     }
+    // return -1 if none is free
     return -1;
 }
 
@@ -139,7 +140,8 @@ void dequeue_next_person_to_store(bool is_person_a_pirate) {
     }
 
     // TODO put them in the next available store slot
-    pthread_mutex_unlock(&person_to_enter_store->is_in_fitting_room);
+   
+    pthread_mutex_unlock(&person_to_enter_store->is_in_fitting_room;
 }
 
     /**
