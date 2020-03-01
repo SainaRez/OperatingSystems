@@ -46,6 +46,25 @@ bool dressing_room_is_empty[MAX_TEAM];
 sem_t *people_in_line_semaphore = NULL;
 sem_t *teams_free_semaphore = NULL;
 
+/**
+ * Frees up the given dressing room team and updates associated semaphore for teams.
+ * Requires state_mutex to be free on call.
+ * @param team_num Team that is to be marked as now free
+ */
+void free_dressing_room_team(int team_num) {
+    assert(dressing_room_is_empty[team_num] == false); // Shouldn't be freeing an already free team
+    pthread_mutex_lock(&state_mutex);
+    int i;
+    sem_getvalue(teams_free_semaphore, &i);
+    if (i == 1) {
+        // We are completely freeing up the dressing room by freeing this
+        does_fitting_room_have_ninjas = false;
+        does_fitting_room_have_pirates = false;
+    }
+    dressing_room_is_empty[team_num] = true;
+    sem_post(teams_free_semaphore);
+    pthread_mutex_unlock(&state_mutex);
+}
 
 /**
  * Creates structs for all pirates and ninjas stored on the heap.
@@ -103,15 +122,15 @@ int get_next_persons_arrival_time(bool is_pirate_wait_time) {
  * Returns the next available team number
  * @return Team number that you should put the next person into
  */
-inline int next_available_team() {
-    // TODO
-    for (int i = 0; i < NUM_TEAMS; i++) {
+int next_available_team() {
+    for (int i = 0; i < NUM_TEAMS; ++i) {
         if (dressing_room_is_empty[i] == true) {
             return i;
         }
     }
-    // return -1 if none is free
-    return -1;
+
+    fprintf(stderr, "Illegal State exception- unreachable code in next_available_team()\n");
+    assert(false);
 }
 
 /**
@@ -129,7 +148,14 @@ void dequeue_next_person_to_store(bool is_person_a_pirate) {
         printf("Dequeued ninja %i\n", person_to_enter_store->id);
     }
 
+
     // TODO put them in the next available store slot
+    const int team_num = next_available_team();
+    person_to_enter_store->assigned_team = team_num;
+    dressing_room_is_empty[team_num] = false;
+
+    sem_wait(teams_free_semaphore); // decrement the number of free teams
+
 
     pthread_mutex_unlock(&person_to_enter_store->is_in_fitting_room);
 }
@@ -156,9 +182,9 @@ void variance_test(int avg_time) {
  */
 void run_store() {
     while (true) { // TODO keep track of how many Persons are still active
-        printf(" ---- Waiting for line\n");
         sem_wait(people_in_line_semaphore);
         // At least one person is in line, now wait for a free room/team
+        printf(" ---- Waiting for free team\n");
         sem_wait(teams_free_semaphore);
         // A person is in line, and there is a free room.
         pthread_mutex_lock(&state_mutex);
@@ -242,6 +268,10 @@ void process_input(int argc, int arguments[]) {
     initialize_people(num_pirates, num_ninjas);
     pirate_queue = createQueue();
     ninja_queue = createQueue();
+
+    for (int i = 0; i < NUM_TEAMS; ++i) {
+        dressing_room_is_empty[i] = true;
+    }
 
     people_in_line_semaphore = malloc(sizeof(sem_t));
     sem_init(people_in_line_semaphore, 1, 0); // Semaphore is initially locked, as no one is in line

@@ -24,6 +24,7 @@ void *person_thread(void *person_arg) {
 
     shallow_queue *waiting_line = p->is_pirate ? pirate_queue : ninja_queue;
     enQueue(waiting_line, p);
+    printf("Person %i is waiting in line\n", p->id);
 
     pthread_mutex_unlock(&state_mutex); // == Exiting Critical
 
@@ -40,8 +41,9 @@ void *person_thread(void *person_arg) {
     enqueue(p->visits_queue, &v);
     pthread_mutex_unlock(&state_mutex); // == Re-entering Critical
     // TODO print entrance, calculate fitting time, sleep for duration,  etc.
-    sleep(1);
+    sleep(shop_time);
     pthread_mutex_unlock(&p->is_in_fitting_room);
+    free_dressing_room_team(p->assigned_team);
 
     pthread_exit(NULL);
 }

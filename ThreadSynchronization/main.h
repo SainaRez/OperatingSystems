@@ -14,3 +14,5 @@ extern int AVG_NINJA_COSTUME_TIME;
 extern int AVG_PIRATE_ARRIVAL_TIME;
 extern int AVG_NINJA_ARRIVAL_TIME;
 
+void free_dressing_room_team(int team_num);
+
