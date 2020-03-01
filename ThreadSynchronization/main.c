@@ -143,12 +143,10 @@ void dequeue_next_person_to_store(bool is_person_a_pirate) {
 
     if (is_person_a_pirate) {
         person_to_enter_store = deQueue(pirate_queue);
-        printf("Dequeued pirate %i\n", person_to_enter_store->id);
         assert(does_fitting_room_have_ninjas == false);
         does_fitting_room_have_pirates = true;
     } else {
         person_to_enter_store = deQueue(ninja_queue);
-        printf("Dequeued ninja %i\n", person_to_enter_store->id);
         assert(does_fitting_room_have_pirates == false);
         does_fitting_room_have_pirates = true;
     }
@@ -181,10 +179,12 @@ void variance_test(int avg_time) {
  * This should be called once all setup is complete and all Person threads are running
  */
 void run_store() {
-    while (true) { // TODO keep track of how many Persons are still active
+    bool are_there_more_customers_about = true;
+    static int run_count;
+    while (are_there_more_customers_about) { // TODO keep track of how many Persons are still active
+        printf("Run_count: %i\n", ++run_count);
         sem_wait(people_in_line_semaphore);
         // At least one person is in line, now wait for a free room/team
-        printf(" ---- Waiting for free team\n");
         sem_wait(teams_free_semaphore);
         // A person is in line, and there is a free room.
         pthread_mutex_lock(&state_mutex);
@@ -202,7 +202,7 @@ void run_store() {
             } else {
                 if (pirate_arrival_time == INT_MAX) {
                     // Pirate line is empty
-                    printf(stderr, "EDGE CASE!, Pirates TODO\n"); // TODO
+                    fprintf(stderr, "EDGE CASE!, Pirates TODO\n"); // TODO
                     exit(EXIT_FAILURE);
                     // TODO Just wait more somehow ...
                 } else {
@@ -217,7 +217,7 @@ void run_store() {
             } else {
                 if (ninja_arrival_time == INT_MAX) {
                     // No ninjas in line
-                    printf(stderr, "EDGE CASE! Ninjas, TODO\n"); // TODO
+                    fprintf(stderr, "EDGE CASE!, Ninjas TODO\n"); // TODO
                     exit(EXIT_FAILURE);
                     // TODO Just wait more somehow ...
                 } else {
@@ -226,6 +226,7 @@ void run_store() {
                 }
             }
         } else {
+            // Fitting room has neither ninjas or pirates and is empty
             if (have_pirates_waited_longer) {
                 dequeue_next_person_to_store(true);
             } else {
