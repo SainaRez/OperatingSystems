@@ -162,9 +162,8 @@ void dequeue_next_person_to_store(bool is_person_a_pirate) {
     int i;
     sem_getvalue(teams_free_semaphore, &i);
     printf("Teams_free_semaphore: %i\n", i);
-    // TODO is this okay?
+    // TODO is this okay? (It doesn't appear so)
     sem_wait(teams_free_semaphore); // decrement the number of free teams
-
 
     pthread_mutex_unlock(&person_to_enter_store->is_in_fitting_room);
 }
