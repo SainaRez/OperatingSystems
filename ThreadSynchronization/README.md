@@ -15,15 +15,15 @@ The program initially takes the inputs from  command line or a test file and per
 The outputs of running our test file "test.sh" are recorded in the output file, test_output.txt.
 
 
-# Running the files:
+#### Running the files:
 
-Running Thread Synchronization:
+##### Running Thread Synchronization:
 
 $ make
 $ ./main 4 12 10 7 5 10 4
 
 
-Running Tests: (They can be run individually)
+##### Running Tests:
 
 $ make
 $ sh test.sh
