@@ -1,6 +1,6 @@
 ## Thread Synchronization
 #### Author: Saina Rezvani, Josh Desmond
-##### Date: 02/29/2020
+###### Date: 02/29/2020
 
 This project includes the main.c, main.h, queue.c, queue.h, people_threads.c, people_threads.h, probability.c, probability.h, 
 shallow_queue.c, shallow_queue.h, thread_demo.c, thread_demo.h files.
