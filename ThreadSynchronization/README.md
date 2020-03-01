@@ -18,14 +18,18 @@
 Running Thread Synchronization:
 
 $ make
+
 $ ./main 4 12 10 7 5 10 4
 
 
 Running Tests: (They can be run individually)
 
 $ make
+
 $ 
+
 $ 
+
 $ 
 
 To run all three test scripts together, run the bash script test.sh
