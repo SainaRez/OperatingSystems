@@ -43,6 +43,9 @@ bool does_fitting_room_have_ninjas;
 /** dressing_room_is_empty[n] is true if room n is empty*/
 bool dressing_room_is_empty[MAX_TEAM];
 
+/** Total Persons who are still active in the simulation */
+int total_people_about = 0;
+
 sem_t *people_in_line_semaphore = NULL;
 sem_t *teams_free_semaphore = NULL;
 
@@ -179,10 +182,9 @@ void variance_test(int avg_time) {
  * This should be called once all setup is complete and all Person threads are running
  */
 void run_store() {
-    bool are_there_more_customers_about = true;
-    static int run_count;
-    while (are_there_more_customers_about) { // TODO keep track of how many Persons are still active
-        printf("Run_count: %i\n", ++run_count);
+    static int run_count; // TODO delete
+    while (total_people_about > 0) { // TODO keep track of how many Persons are still active
+        printf("Run_count: %i. Total People About: %i\n", ++run_count, total_people_about); // TODO delete
         sem_wait(people_in_line_semaphore);
         // At least one person is in line, now wait for a free room/team
         sem_wait(teams_free_semaphore);
@@ -202,9 +204,8 @@ void run_store() {
             } else {
                 if (pirate_arrival_time == INT_MAX) {
                     // Pirate line is empty
-                    fprintf(stderr, "EDGE CASE!, Pirates TODO\n"); // TODO
-                    exit(EXIT_FAILURE);
-                    // TODO Just wait more somehow ...
+                    fprintf(stderr, "EDGE CASE!, Just waiting Pirates TODO\n"); // TODO
+                    sem_post(teams_free_semaphore);
                 } else {
                     // This is where a decision needs to be made based on wait_time_difference
                     dequeue_next_person_to_store(true); // TODO temp, for now, just let pirates block
@@ -217,9 +218,8 @@ void run_store() {
             } else {
                 if (ninja_arrival_time == INT_MAX) {
                     // No ninjas in line
-                    fprintf(stderr, "EDGE CASE!, Ninjas TODO\n"); // TODO
-                    exit(EXIT_FAILURE);
-                    // TODO Just wait more somehow ...
+                    fprintf(stderr, "EDGE CASE!, Just waiting. Ninjas TODO\n"); // TODO delete
+                    sem_post(teams_free_semaphore);
                 } else {
                     // This is where a decision needs to be made based on wait_time_difference
                     dequeue_next_person_to_store(false); // TODO temp for now just let ninjas block
@@ -268,6 +268,7 @@ void process_input(int argc, int arguments[]) {
     }
     variance_test(AVG_NINJA_ARRIVAL_TIME);
 
+    total_people_about = num_ninjas + num_pirates;
 
     // Set up global state variables
     initialize_people(num_pirates, num_ninjas);
