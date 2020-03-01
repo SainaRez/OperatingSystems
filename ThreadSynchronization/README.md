@@ -1,4 +1,4 @@
-### Thread Synchronization
+## Thread Synchronization
 #### Author: Saina Rezvani, Josh Desmond
 ##### Date: 02/29/2020
 
