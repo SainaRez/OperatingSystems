@@ -139,19 +139,19 @@ void dequeue_next_person_to_store(bool is_person_a_pirate) {
     }
 
     // TODO put them in the next available store slot
-   
+
     pthread_mutex_unlock(&person_to_enter_store->is_in_fitting_room);
 }
 
-    /**
+/**
  * Test function wrapper for add_variance
  * @param any average value
  */
 void variance_test(int avg_time) {
-    int i =  0;
+    int i = 0;
     srand(time(NULL));
     rand();
-    while (i <  50) {
+    while (i < 50) {
         add_variance(avg_time);
         i++;
     }
@@ -174,7 +174,8 @@ void run_store() {
         // TODO strategy, how to avoid letting pirates hog the room?
         int pirate_arrival_time = get_next_persons_arrival_time(true);
         int ninja_arrival_time = get_next_persons_arrival_time(false);
-        int wait_time_difference = pirate_arrival_time - ninja_arrival_time; // Useful for when there is a large discrepancy
+        int wait_time_difference =
+                pirate_arrival_time - ninja_arrival_time; // Useful for when there is a large discrepancy
         bool have_pirates_waited_longer = (wait_time_difference < 0);
 
         if (does_fitting_room_have_pirates) {
@@ -190,13 +191,11 @@ void run_store() {
                     dequeue_next_person_to_store(true); // TODO temp, for now, just let pirates block
                 }
             }
-        }
-
-        else if (does_fitting_room_have_ninjas) {
+        } else if (does_fitting_room_have_ninjas) {
             if (!have_pirates_waited_longer) {
                 // Trivial decision
                 dequeue_next_person_to_store(false);
-            } else{
+            } else {
                 if (ninja_arrival_time == INT_MAX) {
                     // No ninjas in line
                     // TODO Just wait more somehow ...
@@ -205,9 +204,7 @@ void run_store() {
                     dequeue_next_person_to_store(false); // TODO temp for now just let ninjas block
                 }
             }
-        }
-
-        else {
+        } else {
             if (have_pirates_waited_longer) {
                 dequeue_next_person_to_store(true);
             } else {
